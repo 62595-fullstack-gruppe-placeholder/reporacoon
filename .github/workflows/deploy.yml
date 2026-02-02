@@ -1,7 +1,7 @@
-name: Backend CI
+name: Frontend CI
 
 on:
-  push:
+ push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Backend placeholder
+      - name: Frontend placeholder
         run: |
-          echo "Backend not implemented yet."
-          echo "CI pipeline is working."
+          echo "Frontend not implemented yet."
+          echo "CI pipeline ready."
