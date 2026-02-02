@@ -1,7 +1,7 @@
 name: Frontend CI
 
 on:
- push:
+  push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
@@ -18,4 +18,4 @@ jobs:
       - name: Frontend placeholder
         run: |
           echo "Frontend not implemented yet."
-          echo "CI pipeline ready."
+          echo "CI pipeline is working."
