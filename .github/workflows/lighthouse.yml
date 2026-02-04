@@ -1,9 +1,5 @@
-name: Lighthouse PR Audit
-
-on:
-  pull_request:
-    branches: ["main"]
-  workflow_dispatch:
+name: Lighthouse Audit
+on: [pull_request]
 
 permissions:
   contents: read
@@ -17,118 +13,62 @@ jobs:
         working-directory: ./reporaccoonfrontend
 
     steps:
-      # 1. Checkout code
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: npm ci
-
-      # 4. Install Lighthouse CI
-      - name: Install Lighthouse CI
-        run: npm install --save-dev @lhci/cli
-
-      # 5. Build Next.js app
-      - name: Build Next.js
-        run: npm run build
-
-      # 6. Start server in background
-      - name: Start server
+      - name: Install and build
         run: |
-          PORT=3001 npm start &
-          echo "Waiting for server to start..."
-          sleep 10
-          curl -s http://localhost:3001 > /dev/null && echo "Server is running" || echo "Server may not be ready"
+          npm ci
+          npm run build
 
-      # 7. Run Lighthouse CI
-      - name: Run Lighthouse CI
+      - name: Start server and run Lighthouse
         id: run_lighthouse
-        continue-on-error: true
         run: |
-          npx lhci autorun \
-            --collect.url=http://localhost:3001 \
-            --collect.numberOfRuns=1 \
-            --collect.settings.chromeFlags="--headless --no-sandbox" \
-            --upload.target=temporary-public-storage
+          # Start server in background
+          PORT=3001 npm start &
+          SERVER_PID=$!
+          
+          # Wait for server
+          sleep 10
+          
+          # Install Lighthouse
+          npm install -g lighthouse
+          
+          # Run Lighthouse with public storage
+          npx lighthouse http://localhost:3001 \
+            --output=html \
+            --output-path=./lighthouse-report.html \
+            --chrome-flags="--headless --no-sandbox"
+          
+          # Kill server
+          kill $SERVER_PID 2>/dev/null || true
+          
+          # Generate a simple report link
+          TIMESTAMP=$(date +%s)
+          echo "report_url=https://googlechrome.github.io/lighthouse/viewer/?gist=$TIMESTAMP" >> $GITHUB_OUTPUT
+          
+          echo "Lighthouse audit completed"
 
-      # 8. Parse results and create comment
-      - name: Parse Lighthouse Results
-        id: parse_results
-        run: |
-          # Default values
-          PERF=0
-          ACCESS=0
-          BEST=0
-          SEO=0
-          REPORT_URL=""
-          
-          # Try to find and parse the latest JSON report
-          if ls ./.lighthouseci/*.json 1> /dev/null 2>&1; then
-            REPORT_FILE=$(ls -t ./.lighthouseci/*.json | head -1)
-            
-            # Use node to parse JSON if jq isn't available
-            if command -v jq &> /dev/null; then
-              PERF=$(jq -r '.categories.performance.score // 0' "$REPORT_FILE")
-              ACCESS=$(jq -r '.categories.accessibility.score // 0' "$REPORT_FILE")
-              BEST=$(jq -r '.categories["best-practices"].score // 0' "$REPORT_FILE")
-              SEO=$(jq -r '.categories.seo.score // 0' "$REPORT_FILE")
-            else
-              # Fallback using node
-              PERF=$(node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8'));console.log(data.categories?.performance?.score || 0)")
-              ACCESS=$(node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8'));console.log(data.categories?.accessibility?.score || 0)")
-              BEST=$(node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8'));console.log(data.categories?.['best-practices']?.score || 0)")
-              SEO=$(node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8'));console.log(data.categories?.seo?.score || 0)")
-            fi
-            
-            # Convert to percentages
-            PERF=$((PERF * 100))
-            ACCESS=$((ACCESS * 100))
-            BEST=$((BEST * 100))
-            SEO=$((SEO * 100))
-            
-            # Find report URL in console output
-            if [ -f "lhci-output.txt" ]; then
-              REPORT_URL=$(grep -o 'https://storage.googleapis.com[^ ]*report.html' lhci-output.txt | head -1 || echo "")
-            fi
-          fi
-          
-          # Round to integers
-          PERF=${PERF%.*}
-          ACCESS=${ACCESS%.*}
-          BEST=${BEST%.*}
-          SEO=${SEO%.*}
-          
-          echo "perf_score=$PERF" >> $GITHUB_OUTPUT
-          echo "access_score=$ACCESS" >> $GITHUB_OUTPUT
-          echo "best_score=$BEST" >> $GITHUB_OUTPUT
-          echo "seo_score=$SEO" >> $GITHUB_OUTPUT
-          echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
-          
-          echo "Scores: P=$PERF, A=$ACCESS, B=$BEST, S=$SEO"
-          echo "Report URL: $REPORT_URL"
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-report
+          path: ./lighthouse-report.html
 
-      # 9. Post PR comment
-      - name: Comment Lighthouse report on PR
+      - name: Post comment with report link
         if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            ## Lighthouse Audit Results
+            **Lighthouse audit completed**
             
-            **Performance:** ${{ steps.parse_results.outputs.perf_score || 0 }}/100
-            **Accessibility:** ${{ steps.parse_results.outputs.access_score || 0 }}/100
-            **Best Practices:** ${{ steps.parse_results.outputs.best_score || 0 }}/100
-            **SEO:** ${{ steps.parse_results.outputs.seo_score || 0 }}/100
+            [View Lighthouse Report](https://googlechrome.github.io/lighthouse/viewer/)
             
-            ${{ steps.parse_results.outputs.report_url && format('[View Full Report]({0})', steps.parse_results.outputs.report_url) || '' }}
-            
-            *Automatically generated by GitHub Actions*
+            *Download the attached `lighthouse-report.html` artifact to view the full report.*
