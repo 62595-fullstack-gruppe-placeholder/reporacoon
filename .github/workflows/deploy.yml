@@ -13,24 +13,25 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./reporaccoonfrontend 
+        working-directory: ./reporaccoonfrontend  # All steps run in your project folder
 
     steps:
+      # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Node
+      # Setup Node.js with caching
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: "npm"
+          cache: 'npm'
 
       # Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # verify Tailwind CLI works
+      # Optional: verify Tailwind CLI works
       - name: Verify Tailwind
         run: npx tailwindcss -v
 
@@ -47,3 +48,4 @@ jobs:
         run: |
           npm start &
           sleep 10
+          curl -f http://localhost:3000 || exit 1
