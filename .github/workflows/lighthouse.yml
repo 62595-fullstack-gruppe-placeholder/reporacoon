@@ -1,5 +1,9 @@
-name: Lighthouse Audit
-on: [pull_request]
+name: Lighthouse PR Audit
+
+on:
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -8,67 +12,70 @@ permissions:
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
+
+
     defaults:
       run:
         working-directory: ./reporaccoonfrontend
 
+    env:
+      # Use GITHUB_TOKEN to post comments on PRs
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
-      - name: Checkout
+      # 1. Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: 22
 
-      - name: Install and build
-        run: |
-          npm ci
-          npm run build
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Start server and run Lighthouse
-        id: run_lighthouse
+      # 4. Build Next.js app
+      - name: Build Next.js
+        run: npm run build
+
+      # 5. Start server in background on a free port
+      - name: Start server
         run: |
-          # Start server in background
           PORT=3001 npm start &
-          SERVER_PID=$!
-          
-          # Wait for server
-          sleep 10
-          
-          # Install Lighthouse
-          npm install -g lighthouse
-          
-          # Run Lighthouse with public storage
-          npx lighthouse http://localhost:3001 \
-            --output=html \
-            --output-path=./lighthouse-report.html \
-            --chrome-flags="--headless --no-sandbox"
-          
-          # Kill server
-          kill $SERVER_PID 2>/dev/null || true
-          
-          # Generate a simple report link
-          TIMESTAMP=$(date +%s)
-          echo "report_url=https://googlechrome.github.io/lighthouse/viewer/?gist=$TIMESTAMP" >> $GITHUB_OUTPUT
-          
-          echo "Lighthouse audit completed"
+          echo "Waiting for server to start..."
+          npx wait-on http://localhost:3001
 
-      - name: Upload Lighthouse report
-        uses: actions/upload-artifact@v3
-        with:
-          name: lighthouse-report
-          path: ./lighthouse-report.html
+      # 6. Run Lighthouse CI and extract metrics
+      - name: Run Lighthouse CI
+        id: lhci
+        run: |
+          npm install --save-dev @lhci/cli
 
-      - name: Post comment with report link
-        if: github.event_name == 'pull_request'
+          OUTPUT=$(npx lhci autorun \
+            --collect.url=http://localhost:3001 \
+            --collect.numberOfRuns=1 \
+            --collect.settings.chromeFlags="--headless" \
+            --upload.target=temporary-public-storage)
+
+          # Extract report URL
+          REPORT_URL=$(echo "$OUTPUT" | grep -o 'https://storage.googleapis.com[^ ]*report.html' | head -1)
+          echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
+          echo "perf_score=$PERF" >> $GITHUB_OUTPUT
+          echo "access_score=$ACCESS" >> $GITHUB_OUTPUT
+          echo "best_score=$BEST" >> $GITHUB_OUTPUT
+          echo "seo_score=$SEO" >> $GITHUB_OUTPUT
+
+      # 7. Post PR comment with Lighthouse metrics
+      - name: Comment Lighthouse report on PR
+        if: ${{ github.event_name == 'pull_request' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            **Lighthouse audit completed**
-            
-            [View Lighthouse Report](https://googlechrome.github.io/lighthouse/viewer/)
-            
-            *Download the attached `lighthouse-report.html` artifact to view the full report.*
+            ## Lighthouse Report
+            Your PR was audited with Lighthouse:
+            [View full Lighthouse report here](${{ steps.lhci.outputs.report_url }})
