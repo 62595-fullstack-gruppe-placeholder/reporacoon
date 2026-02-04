@@ -13,37 +13,36 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./reporaccoonfrontend  # All steps run in your project folder
+        working-directory: ./reporaccoonfrontend
 
     steps:
-      # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Node.js with caching
+#setup node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: 'npm'
 
-      # Install dependencies
+# install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # Optional: verify Tailwind CLI works
+# verify Tailwind CLI works
       - name: Verify Tailwind
         run: npx tailwindcss -v
 
-      # Run lint
+# run lint
       - name: Run ESLint
         run: npm run lint
 
-      # Build Next.js app
+# build Next.js app
       - name: Build Next.js
         run: npm run build
 
-      # Optional: start server and run smoke test
+# start server and run smoke test
       - name: Test build output
         run: |
           npm start &
