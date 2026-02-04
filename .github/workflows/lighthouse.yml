@@ -14,15 +14,15 @@ jobs:
         working-directory: ./reporaccoonfrontend
 
     env:
-      # Use a Personal Access Token with 'repo' scope
+      # Personal Access Token with 'repo' scope
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_PAT }}
 
     steps:
-      # 1. Checkout code
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
+      # 2. Setup Node.js (v22 for Lighthouse 13+)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -36,19 +36,21 @@ jobs:
       - name: Build Next.js
         run: npm run build
 
-      # 5. Start server in background
+      # 5. Start server in background on port 3001
       - name: Start server
         run: |
-          npm start &
-          sleep 20  # give server enough time to start
+          PORT=3001 npm start &
+          sleep 20  # wait for server to be ready
 
       # 6. Run Lighthouse CI and extract metrics
       - name: Run Lighthouse CI
         id: lhci
         run: |
+          # Install LHCI locally
           npm install --save-dev @lhci/cli
 
           OUTPUT=$(npx lhci autorun \
+            --collect.url=http://localhost:3001 \
             --upload.target=temporary-public-storage \
             --github-app-token=$LHCI_GITHUB_APP_TOKEN \
             --collect.numberOfRuns=1 \
@@ -69,7 +71,7 @@ jobs:
           echo "best_score=$BEST" >> $GITHUB_OUTPUT
           echo "seo_score=$SEO" >> $GITHUB_OUTPUT
 
-      # 7. Post PR comment with Lighthouse metrics
+      # 7. Comment Lighthouse report on PR
       - name: Comment Lighthouse report on PR
         if: ${{ github.event_name == 'pull_request' }}
         uses: peter-evans/create-or-update-comment@v4
