@@ -40,31 +40,26 @@ jobs:
       - name: Start server
         run: |
           npm start &
-          sleep 15
+          sleep 20  # give server enough time to start
 
       # 6. Run Lighthouse CI and get scores
       - name: Run Lighthouse CI
         id: lhci
         run: |
-          npm install -g @lhci/cli
-          OUTPUT=$(npx lhci autorun \
-            --upload.target=temporary-public-storage \
-            --github-app-token=$LHCI_GITHUB_APP_TOKEN \
-            --github-repository=$GITHUB_REPOSITORY \
-            --github-head-branch=$GITHUB_HEAD_REF \
-            --github-base-branch=$GITHUB_BASE_REF \
-            --collect.numberOfRuns=1 \
-            --collect.settings.chromeFlags="--headless")
-          
+          # Ensure LHCI is installed locally
+          npm install --save-dev @lhci/cli
+
+          OUTPUT=$(npx lhci autorun --upload.target=temporary-public-storage)
+
           # Extract report URL
           REPORT_URL=$(echo "$OUTPUT" | grep -o 'https://storage.googleapis.com[^ ]*report.html' | head -1)
           echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
 
-          # Extract scores
-          PERF=$(echo "$OUTPUT" | grep -oP '(?<=Performance: )[0-9]+')
-          ACCESS=$(echo "$OUTPUT" | grep -oP '(?<=Accessibility: )[0-9]+')
-          BEST=$(echo "$OUTPUT" | grep -oP '(?<=Best Practices: )[0-9]+')
-          SEO=$(echo "$OUTPUT" | grep -oP '(?<=SEO: )[0-9]+')
+          # Extract scores using grep
+          PERF=$(echo "$OUTPUT" | grep -oP '(?<=Performance: )[0-9]+(?=/100)' | head -1)
+          ACCESS=$(echo "$OUTPUT" | grep -oP '(?<=Accessibility: )[0-9]+(?=/100)' | head -1)
+          BEST=$(echo "$OUTPUT" | grep -oP '(?<=Best Practices: )[0-9]+(?=/100)' | head -1)
+          SEO=$(echo "$OUTPUT" | grep -oP '(?<=SEO: )[0-9]+(?=/100)' | head -1)
 
           echo "perf_score=$PERF" >> $GITHUB_OUTPUT
           echo "access_score=$ACCESS" >> $GITHUB_OUTPUT

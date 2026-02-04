@@ -1,15 +1,14 @@
 module.exports = {
   ci: {
     collect: {
-      url: ['http://localhost:3000'],  // the URL to test
-      startServerCommand: 'npm start',  // command to start the app
-      numberOfRuns: 1,                  // run once
-      settings: {
-        chromeFlags: '--headless',      // run Chrome headless
-      },
+      url: ['http://localhost:3000'],
+      numberOfRuns: 1,
+      startServerCommand: 'npm start',
+      startServerReadyPattern: 'Listening on',
+      chromeFlags: '--headless'
     },
     upload: {
-      target: 'temporary-public-storage', // no server needed
-    },
-  },
+      target: 'temporary-public-storage'
+    }
+  }
 };
