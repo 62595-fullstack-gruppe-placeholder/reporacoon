@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lighthouse": "lighthouse http://localhost:3000 --output html --output-path ./lighthouse-report.html --chrome-flags='--headless'"
   },
   "dependencies": {
     "next": "16.1.6",
@@ -21,6 +22,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "lighthouse": "^13.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
