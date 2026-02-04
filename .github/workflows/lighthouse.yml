@@ -18,44 +18,31 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      # 1. Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 22  # upgrade Node to meet Lighthouse 13 requirement
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # 4. Build Next.js app
-      - name: Build Next.js
+      - name: Build Next.js app
         run: npm run build
 
-      # 5. Start server in background
-      - name: Start server
-        run: |
-          npm start &
-          sleep 20  # give server enough time to start
-
-      # 6. Run Lighthouse CI and get scores
       - name: Run Lighthouse CI
         id: lhci
         run: |
-          # Ensure LHCI is installed locally
-          npm install --save-dev @lhci/cli
-
+          npm install --save-dev @lhci/cli@0.10  # stable LHCI version
           OUTPUT=$(npx lhci autorun --upload.target=temporary-public-storage)
-
+          
           # Extract report URL
           REPORT_URL=$(echo "$OUTPUT" | grep -o 'https://storage.googleapis.com[^ ]*report.html' | head -1)
           echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
 
-          # Extract scores using grep
+          # Extract scores
           PERF=$(echo "$OUTPUT" | grep -oP '(?<=Performance: )[0-9]+(?=/100)' | head -1)
           ACCESS=$(echo "$OUTPUT" | grep -oP '(?<=Accessibility: )[0-9]+(?=/100)' | head -1)
           BEST=$(echo "$OUTPUT" | grep -oP '(?<=Best Practices: )[0-9]+(?=/100)' | head -1)
@@ -66,7 +53,6 @@ jobs:
           echo "best_score=$BEST" >> $GITHUB_OUTPUT
           echo "seo_score=$SEO" >> $GITHUB_OUTPUT
 
-      # 7. Post PR comment with scores + report
       - name: Comment Lighthouse report on PR
         if: ${{ github.event_name == 'pull_request' }}
         uses: peter-evans/create-or-update-comment@v4
