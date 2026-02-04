@@ -14,30 +14,46 @@ jobs:
         working-directory: ./reporaccoonfrontend
 
     env:
-      LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Use a Personal Access Token with 'repo' scope
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_PAT }}
 
     steps:
+      # 1. Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 22  # upgrade Node to meet Lighthouse 13 requirement
+          node-version: 20
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Next.js app
+      # 4. Build Next.js app
+      - name: Build Next.js
         run: npm run build
 
+      # 5. Start server in background
+      - name: Start server
+        run: |
+          npm start &
+          sleep 20  # give server enough time to start
+
+      # 6. Run Lighthouse CI and extract metrics
       - name: Run Lighthouse CI
         id: lhci
         run: |
-          npm install --save-dev @lhci/cli@0.10  # stable LHCI version
-          OUTPUT=$(npx lhci autorun --upload.target=temporary-public-storage)
-          
+          npm install --save-dev @lhci/cli
+
+          OUTPUT=$(npx lhci autorun \
+            --upload.target=temporary-public-storage \
+            --github-app-token=$LHCI_GITHUB_APP_TOKEN \
+            --collect.numberOfRuns=1 \
+            --collect.settings.chromeFlags="--headless")
+
           # Extract report URL
           REPORT_URL=$(echo "$OUTPUT" | grep -o 'https://storage.googleapis.com[^ ]*report.html' | head -1)
           echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
@@ -53,11 +69,12 @@ jobs:
           echo "best_score=$BEST" >> $GITHUB_OUTPUT
           echo "seo_score=$SEO" >> $GITHUB_OUTPUT
 
+      # 7. Post PR comment with Lighthouse metrics
       - name: Comment Lighthouse report on PR
         if: ${{ github.event_name == 'pull_request' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.LHCI_PAT }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ## Lighthouse Report
