@@ -1,11 +1,9 @@
-name: Lighthouse Audit
+name: Lighthouse PR Audit
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
-  workflow_dispatch: # allows manual runs
+  workflow_dispatch:
 
 jobs:
   lighthouse:
@@ -14,6 +12,9 @@ jobs:
     defaults:
       run:
         working-directory: ./reporaccoonfrontend
+
+    env:
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }} # allows posting to PR
 
     steps:
       # 1. Checkout code
@@ -40,18 +41,8 @@ jobs:
           npm start &
           sleep 15
 
-      # 6. Run Lighthouse
-      - name: Run Lighthouse
+      # 6. Run Lighthouse CI and post results to PR
+      - name: Run Lighthouse CI
         run: |
-          npm install -g lighthouse
-          npx lighthouse http://localhost:3000 \
-            --output html \
-            --output-path ./lighthouse-report.html \
-            --chrome-flags="--headless"
-
-      # 7. Upload Lighthouse report
-      - name: Upload Lighthouse report
-        uses: actions/upload-artifact@v4   # updated to v4
-        with:
-          name: lighthouse-report
-          path: ./lighthouse-report.html
+          npm install -g @lhci/cli
+          npx lhci autorun --upload.target=temporary-public-storage
