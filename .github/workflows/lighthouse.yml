@@ -14,15 +14,15 @@ jobs:
         working-directory: ./reporaccoonfrontend
 
     env:
-      # Use a Personal Access Token (PAT) with repo permissions
-      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_PAT }}
+      # Use GITHUB_TOKEN to post comments on PRs
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      # 1. Checkout repository
+      # 1. Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js (compatible with Lighthouse 13+)
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -36,25 +36,24 @@ jobs:
       - name: Build Next.js
         run: npm run build
 
-      # 5. Install LHCI globally
-      - name: Install LHCI
-        run: npm install --save-dev @lhci/cli
+      # 5. Start server in background on a free port
+      - name: Start server
+        run: |
+          PORT=3001 npm start &
+          echo "Waiting for server to start..."
+          npx wait-on http://localhost:3001
 
       # 6. Run Lighthouse CI and extract metrics
       - name: Run Lighthouse CI
         id: lhci
         run: |
-          # Kill anything on port 3000 to prevent conflicts
-          lsof -ti tcp:3000 | xargs -r kill -9
+          npm install --save-dev @lhci/cli
 
-          # Run LHCI with built-in server start
           OUTPUT=$(npx lhci autorun \
-            --collect.startServerCommand="npm start" \
-            --collect.startServerReadyPattern="Listening on" \
+            --collect.url=http://localhost:3001 \
             --collect.numberOfRuns=1 \
             --collect.settings.chromeFlags="--headless" \
-            --upload.target=temporary-public-storage \
-            --github-app-token=$LHCI_GITHUB_APP_TOKEN)
+            --upload.target=temporary-public-storage)
 
           # Extract report URL
           REPORT_URL=$(echo "$OUTPUT" | grep -o 'https://storage.googleapis.com[^ ]*report.html' | head -1)
@@ -76,7 +75,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
-          token: ${{ secrets.LHCI_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ## Lighthouse Report
