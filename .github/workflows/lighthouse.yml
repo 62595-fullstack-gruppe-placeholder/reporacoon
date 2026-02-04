@@ -14,18 +14,19 @@ jobs:
         working-directory: ./reporaccoonfrontend
 
     env:
+      # Use a Personal Access Token (PAT) with repo permissions
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_PAT }}
 
     steps:
-      # 1. Checkout code
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
+      # 2. Setup Node.js (compatible with Lighthouse 13+)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 22  # Required by Lighthouse 13+
+          node-version: 22
 
       # 3. Install dependencies
       - name: Install dependencies
@@ -35,23 +36,25 @@ jobs:
       - name: Build Next.js
         run: npm run build
 
-      # 5. Start server in background
-      - name: Start server
-        run: |
-          npm start &
-          sleep 20  # give server enough time to start
+      # 5. Install LHCI globally
+      - name: Install LHCI
+        run: npm install --save-dev @lhci/cli
 
       # 6. Run Lighthouse CI and extract metrics
       - name: Run Lighthouse CI
         id: lhci
         run: |
-          npm install --save-dev @lhci/cli
+          # Kill anything on port 3000 to prevent conflicts
+          lsof -ti tcp:3000 | xargs -r kill -9
 
+          # Run LHCI with built-in server start
           OUTPUT=$(npx lhci autorun \
-            --upload.target=temporary-public-storage \
-            --github-app-token=$LHCI_GITHUB_APP_TOKEN \
+            --collect.startServerCommand="npm start" \
+            --collect.startServerReadyPattern="Listening on" \
             --collect.numberOfRuns=1 \
-            --collect.settings.chromeFlags="--headless")
+            --collect.settings.chromeFlags="--headless" \
+            --upload.target=temporary-public-storage \
+            --github-app-token=$LHCI_GITHUB_APP_TOKEN)
 
           # Extract report URL
           REPORT_URL=$(echo "$OUTPUT" | grep -o 'https://storage.googleapis.com[^ ]*report.html' | head -1)
