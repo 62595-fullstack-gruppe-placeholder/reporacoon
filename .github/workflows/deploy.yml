@@ -12,10 +12,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Frontend placeholder
+      # Setup Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Optional: verify Tailwind CLI works
+      - name: Verify Tailwind
+        run: npx tailwindcss -v
+
+      # Run lint
+      - name: Run ESLint
+        run: npm run lint
+
+      # Build Next.js app
+      - name: Build Next.js
+        run: npm run build
+
+      # Optional: start server and run smoke test
+      - name: Test build output
         run: |
-          echo "Frontend not implemented yet."
-          echo "CI pipeline is working."
+          npm start &
+          sleep 10
+          curl -f http://localhost:3000 || exit 1
