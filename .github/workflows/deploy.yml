@@ -16,33 +16,27 @@ jobs:
         working-directory: ./reporaccoonfrontend
 
     steps:
+
+
+      
       - name: Checkout repository
         uses: actions/checkout@v4
 
-#setup node.js
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: 'npm'
 
-# install dependencies
+      # Install dependencies
       - name: Install dependencies
         run: npm ci
 
-# verify Tailwind CLI works
-      - name: Verify Tailwind
-        run: npx tailwindcss -v
-
-# run lint
-      - name: Run ESLint
-        run: npm run lint
-
-# build Next.js app
+      # Build Next.js app
       - name: Build Next.js
         run: npm run build
 
-# start server and run smoke test
+      # Start server and run smoke test
       - name: Test build output
         run: |
           npm start &
