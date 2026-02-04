@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: ["main"]
   workflow_dispatch: # allows manual runs
-  # schedule:                  # optional daily run (commented out for now)
-  #   - cron: '0 2 * * *'      # runs daily at 2 AM
 
 jobs:
   lighthouse:
@@ -40,7 +38,7 @@ jobs:
       - name: Start server
         run: |
           npm start &
-          sleep 15 # give server time to start
+          sleep 15
 
       # 6. Run Lighthouse
       - name: Run Lighthouse
@@ -53,7 +51,7 @@ jobs:
 
       # 7. Upload Lighthouse report
       - name: Upload Lighthouse report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4   # updated to v4
         with:
           name: lighthouse-report
           path: ./lighthouse-report.html
