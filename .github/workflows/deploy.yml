@@ -11,11 +11,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./reporaccoonfrontend
+
     steps:
+
+
+      
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Frontend placeholder
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Build Next.js app
+      - name: Build Next.js
+        run: npm run build
+
+      # Start server and run smoke test
+      - name: Test build output
         run: |
-          echo "Frontend not implemented yet."
-          echo "CI pipeline is working."
+          npm start &
+          sleep 10
+          curl -f http://localhost:3000 || exit 1
