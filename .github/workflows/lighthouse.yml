@@ -14,7 +14,8 @@ jobs:
         working-directory: ./reporaccoonfrontend
 
     env:
-      LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }} # allows posting to PR
+      # Allows LHCI to post results to PR
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       # 1. Checkout code
@@ -31,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4. Build the app
+      # 4. Build Next.js app
       - name: Build Next.js
         run: npm run build
 
@@ -39,10 +40,10 @@ jobs:
       - name: Start server
         run: |
           npm start &
-          sleep 15
+          sleep 15  # give server time to start
 
-      # 6. Run Lighthouse CI and post results to PR
+      # 6. Run Lighthouse CI
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli
-          npx lhci autorun --upload.target=temporary-public-storage
+          npx lhci autorun

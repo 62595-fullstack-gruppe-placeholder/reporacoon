@@ -1,16 +1,15 @@
 module.exports = {
   ci: {
     collect: {
-      url: ['http://localhost:3000'],
-      startServerCommand: 'npm start',
-      numberOfRuns: 1,
+      url: ['http://localhost:3000'],  // the URL to test
+      startServerCommand: 'npm start',  // command to start the app
+      numberOfRuns: 1,                  // run once
       settings: {
-        chromeFlags: '--headless',
+        chromeFlags: '--headless',      // run Chrome headless
       },
     },
     upload: {
       target: 'temporary-public-storage', // no server needed
-    },npx lhci autorun
-
+    },
   },
 };
