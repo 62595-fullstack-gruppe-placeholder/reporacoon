@@ -2,7 +2,6 @@ import { query } from './client';
 import bcrypt from 'bcryptjs';
 
 
-
 //uses bcryptjs to hash before storing the password 
 export const createUser = async (username: string, password: string) => {
   const hashed = await bcrypt.hash(password, 10);

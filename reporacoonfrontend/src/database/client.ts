@@ -1,7 +1,6 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env.local file specifically
 const envPath = path.resolve(process.cwd(), '.env.local');
 console.log('Loading env from:', envPath);
 dotenv.config({ path: envPath });
@@ -9,7 +8,6 @@ dotenv.config({ path: envPath });
 import pkg from 'pg';
 const { Pool } = pkg;
 
-// Debug log
 console.log('Environment variables loaded:', {
   user: process.env.POSTGRES_USER || 'NOT FOUND',
   host: process.env.POSTGRES_HOST || 'NOT FOUND',
