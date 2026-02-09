@@ -1,0 +1,81 @@
+name: Lighthouse PR Audit
+
+on:
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+
+
+    defaults:
+      run:
+        working-directory: ./reporaccoonfrontend
+
+    env:
+      # Use GITHUB_TOKEN to post comments on PRs
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build Next.js app
+      - name: Build Next.js
+        run: npm run build
+
+      # 5. Start server in background on a free port
+      - name: Start server
+        run: |
+          PORT=3001 npm start &
+          echo "Waiting for server to start..."
+          npx wait-on http://localhost:3001
+
+      # 6. Run Lighthouse CI and extract metrics
+      - name: Run Lighthouse CI
+        id: lhci
+        run: |
+          npm install --save-dev @lhci/cli
+
+          OUTPUT=$(npx lhci autorun \
+            --collect.url=http://localhost:3001 \
+            --collect.numberOfRuns=1 \
+            --collect.settings.chromeFlags="--headless" \
+            --upload.target=temporary-public-storage)
+
+          # Extract report URL
+          REPORT_URL=$(echo "$OUTPUT" | grep -o 'https://storage.googleapis.com[^ ]*report.html' | head -1)
+          echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
+          echo "perf_score=$PERF" >> $GITHUB_OUTPUT
+          echo "access_score=$ACCESS" >> $GITHUB_OUTPUT
+          echo "best_score=$BEST" >> $GITHUB_OUTPUT
+          echo "seo_score=$SEO" >> $GITHUB_OUTPUT
+
+      # 7. Post PR comment with Lighthouse metrics
+      - name: Comment Lighthouse report on PR
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Lighthouse Report
+            Your PR was audited with Lighthouse:
+            [View full Lighthouse report here](${{ steps.lhci.outputs.report_url }})
