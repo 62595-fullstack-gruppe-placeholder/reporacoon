@@ -8,7 +8,11 @@ module.exports = {
       chromeFlags: '--headless'
     },
     upload: {
-      target: 'temporary-public-storage'
+      target: 'temporary-public-storage',
+      
+      
+      outputDir: './.lighthouseci',
+      reportFilenamePattern: 'report.%%EXTENSION%%'
     }
   }
 };
