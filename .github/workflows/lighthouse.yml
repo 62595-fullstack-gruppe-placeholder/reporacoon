@@ -16,7 +16,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./reporaccoonfrontend
+        working-directory: ./reporacoonfrontend
 
     env:
       # Use GITHUB_TOKEN to post comments on PRs
