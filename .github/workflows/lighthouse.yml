@@ -13,10 +13,9 @@ jobs:
   lighthouse:
     runs-on: ubuntu-latest
 
-
     defaults:
       run:
-        working-directory: ./reporaccoonfrontend
+        working-directory: ./reporacoonfrontend
 
     env:
       # Use GITHUB_TOKEN to post comments on PRs
@@ -58,15 +57,13 @@ jobs:
             --collect.url=http://localhost:3001 \
             --collect.numberOfRuns=1 \
             --collect.settings.chromeFlags="--headless" \
-            --upload.target=temporary-public-storage)
+            --upload.target=temporary-public-storage \
+            --upload.outputDir=./.lighthouseci \
+            --no-upload.html)
 
-          # Extract report URL
+          # Extract report URL (it will still be in the output even with --no-upload.html)
           REPORT_URL=$(echo "$OUTPUT" | grep -o 'https://storage.googleapis.com[^ ]*report.html' | head -1)
           echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
-          echo "perf_score=$PERF" >> $GITHUB_OUTPUT
-          echo "access_score=$ACCESS" >> $GITHUB_OUTPUT
-          echo "best_score=$BEST" >> $GITHUB_OUTPUT
-          echo "seo_score=$SEO" >> $GITHUB_OUTPUT
 
       # 7. Post PR comment with Lighthouse metrics
       - name: Comment Lighthouse report on PR

@@ -13,10 +13,9 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./reporaccoonfrontend
-
+        working-directory: ./reporacoonfrontend
+        
     steps:
-
 
       
       - name: Checkout repository
@@ -24,7 +23,7 @@ jobs:
 
       # Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
@@ -36,7 +35,6 @@ jobs:
       - name: Build Next.js
         run: npm run build
 
-      # Start server and run smoke test
       - name: Test build output
         run: |
           npm start &
