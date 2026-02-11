@@ -1,7 +1,7 @@
 FROM node:24
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /src
 
 COPY package*.json ./
 
