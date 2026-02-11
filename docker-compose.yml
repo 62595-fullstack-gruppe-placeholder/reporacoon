@@ -1,0 +1,43 @@
+services:
+  web:
+    build:
+      context: ./reporacoonfrontend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres/mydb
+    ports:
+      - "3000:3000"
+    depends_on:
+      - scraper
+      - postgres
+    networks:
+      - app-network
+
+  scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres/mydb
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: reporacoondb
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: fisk
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

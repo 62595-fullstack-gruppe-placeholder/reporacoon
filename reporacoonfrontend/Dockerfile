@@ -1,4 +1,4 @@
-FROM node:24
+FROM node:24-alpine
 
 # Set the working directory
 WORKDIR /src
