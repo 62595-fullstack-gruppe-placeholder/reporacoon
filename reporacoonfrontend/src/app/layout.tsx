@@ -1,4 +1,5 @@
 import { Inter } from "next/font/google";
+import Link from 'next/link'
 import "./globals.css";
 import Image from 'next/image'
 
@@ -22,13 +23,19 @@ export default function RootLayout({
         <header>
           <div className="self-stretch px-10 py-3 border-b border-box flex w-full justify-between items-center">
             <div className="flex justify-start items-center gap-4">
-              <Image src="/logo.png" alt="logo" width="32" height="32"></Image>
+            
+                <Link href="/"><Image src="/logo.png" alt="logo" width="32" height="32"/></Link>
+            
               <p className="text-main-text">Repo Racoon</p>
             </div>
             <div className="self-stretch h-10 inline-flex justify-end items-center gap-8">
               <p className="text-center justify-center">Features</p>
-              <button className="bg-button-main btn">Sign up</button>
-              <button className="bg-box px-5 btn">Log in</button>
+              <button className="bg-button-main btn">
+                <Link href="/signup">Sign up</Link>
+              </button>
+              <button className="bg-box px-5 btn">
+                <Link href="/login">Log in</Link>
+              </button>
             </div>
           </div>
         </header>
