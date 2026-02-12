@@ -8,6 +8,8 @@ export default function Home() {
         comprehensive security overviews, helping you identify and
         address potential weaknesses. </p>
 
+      
+
     </div>
   );
 }
