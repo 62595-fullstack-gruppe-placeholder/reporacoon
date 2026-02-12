@@ -39,11 +39,22 @@ Main button color: #23863d
   }
 }
 
-/* Shape and text position for buttons */
+
 @layer components {
+  /* Shape and text position for buttons */
   .btn {
     @apply px-5 h-10 rounded-lg inline-flex items-center justify-center;
   }
+
+  /* Title style */
+  .h1 {
+    @apply justify-center text-text-main text-5xl font-black leading-[60px]
+  }
+  /* Main paragraph style*/
+  .p {
+    @apply justify-center text-text-main text-base font-normal leading-6
+  }
+
 }
 
 body {
