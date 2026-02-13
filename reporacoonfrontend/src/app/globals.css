@@ -55,6 +55,19 @@ Main button color: #23863d
     @apply justify-center text-text-main text-base font-normal leading-6
   }
 
+  .box {
+    @apply rounded-2xl bg-box
+  }
+
+  /* Field style*/
+  .field {
+    @apply bg-box rounded-lg overflow-hidden inline-flex px-4 py-2 items-center gap-8
+  }
+
+  /* Text inside fields style*/
+  .fieldText {
+    @apply justify-center text-secondary text-base font-normal 
+  }
 }
 
 body {
