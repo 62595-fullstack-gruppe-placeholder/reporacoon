@@ -13,12 +13,15 @@ services:
     networks:
       - app-network
 
+
   scraper:
     build:
       context: ./scraper
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://user:password@postgres/mydb
+      DATABASE_URL: postgresql://root:fisk@postgres/reporacoondb
+    ports:
+      - "5001:5001"
     depends_on:
       - postgres
     networks:

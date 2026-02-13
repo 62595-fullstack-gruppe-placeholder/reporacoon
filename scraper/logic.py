@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-"""
-GitHub Secret Scanner
-Scans GitHub repositories for exposed API keys and secrets
-Outputs all results to /scanlogs folder
-"""
-
 import re
 import requests
 import argparse
@@ -19,6 +12,42 @@ from concurrent.futures import ThreadPoolExecutor
 import warnings
 warnings.filterwarnings('ignore')
 
+
+
+
+#------------------------------- basic flow -----------------------------------------------
+# 1. Asks for a GitHub URL to scan
+#   Shows a warning about ethical use and requires confirmation (prolly not needed in backend but just in case)
+#   Creates a scanlogs folder to store all results
+#
+# 2. Creates a unique folder for this specific scan (named after the repository and timestamp)
+#    Sets up the list of secret patterns to look for (AWS keys, GitHub tokens, API keys, etc.)
+#
+# 3. Fetches basic information about the repository (name, default branch, stars, forks)
+#    Gets a list of branches in the repository (up to 3 branches)
+#
+# 4. Starts scanning from the root directory
+#    goes through folders recursively (up to 5 levels deep)
+#    For each file:
+#       Checks if it's a text file worth scanning
+#       Downloads the file content
+#       Scans the content for any secret patterns
+#       If secrets are found, saves details about where and what was found
+#    Respects limits (max files, delay between requests)
+#
+# 5. After scanning, creates several reports in the scan folder (should be in .gitignore):
+#    A summary report listing what was found
+#    A detailed JSON file with all findings
+#    A CSV file for spreadsheets
+#    A log file with all scan activity
+#
+# 6. Prints a final summary to the console with key stats and where to find the reports
+#--------------------------------------------------------------------------------------------
+
+
+
+
+
 class GitHubSecretScanner:
     def __init__(self, repo_url, max_files=100, threads=5, delay=0.1, include_gist=False):
         self.repo_url = repo_url
@@ -32,23 +61,19 @@ class GitHubSecretScanner:
             'Accept': 'application/vnd.github.v3+json'
         })
         
-        # Create scanlogs directory if it doesn't exist
         self.scanlogs_dir = os.path.join(os.getcwd(), 'scanlogs')
         os.makedirs(self.scanlogs_dir, exist_ok=True)
         
-        # Create session-specific directory with timestamp
-        self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')   
         repo_name = self.extract_repo_name(repo_url)
         self.session_dir = os.path.join(self.scanlogs_dir, f"{repo_name}_{self.timestamp}")
         os.makedirs(self.session_dir, exist_ok=True)
         
-        # Store findings
         self.findings = defaultdict(list)
         self.scanned_files = 0
         self.repo_info = {}
         self.scan_log = []
         
-        # Regex patterns for various secrets
         self.patterns = {
             'AWS API Key': r'AKIA[0-9A-Z]{16}',
             'AWS Secret Key': r'(?i)aws[_-]?secret[_-]?access[_-]?key[\s]*[:=][\s]*["\']?[A-Za-z0-9/+=]{40}["\']?',
@@ -88,7 +113,6 @@ class GitHubSecretScanner:
             'Email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
         }
         
-        # Create log file
         self.log_file = os.path.join(self.session_dir, 'scan.log')
         self.write_log(f"=== GitHub Secret Scanner Started ===")
         self.write_log(f"Target: {repo_url}")
@@ -97,7 +121,6 @@ class GitHubSecretScanner:
         self.write_log("="*50)
 
     def extract_repo_name(self, url):
-        """Extract repository name from URL for folder naming"""
         parsed = urlparse(url)
         path_parts = parsed.path.strip('/').split('/')
         if len(path_parts) >= 2:
@@ -105,13 +128,14 @@ class GitHubSecretScanner:
         return f"scan_{self.timestamp}"
 
     def write_log(self, message):
-        """Write message to log file"""
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         log_entry = f"[{timestamp}] {message}"
         self.scan_log.append(log_entry)
         
         with open(self.log_file, 'a') as f:
             f.write(log_entry + '\n')
+
+
 
     def write_finding(self, finding):
         """Write individual finding to findings file"""
@@ -127,8 +151,8 @@ class GitHubSecretScanner:
             f.write(f"Timestamp: {finding['timestamp']}\n")
             f.write(f"{'='*60}\n\n")
 
+
     def parse_github_url(self, url):
-        """Parse GitHub URL to extract owner and repo name"""
         parsed = urlparse(url)
         path_parts = parsed.path.strip('/').split('/')
         
@@ -176,6 +200,7 @@ class GitHubSecretScanner:
             self.write_log(f"Failed to fetch contents at {path}: {e}")
             return []
 
+
     def is_text_file(self, filename):
         """Check if file should be scanned based on extension"""
         text_extensions = [
@@ -201,8 +226,12 @@ class GitHubSecretScanner:
                 return True
         return False
 
+
+
+
+
+# scan file content for secrets using regex patterns
     def scan_content(self, content, file_path, file_url):
-        """Scan file content for secrets"""
         results = defaultdict(list)
         
         for secret_type, pattern in self.patterns.items():
@@ -233,13 +262,18 @@ class GitHubSecretScanner:
         
         return results
 
+
+
+
     def find_line_number(self, content, match_string):
-        """Find line number where match occurs"""
         lines = content.split('\n')
         for i, line in enumerate(lines, 1):
             if match_string in line:
                 return i
         return 0
+    
+
+
 
     def mask_secret(self, secret):
         """Mask sensitive data for safe display"""
@@ -248,7 +282,6 @@ class GitHubSecretScanner:
         return secret[:4] + '...' + secret[-4:]
 
     def scan_file(self, file_info, owner, repo, branch):
-        """Scan a single file from GitHub"""
         try:
             file_path = file_info.get('path', '')
             file_name = file_info.get('name', '')
@@ -277,7 +310,6 @@ class GitHubSecretScanner:
             self.write_log(f"Error scanning {file_path}: {e}")
 
     def scan_directory(self, owner, repo, path='', branch=None, depth=0):
-        """Recursively scan directory contents"""
         if depth > 5:
             return
         
@@ -303,22 +335,22 @@ class GitHubSecretScanner:
                 elif item_type == 'dir':
                     self.scan_directory(owner, repo, item.get('path'), branch, depth + 1)
 
+
+
+
+
     def scan_branch(self, owner, repo, branch):
-        """Scan a specific branch"""
         self.write_log(f"Scanning branch: {branch}")
         self.scan_directory(owner, repo, '', branch)
 
     def scan_repo(self, owner, repo):
-        """Main scanning function for repository"""
         self.write_log(f"\n{'='*70}")
         self.write_log(f"SCANNING REPOSITORY: {owner}/{repo}")
         self.write_log(f"{'='*70}")
         
-        # Get repository info
         if not self.get_repo_info(owner, repo):
             return
         
-        # Get branches
         branches_url = f"https://api.github.com/repos/{owner}/{repo}/branches"
         try:
             response = self.session.get(branches_url)
@@ -380,12 +412,10 @@ class GitHubSecretScanner:
                 self.write_log(f"Failed to scan gist: {e}")
 
     def generate_report(self, elapsed_time):
-        """Generate scan report in scanlogs folder"""
         report_file = os.path.join(self.session_dir, 'summary_report.txt')
         json_file = os.path.join(self.session_dir, 'findings.json')
         csv_file = os.path.join(self.session_dir, 'findings.csv')
         
-        # Generate text report
         with open(report_file, 'w') as f:
             f.write("\n" + "="*70 + "\n")
             f.write(" GITHUB SECRET SCANNER - SUMMARY REPORT\n")
@@ -412,8 +442,7 @@ class GitHubSecretScanner:
                         f.write(f"   ... and {len(matches)-5} more\n")
                     if len(unique_files) > 5:
                         f.write(f"   Spread across {len(unique_files)} files\n")
-        
-        # Generate JSON report
+
         serializable_findings = {}
         for key, matches in self.findings.items():
             serializable_findings[key] = [
@@ -435,7 +464,6 @@ class GitHubSecretScanner:
                 'findings': serializable_findings
             }, f, indent=2)
         
-        # Generate CSV report
         import csv
         with open(csv_file, 'w', newline='') as f:
             writer = csv.writer(f)
@@ -465,7 +493,6 @@ class GitHubSecretScanner:
         self.write_log(f"  - Scan log: scan.log")
         self.write_log("="*70)
         
-        # Print to console
         print(f"\n{'='*70}")
         print(" SCAN COMPLETED - RESULTS SAVED TO /scanlogs")
         print('='*70)
@@ -494,7 +521,6 @@ class GitHubSecretScanner:
         
         elapsed_time = time.time() - start_time
         self.generate_report(elapsed_time)
-
 
 def main():
     parser = argparse.ArgumentParser(description='Scan GitHub repositories for exposed API keys and secrets')
