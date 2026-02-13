@@ -61,7 +61,7 @@ Main button color: #23863d
 
   /* Field style*/
   .field {
-    @apply bg-box rounded-lg overflow-hidden inline-flex px-4 py-2 items-center gap-8
+    @apply bg-box rounded-lg self-stretch flex px-4 py-2 items-center gap-8
   }
 
   /* Text inside fields style*/

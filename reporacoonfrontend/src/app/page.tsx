@@ -1,5 +1,6 @@
 import Image from 'next/image'
 
+
 export default function Home() {
   return (
     <div className='flex flex-col justify-center items-center gap-8'>
@@ -13,8 +14,11 @@ export default function Home() {
 
         <div className="field">
           <Image src="/searchIcon.svg" alt="" width={20} height={20}></Image>
-          <p className="fieldText">Paste a Github/GitLab URL</p>
-          <button className='btn bg-button-main'> Start Scanning </button>
+        
+          <form className='flex items-center flex-1 w-full gap-8'>
+            <input className='fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate' placeholder="Paste a GitHub/GitLab URL"/>
+            <button type="submit" className='btn bg-button-main'> Start Scanning </button>
+          </form>
         </div>
       </div>
 
