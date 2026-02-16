@@ -1,7 +1,7 @@
 services:
   web:
     build:
-      context: ./reporacoonfrontend
+      context: ./web
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
