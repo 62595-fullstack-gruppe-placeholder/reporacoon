@@ -1,16 +1,44 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
+import Link from 'next/link'
+import "./globals.css";
+import Image from 'next/image'
 
+// The inter font type
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter", 
+});
 
-// TODO: Insert header and styling here when we do the frontend
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className={inter.variable}>
+
+      <body
+        className={`antialiased`}
+      >
+        <header>
+          <div className="self-stretch px-10 py-3 border-b border-box flex w-full justify-between items-center">
+            <div className="flex justify-start items-center gap-4">
+            
+                <Link href="/"><Image src="/logo.png" alt="logo" width="32" height="32"/></Link>
+            
+              <p className="text-main-text">Repo Racoon</p>
+            </div>
+            <div className="self-stretch h-10 inline-flex justify-end items-center gap-8">
+              <p className="text-center justify-center">Features</p>
+              <button className="bg-button-main btn">
+                <Link href="/signup">Sign up</Link>
+              </button>
+              <button className="bg-box px-5 btn">
+                <Link href="/login">Log in</Link>
+              </button>
+            </div>
+          </div>
+        </header>
         {children}
       </body>
     </html>
