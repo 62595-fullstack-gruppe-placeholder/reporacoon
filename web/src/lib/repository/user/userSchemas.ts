@@ -6,6 +6,7 @@ import { z } from "zod";
 export const userSchema = z.object({
   id: z.uuidv4(),
   email: z.email(),
+  email_confirmed: z.boolean(),
 });
 
 /**
