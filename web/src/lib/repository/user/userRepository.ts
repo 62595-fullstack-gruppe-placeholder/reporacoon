@@ -10,10 +10,10 @@ import {
 /**
  * Get user by id, returns validated {@link User} or null.
  */
-export async function getUserById(id: number): Promise<User | null> {
+export async function getUserById(id: string): Promise<User | null> {
   const row = await queryOne<User>(
     `
-      SELECT id, email, name, created_at AS "createdAt", updated_at AS "updatedAt"
+      SELECT id, email, email_confirmed
       FROM users
       WHERE id = $1
       `,
@@ -37,7 +37,8 @@ export async function createUser(input: CreateUserDTO): Promise<User> {
       VALUES ($1, $2)
       RETURNING
         id,
-        email
+        email,
+        email_confirmed
       `,
     [data.email, data.password_hash],
   );
@@ -55,7 +56,7 @@ export async function createUser(input: CreateUserDTO): Promise<User> {
 export async function getAllUsers(): Promise<User[]> {
   const rows = await query<User>(
     `
-      SELECT id, email
+      SELECT id, email, email_confirmed
       FROM users
       ORDER BY id ASC
       `,
