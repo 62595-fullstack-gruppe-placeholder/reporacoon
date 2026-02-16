@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import URLForm from './URLForm'
+import URLForm from './_components/URLForm'
 
 
 export default function Home() {
