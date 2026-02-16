@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
+/*
+Background color: #121713
+Box color: #2b362e
+Main text color: #ffffff
+Seconary color: #a1b5a6
+Main button color: #23863d
+
+*/
+
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f9f7;
+  --box: #cddacf;
+  --text-main: #1b251d;
+  --secondary: #4a5c50;
+  --button-main: #23863d;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-box: var(--box);
+  --color-text-main: var(--text-main);
+  --color-secondary: var(--secondary);
+  --color-button-main: var(--button-main);
 }
 
+
+/* Dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #121713;
+    --box: #2b362e;
+    --text-main: #ffffff;
+    --secondary: #a1b5a6;
+    --button-main: #23863d;
+    
+  }
+}
+
+
+@layer components {
+  /* Shape and text position for buttons */
+  .btn {
+    @apply px-5 h-10 rounded-lg inline-flex items-center justify-center;
+  }
+
+  /* Title style */
+  .h1 {
+    @apply justify-center text-text-main text-5xl font-black leading-[60px]
+  }
+  /* Main paragraph style*/
+  .p {
+    @apply justify-center text-text-main text-base font-normal leading-6
+  }
+
+  .box {
+    @apply rounded-2xl bg-box
+  }
+
+  /* Field style*/
+  .field {
+    @apply bg-box rounded-lg self-stretch flex px-4 py-2 items-center gap-8
+  }
+
+  /* Text inside fields style*/
+  .fieldText {
+    @apply justify-center text-secondary text-base font-normal 
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-background text-text-main;
 }
