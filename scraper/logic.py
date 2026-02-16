@@ -15,6 +15,7 @@ warnings.filterwarnings('ignore')
 
 
 
+
 #------------------------------- basic flow -----------------------------------------------
 # 1. Asks for a GitHub URL to scan
 #   Shows a warning about ethical use and requires confirmation (prolly not needed in backend but just in case)
@@ -73,7 +74,6 @@ class GitHubSecretScanner:
         self.scanned_files = 0
         self.repo_info = {}
         self.scan_log = []
-        
         self.patterns = {
             'AWS API Key': r'AKIA[0-9A-Z]{16}',
             'AWS Secret Key': r'(?i)aws[_-]?secret[_-]?access[_-]?key[\s]*[:=][\s]*["\']?[A-Za-z0-9/+=]{40}["\']?',
@@ -184,7 +184,6 @@ class GitHubSecretScanner:
             return False
 
     def get_repo_contents(self, owner, repo, path='', branch=None):
-        """Get contents of a repository path"""
         if not branch:
             branch = self.repo_info.get('default_branch', 'main')
         
@@ -202,7 +201,6 @@ class GitHubSecretScanner:
 
 
     def is_text_file(self, filename):
-        """Check if file should be scanned based on extension"""
         text_extensions = [
             '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
             '.html', '.htm', '.xml', '.json', '.yml', '.yaml', '.toml', '.ini',
@@ -276,7 +274,6 @@ class GitHubSecretScanner:
 
 
     def mask_secret(self, secret):
-        """Mask sensitive data for safe display"""
         if len(secret) <= 8:
             return '***MASKED***'
         return secret[:4] + '...' + secret[-4:]

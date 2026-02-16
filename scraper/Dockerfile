@@ -7,7 +7,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY logic.py .
 COPY api.py .
-COPY app.py .
 
 RUN mkdir -p /app/scanlogs
 

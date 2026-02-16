@@ -27,14 +27,7 @@ scan_results = {}
 # GET    /scan/results/<id>     - Get scan results
 # GET    /scans                 - List all scans
 # DELETE /scan/<id>             - Cancel scan
-#--------------------------------------------------------------------------------------------
-
-
-
-
-# Function to validate GitHub repository URL
-# This function checks if the provided URL is a valid GitHub 
-# repository URL and extracts the owner and repo name.
+#--------------------------------------------------------------------------------------------------
 
 
 
