@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import URLForm from './URLForm'
 
 
 export default function Home() {
@@ -15,10 +16,7 @@ export default function Home() {
         <div className="field">
           <Image src="/searchIcon.svg" alt="" width={20} height={20}></Image>
         
-          <form className='flex items-center flex-1 w-full gap-8'>
-            <input className='fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate' placeholder="Paste a GitHub/GitLab URL"/>
-            <button type="submit" className='btn bg-button-main'> Start Scanning </button>
-          </form>
+          <URLForm/>
         </div>
       </div>
 
