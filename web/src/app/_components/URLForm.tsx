@@ -5,6 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { url } from "inspector";
 import { useForm } from "react-hook-form";
+import { Island_Moments } from "next/font/google";
+import { Loader2 } from "lucide-react";
+import { SubmitButton } from "./_components/SubmitButton";
 
 /**
  * Schema for url form.
@@ -32,6 +35,7 @@ export default function URLForm() {
     });
 
     const onSubmit = form.handleSubmit(async (data) => {
+        setIsLoading(true);
         try {
             const response = await fetch("http://localhost:5001/validate", {
                 method: "POST",
@@ -54,7 +58,6 @@ export default function URLForm() {
 
 
     return (
-
         <form onSubmit={onSubmit} className='flex items-center flex-1 w-full gap-8'>
             <input
                 id="url"
@@ -65,7 +68,7 @@ export default function URLForm() {
                 <p className="mt-1 text-sm text-red-600">
                     {form.formState.errors.url.message}
                 </p>)}
-            <button type="submit" className='btn bg-button-main'> Start Scanning </button>
+            <SubmitButton text="Start Scanning" loadingText="Scanning..." />
         </form>
     )
 }
