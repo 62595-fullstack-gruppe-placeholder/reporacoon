@@ -114,7 +114,7 @@ class GitHubSecretScanner:
     def clone_repo(self):
         self.write_log("Cloning repository...")
         temp_dir = tempfile.mkdtemp()
-        # TODO: add an option to search history and possibly more branches. History can be changed by modifying the depth flag.
+        # TODO: add an option to search history and possibly more branches. History can be changed by modifying the depth flag (removing it) or adding the --mirror flag.
         try:
             subprocess.run(
                 ["git", "clone", "--depth", "1", self.repo_url, temp_dir],
