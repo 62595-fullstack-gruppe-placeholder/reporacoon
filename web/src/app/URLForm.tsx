@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { url } from "inspector";
@@ -22,6 +22,8 @@ export type URLFormSchema = z.infer<typeof urlFormSchema>;
 
 
 export default function URLForm() {
+    const [isLoading, setIsLoading] = useState<boolean>(false)
+
     const form = useForm<URLFormSchema>({
         resolver: zodResolver(urlFormSchema),
         defaultValues: {
@@ -37,9 +39,6 @@ export default function URLForm() {
                 body: JSON.stringify({ url: data.url }),
             });
 
-            if (!response.ok) {
-                throw new Error("Request failed");
-            }
 
             const res = await response.json();
             console.log(res);
@@ -47,6 +46,8 @@ export default function URLForm() {
             form.reset();
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsLoading(false);
         }
     });
 
@@ -57,13 +58,13 @@ export default function URLForm() {
         <form onSubmit={onSubmit} className='flex items-center flex-1 w-full gap-8'>
             <input
                 id="url"
-                type="text"
+                type="url"
                 {...form.register("url")}
                 className='fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate' placeholder="Paste a GitHub/GitLab URL" />
             {form.formState.errors.url && (
-          <p className="mt-1 text-sm text-red-600">
-            {form.formState.errors.url.message}
-          </p>)}
+                <p className="mt-1 text-sm text-red-600">
+                    {form.formState.errors.url.message}
+                </p>)}
             <button type="submit" className='btn bg-button-main'> Start Scanning </button>
         </form>
     )
