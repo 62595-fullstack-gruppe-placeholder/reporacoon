@@ -19,7 +19,7 @@ export type User = z.infer<typeof userSchema>;
  */
 export const createUserDTOSchema = z.object({
   email: z.email(),
-  password_hash: z.string(),
+  password: z.string(),
 });
 
 /**
@@ -44,7 +44,30 @@ export const signupFormSchema = z
     path: ["confirmPassword"],
   });
 
-  /**
-   * Signup form data.
-   */
+/**
+ * Signup form data.
+ */
 export type SignupFormSchema = z.infer<typeof signupFormSchema>;
+
+/**
+ * DTO for authentication credentials.
+ */
+export const credentialsDTOSchema = z.object({
+  email: z.email(),
+  password: z.string(),
+});
+
+/**
+ * Inferred type of {@link credentialsDTOSchema}.
+ */
+export type CredentialsDTO = z.infer<typeof credentialsDTOSchema>;
+
+/**
+ * Schema for login form. Equivalent to {@link credentialsDTOSchema}.
+ */
+export const loginFormSchema = credentialsDTOSchema;
+
+/**
+ * Inferred type of {@link loginFormSchema}.
+ */
+export type LoginFormSchema = z.infer<typeof loginFormSchema>;
