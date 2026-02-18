@@ -6,7 +6,7 @@ async function getTransporter() {
   if (transporter) return transporter;
 
   // creates one-time Ethereal test account, prolly fine for proof of concept 
-  // might need to be swapped out for real SMTP creds in production
+  // might need to be swapped out for real SMTP creds in real life
   const testAccount = await nodemailer.createTestAccount();
 
   transporter = nodemailer.createTransport({
