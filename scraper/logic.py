@@ -80,7 +80,6 @@ class GitHubSecretScanner:
             'MongoDB URI': r'mongodb(\+srv)?://[^/\s]+:[^/\s]+@[^/\s]+',
             'MySQL URI': r'mysql://[^/\s]+:[^/\s]+@[^/\s]+',
             'PostgreSQL URI': r'postgresql://[^/\s]+:[^/\s]+@[^/\s]+',
-            'Redis URI': r'redis://[^:]+:[^@]+@[^/\s]+',
             'Stripe Key': r'(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}',
             'Twilio Key': r'SK[0-9a-fA-F]{32}',
             'SendGrid Key': r'SG\.[0-9A-Za-z\-_]{22}\.[0-9A-Za-z\-_]{43}',
@@ -88,7 +87,6 @@ class GitHubSecretScanner:
             'Algolia Key': r'(?i)(algolia|search)[\-_]?api[\-_]?key[\s]*[:=][\s]*["\']?[0-9a-zA-Z]{32}["\']?',
             'Firebase URL': r'https://[a-zA-Z0-9-]+\.firebaseio\.com',
             'JWT Token': r'eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}',
-            'Password in URL': r'https?://[^:]+:[^@]+@',
             'S3 Bucket': r'[a-zA-Z0-9\-_]{3,63}\.s3\.amazonaws\.com',
             'Slack Webhook': r'https://hooks\.slack\.com/services/[A-Z0-9]+/[A-Z0-9]+/[a-zA-Z0-9]+',
             'Discord Webhook': r'https://discord(?:app)?\.com/api/webhooks/[0-9]+/[a-zA-Z0-9_-]+',
@@ -103,7 +101,7 @@ class GitHubSecretScanner:
             'Telegram Bot Token': r'[0-9]{8,10}:[a-zA-Z0-9_-]{35}',
             'Discord Bot Token': r'[a-zA-Z0-9_-]{24}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27}',
             'IP Address': r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b',
-            'Email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+            # 'Email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', Add this later if we want
         }
 
     # ---------------- Logging ---------------- #

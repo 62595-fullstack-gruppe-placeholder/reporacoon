@@ -36,8 +36,12 @@ export default function URLForm() {
 
     const onSubmit = form.handleSubmit(async (data) => {
         setIsLoading(true);
+        // LOGIC: 
+        // 1. Validate that the URL is actually a Github/Gitlab URL
+        // 2. Add the URL to a scanjob in the database with a status of "pending"
+        // 3. Start the python scraper so it runs all the pending scanjobs in the database
         try {
-            const response = await fetch("http://localhost:5001/scan", {
+            const response = await fetch("http://localhost:5001/validate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url: data.url }),
