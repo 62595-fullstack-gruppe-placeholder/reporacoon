@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 import re
 from urllib.parse import urlparse
+import requests
 
 from logic import GitHubSecretScanner
 
@@ -54,29 +55,21 @@ def validate_github_url(url):
 
 # Check if the repository actually exists on GitHub
 def check_repo_exists(owner, repo):
-    import requests
+    url = f"https://github.com/{owner}/{repo}"
+    
     try:
-        response = requests.get(f'https://api.github.com/repos/{owner}/{repo}')
+        response = requests.head(url, allow_redirects=False)
+        
         if response.status_code == 200:
-            repo_data = response.json()
-            return True, "Repository exists", {
-                'name': repo_data['name'],
-                'full_name': repo_data['full_name'],
-                'description': repo_data['description'],
-                'stars': repo_data['stargazers_count'],
-                'forks': repo_data['forks_count'],
-                'url': repo_data['html_url'],
-                'default_branch': repo_data.get('default_branch', 'main'),
-                'private': repo_data.get('private', False),
-                'created_at': repo_data.get('created_at'),
-                'updated_at': repo_data.get('updated_at')
-            }
+            return True, "Repository exists", {"url": url}
         elif response.status_code == 404:
             return False, "Repository not found on GitHub", None
         else:
-            return False, f"GitHub API error: {response.status_code}", None
+            return False, f"Unexpected status code: {response.status_code}", None
+            
     except requests.exceptions.RequestException as e:
         return False, f"Error connecting to GitHub: {str(e)}", None
+
 
 
 
@@ -463,10 +456,7 @@ def quick_scan():
         
         scanner = GitHubSecretScanner(
             repo_url=url,
-            max_files=data.get('max_files', 50),
-            threads=data.get('threads', 3),
-            delay=data.get('delay', 0.1),
-            include_gist=data.get('include_gist', False)
+            max_files=data.get('max_files', 50)
         )
         
         token = data.get('token', os.environ.get('GITHUB_TOKEN', None))
