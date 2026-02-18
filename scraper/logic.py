@@ -7,6 +7,7 @@ import shutil
 import json
 import csv
 import time
+import requests
 from datetime import datetime
 from collections import defaultdict
 
@@ -41,11 +42,17 @@ from collections import defaultdict
 #--------------------------------------------------------------------------------------------
 
 class GitHubSecretScanner:
-    def __init__(self, repo_url, max_files=1000):
+    def __init__(self, repo_url, max_files=1000, threads=5, delay=0.1, include_gist=False):
         self.repo_url = repo_url
         self.max_files = max_files
+        self.threads = threads
+        self.delay = delay
+        self.include_gist = include_gist
         self.scanned_files = 0
         self.findings = defaultdict(list)
+        
+        # Create a requests session for HTTP requests
+        self.session = requests.Session()
 
         self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 

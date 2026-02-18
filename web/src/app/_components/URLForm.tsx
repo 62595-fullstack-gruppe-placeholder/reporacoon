@@ -37,7 +37,7 @@ export default function URLForm() {
     const onSubmit = form.handleSubmit(async (data) => {
         setIsLoading(true);
         try {
-            const response = await fetch("http://localhost:5001/validate", {
+            const response = await fetch("http://localhost:5001/scan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url: data.url }),
