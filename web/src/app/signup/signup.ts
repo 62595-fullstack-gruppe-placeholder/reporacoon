@@ -5,7 +5,7 @@ import {
   createUserDTOSchema,
   SignupFormSchema,
 } from "@/lib/repository/user/userSchemas";
-import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 
 /**
  * Input to signup server action.
@@ -20,7 +20,8 @@ export async function signup(input: SignupInput) {
   await createUser(
     createUserDTOSchema.parse({
       email: input.email,
-      password_hash: await bcrypt.hash(input.password, 10),
+      password: input.password,
     }),
   );
+  (await cookies()).set("auth", "true");
 }
