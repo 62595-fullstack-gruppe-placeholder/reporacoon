@@ -1,0 +1,63 @@
+# web dependencies
+web/node_modules
+web/.pnp
+web/.pnp.*
+web/.yarn/*
+web/!.yarn/patches
+web/!.yarn/plugins
+web/!.yarn/releases
+web/!.yarn/versions
+
+# web testing
+web/coverage
+
+# next.js
+web/.next/
+web/out/
+
+# web production
+web/build
+
+# web misc
+web/.DS_Store
+web/*.pem
+
+# web debug
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/.pnpm-debug.log*
+
+# web env files
+web/.env*
+
+# web typescript
+web/*.tsbuildinfo
+web/next-env.d.ts
+
+# web scrapelog
+web/scanlogs/
+web/scraper/scanlogs/
+web/scraper/scanlogs/*.csv
+web/scraper/scanlogs/*.json
+web/scraper/scanlogs/*.log
+web/scraper/scanlogs/*.txt
+web/scraper/*.csv
+web/scraper/*.json
+web/scraper/*.log
+web/scraper/*.txt
+
+# scraper results
+scraper/scanlogs/
+
+# scraper virtual environment
+scraper/venv/
+scraper/__pycache__/
+scraper/*.pyc
+
+# scraper os files
+scraper/.DS_Store
+
+# playwright
+playwright-report
+test-results
