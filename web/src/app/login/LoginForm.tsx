@@ -2,30 +2,30 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, Lock } from "lucide-react";
-import { signup, SignupInput } from "./signup";
+import { Loader2, Mail, Lock } from "lucide-react";
+import { useFormStatus } from "react-dom";
+import { login } from "./login";
 import {
-  signupFormSchema,
-  SignupFormSchema,
+  CredentialsDTO,
+  type LoginFormSchema,
+  loginFormSchema,
 } from "@/lib/repository/user/userSchemas";
-import { SubmitButton } from "../_components/SubmitButton";
 
-export function SignupForm() {
-  const form = useForm<SignupFormSchema>({
-    resolver: zodResolver(signupFormSchema),
+export function LoginForm() {
+  const form = useForm<LoginFormSchema>({
+    resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: "",
       password: "",
-      confirmPassword: "",
     },
   });
 
-  const onSubmit = form.handleSubmit(async (data: SignupFormSchema) => {
-    const input: SignupInput = {
+  const onSubmit = form.handleSubmit(async (data: LoginFormSchema) => {
+    const input: CredentialsDTO = {
       email: data.email,
       password: data.password,
     };
-    await signup(input);
+    await login(input);
     form.reset();
   });
 
@@ -82,32 +82,28 @@ export function SignupForm() {
         )}
       </div>
 
-      <div>
-        <label
-          htmlFor="confirmPassword"
-          className="block text-secondary text-sm font-medium mb-1"
-        >
-          Confirm Password
-        </label>
-        <div className="field relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary w-4 h-4" />
-          <input
-            id="confirmPassword"
-            type="password"
-            placeholder="Confirm your password"
-            {...form.register("confirmPassword")}
-            className="w-full pl-10 pr-4 py-2 bg-transparent border-0 text-text-main placeholder:text-secondary focus:ring-0 focus:outline-none"
-          />
-        </div>
-        {form.formState.errors.confirmPassword && (
-          <p className="mt-1 text-sm text-red-500">
-            {form.formState.errors.confirmPassword.message}
-          </p>
-        )}
-      </div>
-
-      <SubmitButton text="Sign Up" loadingText="Creating Account..." />
+      <SubmitButton />
     </form>
   );
 }
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full btn bg-button-main text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+    >
+      {pending ? (
+        <>
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Signing In...</span>
+        </>
+      ) : (
+        <span>Sign In</span>
+      )}
+    </button>
+  );
+}
