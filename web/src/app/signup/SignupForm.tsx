@@ -2,13 +2,13 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Mail, Lock } from "lucide-react";
-import { useFormStatus } from "react-dom";
+import { Mail, Lock } from "lucide-react";
 import { signup, SignupInput } from "./signup";
 import {
   signupFormSchema,
   SignupFormSchema,
 } from "@/lib/repository/user/userSchemas";
+import { SubmitButton } from "../_components/SubmitButton";
 
 export function SignupForm() {
   const form = useForm<SignupFormSchema>({
@@ -106,28 +106,8 @@ export function SignupForm() {
         )}
       </div>
 
-      <SubmitButton />
+      <SubmitButton text="Sign Up" loadingText="Creating Account..." />
     </form>
   );
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full btn bg-button-main text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-    >
-      {pending ? (
-        <>
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Creating Account...</span>
-        </>
-      ) : (
-        <span>Sign Up</span>
-      )}
-    </button>
-  );
-}
