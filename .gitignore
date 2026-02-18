@@ -57,3 +57,7 @@ scraper/*.pyc
 
 # scraper os files
 scraper/.DS_Store
+
+# playwright
+playwright-report
+test-results
