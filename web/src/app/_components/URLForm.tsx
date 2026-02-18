@@ -7,7 +7,7 @@ import { url } from "inspector";
 import { useForm } from "react-hook-form";
 import { Island_Moments } from "next/font/google";
 import { Loader2 } from "lucide-react";
-import { SubmitButton } from "./_components/SubmitButton";
+import { SubmitButton } from "./SubmitButton";
 
 /**
  * Schema for url form.
