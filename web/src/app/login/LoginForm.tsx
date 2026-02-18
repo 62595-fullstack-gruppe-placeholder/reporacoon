@@ -10,6 +10,7 @@ import {
   type LoginFormSchema,
   loginFormSchema,
 } from "@/lib/repository/user/userSchemas";
+import { SubmitButton } from "../_components/SubmitButton";
 
 export function LoginForm() {
   const form = useForm<LoginFormSchema>({
@@ -82,28 +83,7 @@ export function LoginForm() {
         )}
       </div>
 
-      <SubmitButton />
+      <SubmitButton text="Log in" loadingText="logging in..." />
     </form>
-  );
-}
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full btn bg-button-main text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-    >
-      {pending ? (
-        <>
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Signing In...</span>
-        </>
-      ) : (
-        <span>Sign In</span>
-      )}
-    </button>
   );
 }
