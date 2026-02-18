@@ -53,6 +53,7 @@ scraper/scanlogs/
 # scraper virtual environment
 scraper/venv/
 scraper/__pycache__/
+scraper/tests/__pycache__/
 scraper/*.pyc
 
 # scraper os files
