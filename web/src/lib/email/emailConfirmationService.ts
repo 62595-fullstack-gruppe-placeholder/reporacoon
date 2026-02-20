@@ -18,6 +18,7 @@ export async function sendConfirmationEmail(
 ): Promise<void> {
   const rawToken = crypto.randomBytes(32).toString("hex");
   const tokenHash = hashToken(rawToken);
+  //set for 24 hours for now
   const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
   await createEmailConfirmation({ user_id: userId, token_hash: tokenHash, expires_at });
