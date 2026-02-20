@@ -36,9 +36,6 @@ try {
   } catch (err) {
     console.error("Failed to send confirmation email:", err);
   }
-
-await sendConfirmationEmail(user.id, user.email);
-
-
+  
   (await cookies()).set("auth", "true");
 }
