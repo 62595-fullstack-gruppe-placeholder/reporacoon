@@ -13,7 +13,8 @@ export async function generateAccessToken(user: User): Promise<string> {
 
   const jwt = new SignJWT({
     sub: user.id,
-    email: user.email,
+    ema: user.email,
+    emc: user.email_confirmed,
     iat: getNow(),
     exp: getFuture(60 * 60),
     iss: "reporacoon",
