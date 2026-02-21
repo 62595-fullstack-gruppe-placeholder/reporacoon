@@ -7,7 +7,7 @@ from datetime import datetime
 import re
 from urllib.parse import urlparse
 import requests
-
+from repository import *
 from logic import GitHubSecretScanner
 
 app = Flask(__name__)
@@ -23,11 +23,6 @@ scan_results = {}
 # GET    /health                - Health check
 # POST   /validate              - Validate GitHub URL
 # POST   /scan                  - Start async scan
-# POST   /scan/quick            - Quick sync scan
-# GET    /scan/status/<id>      - Get scan status
-# GET    /scan/results/<id>     - Get scan results
-# GET    /scans                 - List all scans
-# DELETE /scan/<id>             - Cancel scan
 #--------------------------------------------------------------------------------------------------
 
 
@@ -50,9 +45,6 @@ def validate_github_url(url):
     return True, "Valid GitHub URL", {'owner': owner, 'repo': repo}
 
 
-
-
-
 # Check if the repository actually exists on GitHub
 def check_repo_exists(owner, repo):
     url = f"https://github.com/{owner}/{repo}"
@@ -69,9 +61,6 @@ def check_repo_exists(owner, repo):
             
     except requests.exceptions.RequestException as e:
         return False, f"Error connecting to GitHub: {str(e)}", None
-
-
-
 
 
 def load_scan_results(session_dir):
@@ -99,12 +88,6 @@ def load_scan_results(session_dir):
     return results
 
 
-
-
-
-
-
-
 #app route for health check
 @app.route('/health', methods=['GET'])
 def health():
@@ -114,14 +97,6 @@ def health():
         'service': 'GitHub Secret Scanner API',
         'version': '1.0.0'
     })
-
-
-
-
-
-
-
-
 
 
 #app route to validate GitHub URL without scanning
@@ -173,26 +148,14 @@ def validate():
         }), 500
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #app route to start a new scan (async)
 @app.route('/scan', methods=['POST'])
 def start_scan():
     """Start a new scan"""
     try:
+
+        testData = getAllScanJobs()
+        print(testData)
         data = request.get_json()
         
         if not data or 'url' not in data:
@@ -204,15 +167,7 @@ def start_scan():
         
         if not is_valid:
             return jsonify({'error': message}), 400
-        
 
-        exists, exists_message, repo_details = check_repo_exists(
-            repo_info['owner'],
-            repo_info['repo']
-        )
-        
-        if not exists:
-            return jsonify({'error': exists_message}), 404
         
         scan_id = f"{repo_info['owner']}_{repo_info['repo']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
@@ -228,7 +183,6 @@ def start_scan():
             'status': 'starting',
             'url': url,
             'repo_info': repo_info,
-            'repo_details': repo_details,
             'progress': 0,
             'start_time': datetime.now().isoformat(),
             'scanned_files': 0,
@@ -268,7 +222,6 @@ def start_scan():
                     'status': 'completed',
                     'url': url,
                     'repo_info': repo_info,
-                    'repo_details': repo_details,
                     'scan_summary': {
                         'files_scanned': scanner.scanned_files,
                         'secrets_found': total_secrets,
@@ -305,194 +258,12 @@ def start_scan():
             'message': 'Scan started successfully',
             'scan_id': scan_id,
             'repo_info': repo_info,
-            'repo_details': repo_details,
             'status_url': f'/scan/status/{scan_id}',
             'results_url': f'/scan/results/{scan_id}'
         }), 202
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-
-
-
-
-
-
-
-
-
-#app route to get scan status
-@app.route('/scan/status/<scan_id>', methods=['GET'])
-def get_scan_status(scan_id):
-    """Get the status of a scan"""
-    if scan_id in active_scans:
-        return jsonify(active_scans[scan_id])
-    elif scan_id in scan_results:
-        result = scan_results[scan_id].copy()
-        if 'results' in result:
-            result['results'] = {'available': True, 'url': f'/scan/results/{scan_id}'}
-        return jsonify(result)
-    else:
-        return jsonify({'error': 'Scan not found'}), 404
-
-
-
-
-
-
-
-#app route to get full results of a completed scan
-@app.route('/scan/results/<scan_id>', methods=['GET'])
-def get_scan_results(scan_id):
-    """Get the full results of a completed scan"""
-    if scan_id in scan_results:
-        return jsonify(scan_results[scan_id])
-    elif scan_id in active_scans:
-        return jsonify({
-            'status': active_scans[scan_id]['status'],
-            'message': 'Scan still in progress',
-            'scan_info': active_scans[scan_id]
-        }), 202
-    else:
-        return jsonify({'error': 'Scan not found'}), 404
-
-
-
-
-
-
-
-
-
-
-#app route to list all scans (active and completed)
-@app.route('/scans', methods=['GET'])
-def list_scans():
-    #list all scans (active and completed)
-    active_list = {}
-    for scan_id, info in active_scans.items():
-        active_list[scan_id] = {
-            'status': info.get('status'),
-            'url': info.get('url'),
-            'start_time': info.get('start_time'),
-            'repo_info': info.get('repo_info')
-        }
-    
-    completed_list = {}
-    for scan_id, info in scan_results.items():
-        completed_list[scan_id] = {
-            'status': info.get('status'),
-            'url': info.get('url'),
-            'start_time': info.get('start_time'),
-            'completion_time': info.get('completion_time'),
-            'repo_info': info.get('repo_info'),
-            'secrets_found': info.get('scan_summary', {}).get('secrets_found', 0) if info.get('status') == 'completed' else None
-        }
-    
-    return jsonify({
-        'active_scans': active_list,
-        'completed_scans': completed_list,
-        'total_active': len(active_list),
-        'total_completed': len(completed_list)
-    })
-
-
-
-
-
-
-
-
-
-
-#app route to cancel a scan (can't actually stop the thread, just mark as cancelled)
-@app.route('/scan/<scan_id>', methods=['DELETE'])
-def cancel_scan(scan_id):
-    if scan_id in active_scans:
-        if active_scans[scan_id]['status'] == 'scanning':
-            active_scans[scan_id]['status'] = 'cancelled'
-            active_scans[scan_id]['completion_time'] = datetime.now().isoformat()
-            
-            # Move to results with cancelled status
-            scan_results[scan_id] = active_scans.pop(scan_id)
-            
-            return jsonify({'message': 'Scan cancelled successfully'})
-        else:
-            return jsonify({'message': f'Scan is already {active_scans[scan_id]["status"]}'}), 400
-    else:
-        return jsonify({'error': 'Scan not found'}), 404
-
-
-
-
-
-
-
-#app route for quick scan (synchronous, returns results immediately)
-@app.route('/scan/quick', methods=['POST'])
-def quick_scan():
-    try:
-        data = request.get_json()
-        
-        if not data or 'url' not in data:
-            return jsonify({'error': 'No URL provided'}), 400
-        
-        url = data['url']
-        
-        is_valid, message, repo_info = validate_github_url(url)
-        
-        if not is_valid:
-            return jsonify({'error': message}), 400
-        
-        exists, exists_message, repo_details = check_repo_exists(
-            repo_info['owner'],
-            repo_info['repo']
-        )
-        
-        if not exists:
-            return jsonify({'error': exists_message}), 404
-        
-        scanner = GitHubSecretScanner(
-            repo_url=url,
-            max_files=data.get('max_files', 50)
-        )
-        
-        token = data.get('token', os.environ.get('GITHUB_TOKEN', None))
-        if token:
-            scanner.session.headers.update({'Authorization': f'token {token}'})
-        
-        scanner.run()
-        
-        results = load_scan_results(scanner.session_dir)
-        
-        total_secrets = sum(len(matches) for matches in scanner.findings.values())
-        
-        return jsonify({
-            'success': True,
-            'url': url,
-            'repo_info': repo_info,
-            'repo_details': repo_details,
-            'scan_summary': {
-                'files_scanned': scanner.scanned_files,
-                'secrets_found': total_secrets,
-                'findings_by_type': {k: len(v) for k, v in scanner.findings.items()}
-            },
-            'session_dir': scanner.session_dir,
-            'completion_time': datetime.now().isoformat(),
-            'results': results
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-
-
-
-
-
 
 
 # main entry point
@@ -514,10 +285,6 @@ if __name__ == '__main__':
     print(f"\nServer running on: http://0.0.0.0:5001")
     print("="*70 + "\n")
     
-
-
-
-
 
 # Run the Flask app with threading enabled to allow concurrent scans
     app.run(
