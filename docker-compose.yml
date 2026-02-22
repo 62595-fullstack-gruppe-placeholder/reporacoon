@@ -1,4 +1,22 @@
 services:
+  init_rsa_keys:
+    image: alpine:3.20
+    networks:
+      - app-network
+    volumes:
+      - jwt-keys:/keys
+    command: >
+      sh -c "
+        apk update &&
+        apk add --no-cache openssl &&
+        echo 'Generating RSA key pair...' &&
+        openssl genpkey -algorithm RSA -out /keys/private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
+        openssl rsa -pubout -in /keys/private_key.pem -out /keys/public_key.pem &&
+        echo 'Key pair generated successfully!' &&
+        ls -lA /keys/
+      "
+    restart: 'no'
+
   web:
     build:
       context: ./web
@@ -6,9 +24,15 @@ services:
     environment:
       DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
       NEXT_TELEMETRY_DISABLED: 1
+      JWT_PRIVATE_KEY_PATH: /keys/private_key.pem
+      JWT_PUBLIC_KEY_PATH: /keys/public_key.pem
     ports:
       - "3000:3000"
+    volumes:
+      - jwt-keys:/keys:ro # mount RSA keys as read only
     depends_on:
+      init_rsa_keys:
+        condition: service_completed_successfully
       migrator:
         condition: service_completed_successfully
       postgres:
@@ -88,6 +112,7 @@ services:
 
 volumes:
   postgres_data:
+  jwt-keys:
 
 networks:
   app-network:
