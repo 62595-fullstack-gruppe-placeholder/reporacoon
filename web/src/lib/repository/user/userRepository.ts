@@ -85,3 +85,14 @@ export async function verifyUserCredentials(
   console.log("parse result is", parseResult)
   return parseResult.success ? parseResult.data : null;
 }
+
+/**
+ * marks mail as confirmed. note: this does not check if the user exists, so it will succeed even if the user id is invalid.
+ */
+export async function markUserEmailConfirmed(userId: string): Promise<void> {
+  await queryOne(
+    `UPDATE users SET email_confirmed = true WHERE id = $1`,
+    [userId]
+  );
+}
+
