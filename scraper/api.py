@@ -153,106 +153,27 @@ def validate():
 def start_scan():
     """Start a new scan"""
     try:
-
-        testData = getAllScanJobs()
-        print(testData)
-        data = request.get_json()
+        data = getAllPendingScanJobs()
+    
+        print(data)
         
-        if not data or 'url' not in data:
+        if not data:
             return jsonify({'error': 'No URL provided'}), 400
-        
-        url = data['url']
-        
-        is_valid, message, repo_info = validate_github_url(url)
-        
-        if not is_valid:
-            return jsonify({'error': message}), 400
 
-        
-        scan_id = f"{repo_info['owner']}_{repo_info['repo']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        
-        
-        
-        max_files = data.get('max_files', 100)
-        threads = data.get('threads', 5)
-        delay = data.get('delay', 0.1)
-        include_gist = data.get('include_gist', False)
-        token = data.get('token', os.environ.get('GITHUB_TOKEN', None))
-        
-        active_scans[scan_id] = {
-            'status': 'starting',
-            'url': url,
-            'repo_info': repo_info,
-            'progress': 0,
-            'start_time': datetime.now().isoformat(),
-            'scanned_files': 0,
-            'parameters': {
-                'max_files': max_files,
-                'threads': threads,
-                'delay': delay,
-                'include_gist': include_gist
-            }
-        }
-        
+        for id, url in data.items():
+            is_valid, message, repo_info = validate_github_url(url)
+            print("url: " + url)
 
-        def run_scan():
-            try:
-          
-                active_scans[scan_id]['status'] = 'scanning'
-                
+            if not is_valid:
+                return jsonify({'error': message}), 400
             
-                scanner = GitHubSecretScanner(
-                    repo_url=url,
-                    max_files=max_files,
-                    threads=threads,
-                    delay=delay,
-                    include_gist=include_gist
-                )
-                
-                if token:
-                    scanner.session.headers.update({'Authorization': f'token {token}'})
-                
-                scanner.run()
-                
-                results = load_scan_results(scanner.session_dir)
-                
-                total_secrets = sum(len(matches) for matches in scanner.findings.values())
-                
-                scan_results[scan_id] = {
-                    'status': 'completed',
-                    'url': url,
-                    'repo_info': repo_info,
-                    'scan_summary': {
-                        'files_scanned': scanner.scanned_files,
-                        'secrets_found': total_secrets,
-                        'findings_by_type': {k: len(v) for k, v in scanner.findings.items()}
-                    },
-                    'session_dir': scanner.session_dir,
-                    'start_time': active_scans[scan_id]['start_time'],
-                    'completion_time': datetime.now().isoformat(),
-                    'results': results
-                }
-                
-                active_scans.pop(scan_id, None)
-                
-            except Exception as e:
-                error_info = {
-                    'status': 'failed',
-                    'url': url,
-                    'error': str(e),
-                    'start_time': active_scans[scan_id]['start_time'],
-                    'completion_time': datetime.now().isoformat()
-                }
-                
-                if scan_id in active_scans:
-                    active_scans[scan_id] = error_info
-                else:
-                    scan_results[scan_id] = error_info
-        
-        thread = threading.Thread(target=run_scan)
-        thread.daemon = True
-        thread.start()
-        
+            scan_id = id
+
+            scanner = GitHubSecretScanner(url, id)
+            scanner.run() 
+
+
+        print(getAllScanFindings())
         return jsonify({
             'success': True,
             'message': 'Scan started successfully',
@@ -263,6 +184,7 @@ def start_scan():
         }), 202
         
     except Exception as e:
+        print("error: " + str(e))
         return jsonify({'error': str(e)}), 500
 
 

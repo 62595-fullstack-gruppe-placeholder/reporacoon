@@ -70,6 +70,7 @@ export default function URLForm() {
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ url: data.url }),
                     });
+                    console.log(response)
                 } catch (err) {
                     console.error(err)
                 }

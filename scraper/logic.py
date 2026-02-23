@@ -10,7 +10,7 @@ import time
 import requests
 from datetime import datetime
 from collections import defaultdict
-
+from repository import *
 
 #------------------------------- basic flow -----------------------------------------------
 # 1. Asks for a GitHub URL to scan
@@ -42,12 +42,9 @@ from collections import defaultdict
 #--------------------------------------------------------------------------------------------
 
 class GitHubSecretScanner:
-    def __init__(self, repo_url, max_files=1000, threads=5, delay=0.1, include_gist=False):
+    def __init__(self, repo_url, job_id):
         self.repo_url = repo_url
-        self.max_files = max_files
-        self.threads = threads
-        self.delay = delay
-        self.include_gist = include_gist
+        self.job_id = job_id
         self.scanned_files = 0
         self.findings = defaultdict(list)
         
@@ -132,6 +129,7 @@ class GitHubSecretScanner:
 
         except subprocess.CalledProcessError:
             shutil.rmtree(temp_dir)
+            self.write_log("Failed to clone repo")
             raise Exception("Failed to clone repository.")
 
     # ---------------- File Handling ---------------- #
@@ -192,15 +190,14 @@ class GitHubSecretScanner:
                 self.write_log(
                     f"FOUND {secret_type} in {file_path}:{line_number}"
                 )
+                insertScanFindings(self.job_id, file_path, line_number, match, 'LOW', secret_type)
 
     def scan_repository(self, repo_path):
+        # TODO: add an upper limit of files to scan
         self.write_log("Scanning files locally...")
 
         for root, dirs, files in os.walk(repo_path):
             for file in files:
-                if self.scanned_files >= self.max_files:
-                    return
-
                 if not self.is_text_file(file):
                     continue
 
@@ -274,37 +271,4 @@ class GitHubSecretScanner:
                 shutil.rmtree(repo_path)
                 self.write_log("Temporary repository deleted.")
 
-        elapsed = time.time() - start
-        self.generate_report(elapsed)
 
-
-# ---------------- CLI ---------------- #
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Scan GitHub repository for exposed secrets (clone-first method)"
-    )
-    parser.add_argument("url", help="GitHub repository URL")
-    parser.add_argument("--max-files", type=int, default=1000)
-
-    args = parser.parse_args()
-
-    print("=" * 60)
-    print("WARNING: Only scan repositories you own or have permission to test.")
-    print("=" * 60)
-
-    confirm = input("Do you have permission to scan this target? (yes/no): ")
-    if confirm.lower() != "yes":
-        print("Scan cancelled.")
-        return
-
-    scanner = GitHubSecretScanner(
-        repo_url=args.url,
-        max_files=args.max_files
-    )
-
-    scanner.run()
-
-
-if __name__ == "__main__":
-    main()
