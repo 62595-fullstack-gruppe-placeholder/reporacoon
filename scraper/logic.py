@@ -1,44 +1,19 @@
 import re
 import os
-import argparse
 import subprocess
 import tempfile
 import shutil
-import json
-import csv
-import time
 import requests
 from datetime import datetime
 from collections import defaultdict
 from repository import *
 
 #------------------------------- basic flow -----------------------------------------------
-# 1. Asks for a GitHub URL to scan
-#   Shows a warning about ethical use and requires confirmation (prolly not needed in backend but just in case)
-#   Creates a scanlogs folder to store all results
-#
-# 2. Creates a unique folder for this specific scan (named after the repository and timestamp)
-#    Sets up the list of secret patterns to look for (AWS keys, GitHub tokens, API keys, etc.)
-#
-# 3. Fetches basic information about the repository (name, default branch, stars, forks)
-#    Gets a list of branches in the repository (up to 3 branches)
-#
-# 4. Starts scanning from the root directory
-#    goes through folders recursively (up to 5 levels deep)
-#    For each file:
-#       Checks if it's a text file worth scanning
-#       Downloads the file content
-#       Scans the content for any secret patterns
-#       If secrets are found, saves details about where and what was found
-#    Respects limits (max files, delay between requests)
-#
-# 5. After scanning, creates several reports in the scan folder (should be in .gitignore):
-#    A summary report listing what was found
-#    A detailed JSON file with all findings
-#    A CSV file for spreadsheets
-#    A log file with all scan activity
-#
-# 6. Prints a final summary to the console with key stats and where to find the reports
+#  1. The API file gives the scanner a repo URL and a job ID
+#  2. The scanner clones the repo
+#  3. The scanner then recursively reads files from the repoand if there are any matches 
+#  with our regex below, the findings will be inserted into the scan_findings table
+#  4. The cloned repo is deleted again
 #--------------------------------------------------------------------------------------------
 
 class GitHubSecretScanner:
@@ -52,17 +27,6 @@ class GitHubSecretScanner:
         self.session = requests.Session()
 
         self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-        self.scanlogs_dir = os.path.join(os.getcwd(), 'scanlogs')
-        os.makedirs(self.scanlogs_dir, exist_ok=True)
-
-        self.session_dir = os.path.join(
-            self.scanlogs_dir,
-            f"scan_{self.timestamp}"
-        )
-        os.makedirs(self.session_dir, exist_ok=True)
-
-        self.log_file = os.path.join(self.session_dir, "scan.log")
 
         self.patterns = {
             'AWS API Key': r'AKIA[0-9A-Z]{16}',
@@ -108,9 +72,6 @@ class GitHubSecretScanner:
         log_entry = f"[{timestamp}] {message}"
         print(log_entry)
 
-        with open(self.log_file, "a") as f:
-            f.write(log_entry + "\n")
-
     # ---------------- Git Clone ---------------- #
 
     def clone_repo(self):
@@ -154,11 +115,6 @@ class GitHubSecretScanner:
         )
         return filename.lower().endswith(text_extensions)
 
-    def mask_secret(self, secret):
-        if len(secret) < 8:
-            return "***MASKED***"
-        return secret[:4] + "..." + secret[-4:]
-
     def find_line_number(self, content, match):
         for i, line in enumerate(content.split('\n'), 1):
             if match in line:
@@ -175,22 +131,10 @@ class GitHubSecretScanner:
                 if isinstance(match, tuple):
                     match = match[0]
 
-                masked = self.mask_secret(match)
                 line_number = self.find_line_number(content, match)
-
-                finding = {
-                    "type": secret_type,
-                    "file_path": file_path,
-                    "line_number": line_number,
-                    "match": masked,
-                    "timestamp": datetime.now().isoformat()
-                }
-
-                self.findings[secret_type].append(finding)
-                self.write_log(
-                    f"FOUND {secret_type} in {file_path}:{line_number}"
-                )
-                insertScanFindings(self.job_id, file_path, line_number, match, 'LOW', secret_type)
+                # TODO: add the code snippet locating code
+                # TODO: add a severity system
+                insertScanFindings(self.job_id, file_path, line_number, "CODE SNIPPET GOES HERE", 'LOW', secret_type)
 
     def scan_repository(self, repo_path):
         # TODO: add an upper limit of files to scan
@@ -215,51 +159,9 @@ class GitHubSecretScanner:
                 except Exception as e:
                     self.write_log(f"Error reading {file_path}: {e}")
 
-    # ---------------- Reporting ---------------- #
-
-    def generate_report(self, elapsed_time):
-        summary_file = os.path.join(self.session_dir, "summary.txt")
-        json_file = os.path.join(self.session_dir, "findings.json")
-        csv_file = os.path.join(self.session_dir, "findings.csv")
-
-        total_secrets = sum(len(v) for v in self.findings.values())
-
-        with open(summary_file, "w") as f:
-            f.write("GITHUB SECRET SCANNER REPORT\n")
-            f.write("=" * 50 + "\n")
-            f.write(f"Target: {self.repo_url}\n")
-            f.write(f"Files scanned: {self.scanned_files}\n")
-            f.write(f"Secrets found: {total_secrets}\n")
-            f.write(f"Time elapsed: {elapsed_time:.2f} seconds\n\n")
-
-            for secret_type, matches in self.findings.items():
-                f.write(f"{secret_type}: {len(matches)} found\n")
-
-        with open(json_file, "w") as f:
-            json.dump(self.findings, f, indent=2)
-
-        with open(csv_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Type", "File", "Line", "Match"])
-
-            for secret_type, matches in self.findings.items():
-                for match in matches:
-                    writer.writerow([
-                        secret_type,
-                        match["file_path"],
-                        match["line_number"],
-                        match["match"]
-                    ])
-
-        self.write_log("Scan complete.")
-        self.write_log(f"Files scanned: {self.scanned_files}")
-        self.write_log(f"Secrets found: {total_secrets}")
-        self.write_log(f"Reports saved in: {self.session_dir}")
-
     # ---------------- Main ---------------- #
 
     def run(self):
-        start = time.time()
         repo_path = None
 
         try:

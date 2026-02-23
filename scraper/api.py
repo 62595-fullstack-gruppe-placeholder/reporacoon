@@ -63,30 +63,6 @@ def check_repo_exists(owner, repo):
         return False, f"Error connecting to GitHub: {str(e)}", None
 
 
-def load_scan_results(session_dir):
-    results = {
-        'summary': None,
-        'findings': None,
-        'json_data': None
-    }
-    
-    summary_file = os.path.join(session_dir, 'summary_report.txt')
-    if os.path.exists(summary_file):
-        with open(summary_file, 'r') as f:
-            results['summary'] = f.read()
-    
-    json_file = os.path.join(session_dir, 'findings.json')
-    if os.path.exists(json_file):
-        with open(json_file, 'r') as f:
-            results['json_data'] = json.load(f)
-    
-    findings_file = os.path.join(session_dir, 'findings_detailed.txt')
-    if os.path.exists(findings_file):
-        with open(findings_file, 'r') as f:
-            results['findings'] = f.read()
-    
-    return results
-
 
 #app route for health check
 @app.route('/health', methods=['GET'])
@@ -173,7 +149,7 @@ def start_scan():
             scanner.run() 
 
         # Updates the status of all of the parsed jobs
-        setParsingScanJobsToParsed(data.keys)
+        setParsingScanJobsToParsed(list(data.keys()))
 
         print(getAllScanFindings())
         return jsonify({
