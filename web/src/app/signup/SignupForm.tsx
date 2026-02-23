@@ -40,7 +40,7 @@ export function SignupForm() {
     }
 
     form.reset();
-    window.location.href = "/login";
+    window.location.href = "/dashboard";
   });
 
   return (
