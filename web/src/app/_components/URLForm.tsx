@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { Island_Moments } from "next/font/google";
 import { Loader2 } from "lucide-react";
 import { SubmitButton } from "./SubmitButton";
-import { createScanJobServerAction } from "@/app/_components/CreateScanJob";
+import { createScanJobServerAction } from "@/app/CreateScanJob";
 import { createScanJob } from "@/lib/repository/scanJob/scanJobRepository";
 import { CreateScanJobDTO, createScanJobDTOSchema, ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 

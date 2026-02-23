@@ -2,8 +2,6 @@
 
 import { createScanJob } from "@/lib/repository/scanJob/scanJobRepository";
 import { CreateScanJobDTO, createScanJobDTOSchema } from "@/lib/repository/scanJob/scanJobSchemas";
-import { cookies } from "next/dist/server/request/cookies";
-
 
 /**
  * Create scan job server action.
@@ -17,7 +15,4 @@ export async function createScanJobServerAction(input: CreateScanJobDTO) {
       priority: input.priority,
     }),
   );
-  (await cookies()).set("auth", "true");
-
-  console.log(scanjob)
 }
