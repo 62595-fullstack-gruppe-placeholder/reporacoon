@@ -1,12 +1,14 @@
 "use server";
 
+import { generateAccessToken } from "@/lib/auth/accessToken";
+import { setAccessTokenCookie } from "@/lib/auth/cookies";
 import { createUser } from "@/lib/repository/user/userRepository";
 import {
   createUserDTOSchema,
   SignupFormSchema,
 } from "@/lib/repository/user/userSchemas";
 import { sendConfirmationEmail } from "@/lib/email/emailConfirmationService";
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 /**
  * Input to signup server action.
@@ -14,8 +16,8 @@ import { cookies } from "next/headers";
 export type SignupInput = Omit<SignupFormSchema, "confirmPassword">;
 
 /**
- * Signup server action. Creates a new user 
- * 
+ * Signup server action. Creates a new user
+ *
  * and sends a confirmation email.
  * @param input see {@link SignupInput}.
  */
@@ -32,7 +34,7 @@ export async function signup(input: SignupInput) {
       await sendConfirmationEmail(user.id, user.email);
       console.log("Email sent successfully");
 
-      (await cookies()).set("auth", "true");
+      await setAccessTokenCookie(await generateAccessToken(user));
       return { success: true };
   }
   catch (error: any) {
@@ -41,5 +43,4 @@ export async function signup(input: SignupInput) {
     }
     return { error: "An unexpected error occurred." };
   }
-
 }

@@ -21,8 +21,20 @@ export async function query<T = unknown>(
   text: string,
   params?: any[],
 ): Promise<T[]> {
-  const result = await pool.query(text, params);
-  return result.rows as T[];
+  try {
+    const result = await pool.query(text, params);
+    return result.rows as T[];
+  } catch (error: any) {
+    const errorMessage = error?.message || error?.toString?.() || JSON.stringify(error) || 'Unknown error';
+    const errorDetails = error?.detail || error?.code || '';
+    console.error("Database query error:", errorMessage);
+    console.error("Error details:", errorDetails);
+    console.error("Error code:", error?.code);
+    console.error("Full error:", error);
+    
+    const fullMessage = errorDetails ? `${errorMessage} (${errorDetails})` : errorMessage;
+    throw new Error(`Database query failed: ${fullMessage}`);
+  }
 }
 
 /**

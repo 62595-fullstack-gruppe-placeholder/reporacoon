@@ -8,6 +8,9 @@ import { useForm } from "react-hook-form";
 import { Island_Moments } from "next/font/google";
 import { Loader2 } from "lucide-react";
 import { SubmitButton } from "./SubmitButton";
+import { createScanJobServerAction } from "@/app/CreateScanJob";
+import { createScanJob } from "@/lib/repository/scanJob/scanJobRepository";
+import { CreateScanJobDTO, createScanJobDTOSchema, ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 
 /**
  * Schema for url form.
@@ -47,9 +50,35 @@ export default function URLForm() {
                 body: JSON.stringify({ url: data.url }),
             });
 
+            const input: CreateScanJobDTO = {
+                repo_url: data.url,
+                owner_id: null, // TODO: Get the actual user ID from the session
+                priority: 1, // TODO: Allow the user to set the priority
+            };
 
             const res = await response.json();
             console.log(res);
+
+            if (res.valid === true) {
+                console.log("URL is valid, starting scan...");
+                // Creating the scan job in the database
+                const scanJob = await createScanJobServerAction(input);
+                // Starting the scanner, which runs all of the scan jobs currently in the database
+                try {
+                    const response = await fetch("http://localhost:5001/scan", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url: data.url }),
+                    });
+                } catch (err) {
+                    console.error(err)
+                }
+
+            } else {
+                // TODO: show this to the user
+                console.log("URL is invalid, please enter a valid GitHub/GitLab URL.");
+            }
+
 
             form.reset();
         } catch (err) {
