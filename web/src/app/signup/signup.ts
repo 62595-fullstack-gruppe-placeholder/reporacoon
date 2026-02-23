@@ -20,22 +20,26 @@ export type SignupInput = Omit<SignupFormSchema, "confirmPassword">;
  * @param input see {@link SignupInput}.
  */
 export async function signup(input: SignupInput) {
-  const user = await createUser(
-  createUserDTOSchema.parse({
-    email: input.email,
-    password: input.password,
-  }),
-);
+  try {
+      const user = await createUser(
+      createUserDTOSchema.parse({
+        email: input.email,
+        password: input.password,}),
+      );
 
+      // debug logs for email sending
+      console.log("Sending confirmation email to:", user.email);
+      await sendConfirmationEmail(user.id, user.email);
+      console.log("Email sent successfully");
 
-// debug logs for email sending
-try {
-    console.log("Sending confirmation email to:", user.email);
-    await sendConfirmationEmail(user.id, user.email);
-    console.log("Email sent successfully");
-  } catch (err) {
-    console.error("Failed to send confirmation email:", err);
+      (await cookies()).set("auth", "true");
+      return { success: true };
   }
-  
-  (await cookies()).set("auth", "true");
+  catch (error: any) {
+    if (error.message === "A user with this email already exists.") {
+      return { error: "That email is already taken." };
+    }
+    return { error: "An unexpected error occurred." };
+  }
+
 }

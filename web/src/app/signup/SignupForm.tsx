@@ -25,8 +25,22 @@ export function SignupForm() {
       email: data.email,
       password: data.password,
     };
-    await signup(input);
+    const result = await signup(input);
+
+    if (result?.error) {
+      if (result.error.toLowerCase().includes("email")) {
+        form.setError("email", {
+          type: "manual",
+          message: result.error,
+        });
+      } else {
+        console.error(result.error);
+      }
+      return;
+    }
+
     form.reset();
+    window.location.href = "/login";
   });
 
   return (
@@ -37,7 +51,7 @@ export function SignupForm() {
         <div className="text-center space-y-1">
         <h1 className="text-2xl font-bold text-gray-900">Sign up</h1>
         <p className="text-sm text-gray-500">
-          Please make a user
+          Enter your credentials to sign up as a user
         </p>
       </div>
 
