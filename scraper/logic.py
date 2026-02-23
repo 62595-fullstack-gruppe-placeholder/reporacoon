@@ -104,7 +104,7 @@ class GitHubSecretScanner:
             '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
             '.html', '.htm', '.xml', '.json', '.yml', '.yaml', '.toml', '.ini',
             '.cfg', '.conf', '.config', '.env', '.sh', '.bash', '.zsh', '.fish',
-            '.ps1', '.bat', '.cmd', '.txt', '.md', '.rst', '.tex', '.csv',
+            '.ps1', '.bat', '.cmd', '.txt', '.rst', '.tex', '.csv',
             '.sql', '.css', '.scss', '.sass', '.less', '.vue', '.svelte',
             '.swift', '.kt', '.kts', '.rs', '.scala', '.clj', '.elm',
             '.ex', '.exs', '.erl', '.hrl', '.hs', '.lhs', '.lua', '.pl',

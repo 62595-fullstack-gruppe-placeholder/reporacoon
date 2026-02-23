@@ -144,7 +144,7 @@ def start_scan():
                 return jsonify({'error': message}), 400
             
             scan_id = id
-
+            # TODO: Add multithreading here (Main work of scanning & cloning)
             scanner = GitHubSecretScanner(url, id)
             scanner.run() 
 
