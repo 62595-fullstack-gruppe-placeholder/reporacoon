@@ -151,7 +151,12 @@ def start_scan():
         # Updates the status of all of the parsed jobs
         setParsingScanJobsToParsed(list(data.keys()))
 
-        print(getAllScanFindings())
+        findings = getAllScanFindings()
+        try:
+            print(json.dumps(findings, indent=2, default=str, ensure_ascii=False))
+        except Exception:
+            from pprint import pprint
+            pprint(findings)
         return jsonify({
             'success': True,
             'message': 'Scan started successfully',

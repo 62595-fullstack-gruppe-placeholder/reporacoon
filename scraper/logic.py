@@ -28,41 +28,44 @@ class GitHubSecretScanner:
 
         self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
+        # Map pattern -> (regex, severity)
         self.patterns = {
-            'AWS API Key': r'AKIA[0-9A-Z]{16}',
-            'AWS Secret Key': r'(?i)aws[_-]?secret[_-]?access[_-]?key[\s]*[:=][\s]*["\']?[A-Za-z0-9/+=]{40}["\']?',
-            'Google API Key': r'AIza[0-9A-Za-z\-_]{35}',
-            'Google OAuth': r'[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com',
-            'Slack Token': r'(xox[pborsa]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})',
-            'GitHub Token': r'ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9]{22,}|gh[oasu]_[A-Za-z0-9]{36,}',
-            'Generic API Key': r'(?i)(api[_-]?key|apikey|secret[_-]?key|access[_-]?token|auth[_-]?token)[\s]*[:=][\s]*["\']?[a-zA-Z0-9_\-]{16,64}["\']?',
-            'Bearer Token': r'bearer\s+[a-zA-Z0-9\-_=]+\.[a-zA-Z0-9\-_=]+\.[a-zA-Z0-9\-_=]+',
-            'Private Key': r'-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----',
-            'MongoDB URI': r'mongodb(\+srv)?://[^/\s]+:[^/\s]+@[^/\s]+',
-            'MySQL URI': r'mysql://[^/\s]+:[^/\s]+@[^/\s]+',
-            'PostgreSQL URI': r'postgresql://[^/\s]+:[^/\s]+@[^/\s]+',
-            'Stripe Key': r'(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}',
-            'Twilio Key': r'SK[0-9a-fA-F]{32}',
-            'SendGrid Key': r'SG\.[0-9A-Za-z\-_]{22}\.[0-9A-Za-z\-_]{43}',
-            'Mailgun Key': r'key-[0-9a-zA-Z]{32}',
-            'Algolia Key': r'(?i)(algolia|search)[\-_]?api[\-_]?key[\s]*[:=][\s]*["\']?[0-9a-zA-Z]{32}["\']?',
-            'Firebase URL': r'https://[a-zA-Z0-9-]+\.firebaseio\.com',
-            'JWT Token': r'eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}',
-            'S3 Bucket': r'[a-zA-Z0-9\-_]{3,63}\.s3\.amazonaws\.com',
-            'Slack Webhook': r'https://hooks\.slack\.com/services/[A-Z0-9]+/[A-Z0-9]+/[a-zA-Z0-9]+',
-            'Discord Webhook': r'https://discord(?:app)?\.com/api/webhooks/[0-9]+/[a-zA-Z0-9_-]+',
-            'OpenAI API Key': r'sk-[a-zA-Z0-9]{48,}',
-            'OpenAI Legacy Key': r'sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}',
-            'OpenAI Org ID': r'org-[a-zA-Z0-9]{15,}',
-            'Anthropic API Key': r'sk-ant-api03-[a-zA-Z0-9_-]{40,}',
-            'Hugging Face Token': r'hf_[a-zA-Z0-9]{34,}',
-            'NPM Token': r'npm_[a-zA-Z0-9]{36,}',
-            'PyPI Token': r'pypi-[A-Za-z0-9]{40,}',
-            'Docker Hub Token': r'dckr_pat_[a-zA-Z0-9_-]{26,}',
-            'Telegram Bot Token': r'[0-9]{8,10}:[a-zA-Z0-9_-]{35}',
-            'Discord Bot Token': r'[a-zA-Z0-9_-]{24}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27}',
-            'IP Address': r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b',
-            # 'Email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', Add this later if we want
+            'AWS API Key': (r'AKIA[0-9A-Z]{16}', 'CRITICAL'),
+            'AWS Secret Key': (r'(?i)aws[_-]?secret[_-]?access[_-]?key[\s]*[:=][\s]*["\']?[A-Za-z0-9/+=]{40}["\']?', 'CRITICAL'),
+            'Private Key': (r'-----BEGIN (?:RSA|DSA|EC|OPENSSH) PRIVATE KEY-----', 'CRITICAL'),
+            'Stripe Key': (r'(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}', 'CRITICAL'),
+            'OpenAI API Key': (r'sk-[a-zA-Z0-9]{48,}', 'CRITICAL'),
+            'OpenAI Legacy Key': (r'sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}', 'CRITICAL'),
+            'Anthropic API Key': (r'sk-ant-api03-[a-zA-Z0-9_-]{40,}', 'CRITICAL'),
+
+            'Google API Key': (r'AIza[0-9A-Za-z\-_]{35}', 'HIGH'),
+            'Slack Token': (r'(xox[pborsa]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})', 'HIGH'),
+            'GitHub Token': (r'ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9]{22,}|gh[oasu]_[A-Za-z0-9]{36,}', 'HIGH'),
+            'MongoDB URI': (r'mongodb(\+srv)?://[^/\s]+:[^/\s]+@[^/\s]+', 'HIGH'),
+            'PostgreSQL URI': (r'postgresql://[^/\s]+:[^/\s]+@[^/\s]+', 'HIGH'),
+            'Telegram Bot Token': (r'[0-9]{8,10}:[a-zA-Z0-9_-]{35}', 'HIGH'),
+            'Discord Bot Token': (r'[a-zA-Z0-9_-]{24}\.[a-zA-Z0-9_-]{6}\.[a-zA-Z0-9_-]{27}', 'HIGH'),
+            'Hugging Face Token': (r'hf_[a-zA-Z0-9]{34,}', 'HIGH'),
+            'Twilio Key': (r'SK[0-9a-fA-F]{32}', 'HIGH'),
+            'SendGrid Key': (r'SG\.[0-9A-Za-z\-_]{22}\.[0-9A-Za-z\-_]{43}', 'HIGH'),
+            'Mailgun Key': (r'key-[0-9a-zA-Z]{32}', 'HIGH'),
+            'JWT Token': (r'eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}', 'HIGH'),
+            'MySQL URI': (r'mysql://[^/\s]+:[^/\s]+@[^/\s]+', 'HIGH'),
+            'Bearer Token': (r'bearer\s+[a-zA-Z0-9\-_=]+\.[a-zA-Z0-9\-_=]+\.[a-zA-Z0-9\-_=]+', 'HIGH'),
+
+            'Google OAuth': (r'[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com', 'MEDIUM'),
+            'Generic API Key': (r'(?i)(api[_-]?key|apikey|secret[_-]?key|access[_-]?token|auth[_-]?token)[\s]*[:=][\s]*["\']?[a-zA-Z0-9_\-]{16,64}["\']?', 'MEDIUM'),
+            'Algolia Key': (r'(?i)(algolia|search)[\-_]?api[\-_]?key[\s]*[:=][\s]*["\']?[0-9a-zA-Z]{32}["\']?', 'MEDIUM'),
+            'Slack Webhook': (r'https://hooks\.slack\.com/services/[A-Z0-9]+/[A-Z0-9]+/[a-zA-Z0-9]+', 'MEDIUM'),
+            'Discord Webhook': (r'https://discord(?:app)?\.com/api/webhooks/[0-9]+/[a-zA-Z0-9_-]+', 'MEDIUM'),
+            'NPM Token': (r'npm_[a-zA-Z0-9]{36,}', 'MEDIUM'),
+            'PyPI Token': (r'pypi-[A-Za-z0-9]{40,}', 'MEDIUM'),
+            'Docker Hub Token': (r'dckr_pat_[a-zA-Z0-9_-]{26,}', 'MEDIUM'),
+            
+            'OpenAI Org ID': (r'org-[a-zA-Z0-9]{15,}', 'LOW'),
+            'IP Address': (r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b', 'LOW'),
+            'S3 Bucket': (r'[a-zA-Z0-9\-_]{3,63}\.s3\.amazonaws\.com', 'LOW'),
+            'Firebase URL': (r'https://[a-zA-Z0-9-]+\.firebaseio\.com', 'LOW'),
         }
 
     # ---------------- Logging ---------------- #
@@ -116,25 +119,31 @@ class GitHubSecretScanner:
         return filename.lower().endswith(text_extensions)
 
     def find_line_number(self, content, match):
+        """Return (line_number, line_text) for the first line containing match.
+
+        If not found, returns (0, '').
+        """
         for i, line in enumerate(content.split('\n'), 1):
             if match in line:
-                return i
-        return 0
+                return i, line
+        return 0, ""
 
     # ---------------- Scanning ---------------- #
 
     def scan_content(self, content, file_path):
-        for secret_type, pattern in self.patterns.items():
-            matches = re.findall(pattern, content)
+        for secret_type, (pattern, severity) in self.patterns.items():
+            for m in re.finditer(pattern, content, flags=re.MULTILINE):
+                match_text = m.group(0)
+                line_number, line_text = self.find_line_number(content, match_text)
+                if line_text:
+                    snippet = line_text.strip()
+                else:
+                    snippet = match_text
 
-            for match in matches:
-                if isinstance(match, tuple):
-                    match = match[0]
+                if len(snippet) > 1000:
+                    snippet = snippet[:1000]
 
-                line_number = self.find_line_number(content, match)
-                # TODO: add the code snippet locating code
-                # TODO: add a severity system
-                insertScanFindings(self.job_id, file_path, line_number, "CODE SNIPPET GOES HERE", 'LOW', secret_type)
+                insertScanFindings(self.job_id, file_path, line_number, snippet, severity, secret_type)
 
     def scan_repository(self, repo_path):
         # TODO: add an upper limit of files to scan
