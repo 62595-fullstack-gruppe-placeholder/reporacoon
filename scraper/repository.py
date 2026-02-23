@@ -32,6 +32,17 @@ def getAllPendingScanJobs():
         if conn:
             conn.close()
 
+def setParsingScanJobsToParsed(ids):
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("UPDATE scan_jobs SET status = %s WHERE id = ANY(%s::uuid[])", ("PARSED", ids))
+            conn.commit()
+    finally:
+        if conn:
+            conn.close()
+
 
 def clearAllScanJobs():
     conn = None

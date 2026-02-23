@@ -172,6 +172,8 @@ def start_scan():
             scanner = GitHubSecretScanner(url, id)
             scanner.run() 
 
+        # Updates the status of all of the parsed jobs
+        setParsingScanJobsToParsed(data.keys)
 
         print(getAllScanFindings())
         return jsonify({
