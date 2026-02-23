@@ -63,7 +63,8 @@ class GitHubSecretScanner:
             'Docker Hub Token': (r'dckr_pat_[a-zA-Z0-9_-]{26,}', 'MEDIUM'),
             
             'OpenAI Org ID': (r'org-[a-zA-Z0-9]{15,}', 'LOW'),
-            'IP Address': (r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b', 'LOW'),
+             #IP Address are too commonly used, so it will clog the results. Should reconsider having this
+             #'IP Address': (r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b', 'LOW'),
             'S3 Bucket': (r'[a-zA-Z0-9\-_]{3,63}\.s3\.amazonaws\.com', 'LOW'),
             'Firebase URL': (r'https://[a-zA-Z0-9-]+\.firebaseio\.com', 'LOW'),
         }
