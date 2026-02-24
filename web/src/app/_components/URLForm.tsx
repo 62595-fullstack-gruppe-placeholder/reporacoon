@@ -57,13 +57,13 @@ export default function URLForm() {
             };
 
             const res = await response.json();
-            console.log(res);
-
+            // TODO: handle errors for the validation call above
             if (res.valid === true) {
                 console.log("URL is valid, starting scan...");
                 // Creating the scan job in the database
                 const scanJob = await createScanJobServerAction(input);
                 // Starting the scanner, which runs all of the scan jobs currently in the database
+                // TODO: handle errors from the scan
                 try {
                     const response = await fetch("http://localhost:5001/scan", {
                         method: "POST",
@@ -95,7 +95,7 @@ export default function URLForm() {
         <form onSubmit={onSubmit} className='flex items-center flex-1 w-full gap-8'>
             <input
                 id="url"
-                type="url"
+                type="text"
                 {...form.register("url")}
                 className='fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate' placeholder="Paste a GitHub/GitLab URL" />
             {form.formState.errors.url && (

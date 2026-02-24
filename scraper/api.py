@@ -130,15 +130,12 @@ def start_scan():
     """Start a new scan"""
     try:
         data = getAllPendingScanJobs()
-    
-        print(data)
         
         if not data:
             return jsonify({'error': 'No URL provided'}), 400
 
         for id, url in data.items():
             is_valid, message, repo_info = validate_github_url(url)
-            print("url: " + url)
 
             if not is_valid:
                 return jsonify({'error': message}), 400
@@ -148,7 +145,7 @@ def start_scan():
             scanner = GitHubSecretScanner(url, id)
             scanner.run() 
 
-        # Updates the status of all of the parsed jobs
+        # Updates the status of all of the parsed jobs (data.keys are the ids)
         setParsingScanJobsToParsed(list(data.keys()))
 
         findings = getAllScanFindings()
@@ -181,11 +178,6 @@ if __name__ == '__main__':
     print("  GET    /health              - Health check")
     print("  POST   /validate             - Validate GitHub URL")
     print("  POST   /scan                  - Start async scan")
-    print("  POST   /scan/quick            - Quick sync scan")
-    print("  GET    /scan/status/<id>      - Get scan status")
-    print("  GET    /scan/results/<id>     - Get scan results")
-    print("  GET    /scans                 - List all scans")
-    print("  DELETE /scan/<id>             - Cancel scan")
     print("="*70)
     print(f"\nServer running on: http://0.0.0.0:5001")
     print("="*70 + "\n")
