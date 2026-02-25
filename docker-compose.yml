@@ -12,7 +12,11 @@ services:
         echo 'Generating RSA key pair...' &&
         openssl genpkey -algorithm RSA -out /keys/private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
         openssl rsa -pubout -in /keys/private_key.pem -out /keys/public_key.pem &&
-        echo 'Key pair generated successfully!' &&
+        echo 'Key pair generated successfully! Fixing key file permissions...' &&
+        chown 1001:1001 /keys/private_key.pem /keys/public_key.pem &&
+        chmod 600 /keys/private_key.pem /keys/public_key.pem &&
+        chmod 644 /keys/public_key.pem &&
+        echo 'Fixed permissions for key pair' &&
         ls -lA /keys/
       "
     restart: 'no'
