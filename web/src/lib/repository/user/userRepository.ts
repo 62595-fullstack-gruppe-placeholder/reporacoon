@@ -91,9 +91,9 @@ export async function verifyUserCredentials(
      AND password_hash = crypt($2, password_hash)`,
     [loginDTO.email, loginDTO.password],
   );
-  console.log("query returned ", row)
+
   const parseResult = userSchema.safeParse(row);
-  console.log("parse result is", parseResult)
+
   return parseResult.success ? parseResult.data : null;
 }
 
