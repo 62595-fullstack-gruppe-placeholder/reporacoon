@@ -81,3 +81,17 @@ def insertScanFindings(job_id, file_path, line_number, code_snippet, severity, r
     finally:
         if conn:
             conn.close()
+
+def insertDurationInScanJobs(duration, id):
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE scan_jobs SET duration = %s WHERE id = %s",
+                (duration, id),
+            )
+            conn.commit()
+    finally:
+        if conn:
+            conn.close()

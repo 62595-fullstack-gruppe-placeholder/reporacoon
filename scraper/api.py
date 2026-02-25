@@ -5,6 +5,8 @@ import json
 import os
 from datetime import datetime
 import re
+import time
+import math
 from urllib.parse import urlparse
 import requests
 from repository import *
@@ -143,7 +145,15 @@ def start_scan():
             scan_id = id
             # TODO: Add multithreading here (Main work of scanning & cloning)
             scanner = GitHubSecretScanner(url, id)
+
+            start = time.time()
+
             scanner.run() 
+
+            end = time.time()
+
+            # Adds the time taken to complete a scan job to the database
+            insertDurationInScanJobs(math.floor(end-start), scan_id)
 
         # Updates the status of all of the parsed jobs (data.keys are the ids)
         setParsingScanJobsToParsed(list(data.keys()))
