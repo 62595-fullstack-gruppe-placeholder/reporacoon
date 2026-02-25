@@ -76,23 +76,15 @@ services:
       - app-network
     command: >
       sh -c "
-        echo 'Waiting for postgres...' &&
-        until pg_isready -h $$PGHOST -p 5432 -U $$PGUSER; do 
-          echo 'Postgres not ready, waiting...'; 
-          sleep 2; 
+        until pg_isready -h $$PGHOST -p 5432 -U $$PGUSER -d $$PGDATABASE; do 
+          echo 'Waiting for postgres...'; sleep 2; 
         done &&
-        echo 'Postgres ready! Running migrations...' &&
-        files=$$(ls /migrations/*.sql 2>/dev/null || echo 'none') &&
-        if [ '$$files' != 'none' ]; then
-          for file in /migrations/*.sql; do
-            echo \"Running $$file\" &&
-            psql -h $$PGHOST -U $$PGUSER -d $$PGDATABASE -f $$file &&
-            echo \"✓ Completed $$file\"
-          done
-        else
-          echo 'No migration files found - skipping'
-        fi &&
-        echo 'All migrations completed successfully'
+        find /migrations -name '*.sql' -type f | sort | while read file; do
+          echo \"Running $$file\" &&
+          psql -h $$PGHOST -U $$PGUSER -d $$PGDATABASE -f \"$$file\" &&
+          echo \"✓ Completed $$file\";
+        done &&
+        echo 'Migrations done'
       "
     restart: "no"
 
