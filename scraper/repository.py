@@ -12,14 +12,72 @@ def get_connection():
         host=os.environ.get("DB_HOST", "127.0.0.1"),
         port=int(os.environ.get("DB_PORT", 5432)),
     )
-# TODO: Test if this works
-def getAllScanJobs():
+
+# Gets all scan jobs with status 'PENDING'. Updates the status of all the scan jobs returned by the function to 'PARSING'
+# Returns a dictionary (map) with the key being the job id and the value being the repo url
+def getAllPendingScanJobs():
     conn = None
     try:
         conn = get_connection()
         with conn.cursor() as cur:
-            cur.execute("SELECT repo_url FROM scan_jobs")
-            return [row[0] for row in cur.fetchall()]
+            cur.execute("SELECT id, repo_url FROM scan_jobs WHERE status = %s", ("PENDING",))
+            rows = cur.fetchall()
+            result = {row[0]: row[1] for row in rows}
+            if rows:
+                ids = [str(r[0]) for r in rows]
+                cur.execute("UPDATE scan_jobs SET status = %s WHERE id = ANY(%s::uuid[])", ("PARSING", ids))
+            conn.commit()
+            return result
+    finally:
+        if conn:
+            conn.close()
+
+def setParsingScanJobsToParsed(ids):
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("UPDATE scan_jobs SET status = %s WHERE id = ANY(%s::uuid[])", ("PARSED", ids))
+            conn.commit()
+    finally:
+        if conn:
+            conn.close()
+
+
+def clearAllScanJobs():
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM scan_jobs WHERE status = %s", ("PENDING",))
+            deleted = cur.rowcount
+            conn.commit()
+            return deleted
+    finally:
+        if conn:
+            conn.close()
+
+def getAllScanFindings():
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM scan_findings")
+            return cur.fetchall()
+    finally:
+        if conn:
+            conn.close()
+
+def insertScanFindings(job_id, file_path, line_number, code_snippet, severity, rule):
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO scan_findings (job_id, file_path, line_number, code_snippet, severity, rule) VALUES (%s, %s, %s, %s, %s, %s)",
+                (job_id, file_path, line_number, code_snippet, severity, rule),
+            )
+            conn.commit()
     finally:
         if conn:
             conn.close()
