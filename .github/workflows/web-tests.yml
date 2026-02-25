@@ -2,9 +2,16 @@ name: Web tests
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main", "master" ]
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-tests.yml'
+      - '.github/workflows/lighthouse.yml'
+      - '.github/workflows/playwrigt.yml'
   pull_request:
-    branches: ["main"]
+    branches: [ "main", "master" ]
+    paths:
+      - 'web/**'
   workflow_dispatch:
 
 jobs:
