@@ -134,7 +134,7 @@ def start_scan():
         data = getAllPendingScanJobs()
         
         if not data:
-            return jsonify({'error': 'No URL provided'}), 400
+            return jsonify({'success': False, 'message': 'No pending scan jobs'}), 200
 
         for id, url in data.items():
             is_valid, message, repo_info = validate_github_url(url)
