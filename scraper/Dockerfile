@@ -14,6 +14,7 @@ RUN apt-get update \
 COPY logic.py .
 COPY api.py .
 COPY repository.py .
+COPY tests/ ./tests/
 
 RUN mkdir -p /app/scanlogs
 
