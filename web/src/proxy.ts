@@ -11,27 +11,50 @@ import { log, LogLevel } from "@/lib/log";
  * @returns response.
  */
 export async function proxy(req: NextRequest) {
-  const accessTokenCookie = await getAccessTokenCookie()
+  const accessToken = req.cookies.get("access-token")?.value;
+  const refreshToken = req.cookies.get("refresh-token")?.value;
 
-  if (!accessTokenCookie) {
-    const res = NextResponse.redirect(new URL("/login", req.url));
-    return res;
+  // Try verifying Access Token
+  if (accessToken) {
+    try {
+      const { publicKey } = await loadKeys();
+      await jwtVerify(accessToken, publicKey, { issuer: "reporacoon", audience: "reporacoon" });
+      return NextResponse.next();
+    } catch (err) {
+      log("Access token expired, attempting refresh...", LogLevel.debug);
+    }
   }
 
-  try {
-    const { publicKey } = await loadKeys();
-    await jwtVerify(accessTokenCookie.value, publicKey, {
-      issuer: "reporacoon",
-      audience: "reporacoon",
-    });
+  // Access token failed/missing, try Refresh Token
+  if (refreshToken) {
+    try {
+      const refreshResponse = await fetch(new URL("/api/auth/refresh", req.url), {
+        method: "POST",
+        headers: { Cookie: `refresh-token=${refreshToken}` },
+      });
 
-    return NextResponse.next();
-  } catch {
-    log("access token verification failed, redirecting to login", LogLevel.debug)
-    const res = NextResponse.redirect(new URL("/login", req.url));
-    res.cookies.delete("access-token");
-    return res;
+      if (refreshResponse.ok) {
+        const { newAccessToken } = await refreshResponse.json();
+        const res = NextResponse.next();
+        
+        // Update the access token cookie for the browser
+        res.cookies.set("access-token", newAccessToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "lax",
+          maxAge: 60 * 15, // 15 mins
+        });
+        return res;
+      }
+    } catch (refreshErr) {
+      log("Refresh failed", LogLevel.error);
+    }
   }
+
+  const res = NextResponse.redirect(new URL("/login", req.url));
+  res.cookies.delete("access-token");
+  res.cookies.delete("refresh-token");
+  return res;
 }
 
 /**
