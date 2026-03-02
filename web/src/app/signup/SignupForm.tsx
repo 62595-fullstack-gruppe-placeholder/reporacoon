@@ -21,8 +21,6 @@ export function SignupForm() {
     },
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-
   const onSubmit = form.handleSubmit(async (data: SignupFormSchema) => {
     setIsLoading(true);
     const input: SignupInput = {
@@ -40,13 +38,14 @@ export function SignupForm() {
       } else {
         console.error(result.error);
       }
-      setIsLoading(false);
       return;
     }
 
     form.reset();
     window.location.href = "/dashboard";
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="min-h-screen w-full flex justify-center pt-20 p-4">

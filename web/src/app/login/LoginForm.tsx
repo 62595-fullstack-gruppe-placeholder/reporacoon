@@ -11,6 +11,8 @@ import {
   loginFormSchema,
 } from "@/lib/repository/user/userSchemas";
 import { SubmitButton } from "../_components/SubmitButton";
+import { boolean } from "zod";
+import { useState } from "react";
 
 export function LoginForm() {
   const form = useForm<LoginFormSchema>({
@@ -22,6 +24,7 @@ export function LoginForm() {
   });
 
   const onSubmit = form.handleSubmit(async (data: LoginFormSchema) => {
+    setIsLoading(true);
     const input: CredentialsDTO = {
       email: data.email,
       password: data.password,
@@ -29,6 +32,8 @@ export function LoginForm() {
     await login(input);
     form.reset();
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="min-h-screen w-full flex justify-center pt-20 p-4">
@@ -93,7 +98,7 @@ export function LoginForm() {
         </div>
 
         <div className="pt-2">
-          <SubmitButton text="Log in" loadingText="Logging in..." />
+          <SubmitButton text="Log in" loadingText="Logging in..." loading={isLoading}/>
         </div>
       </form>
     </div>

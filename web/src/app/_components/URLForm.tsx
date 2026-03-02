@@ -120,7 +120,7 @@ export default function URLForm({ onScanStarted }: URLFormProps) {
                 <p className="mt-1 text-sm text-red-600">
                     {form.formState.errors.url.message}
                 </p>)}
-            <SubmitButton text="Start Scanning" loadingText="Scanning..." />
+            <SubmitButton text="Start Scanning" loadingText="Scanning..." loading={isLoading}/>
         </form>
     )
 }
