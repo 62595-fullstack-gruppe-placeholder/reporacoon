@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import URLForm from './_components/URLForm';
-import FakeDashboard from './_components/Dashboard';
+import ScanResults from './_components/ScanResults';
 
 export default function Home() {
   const [isScanning, setIsScanning] = useState(false);
@@ -48,7 +48,7 @@ export default function Home() {
           }
         `}
       >
-        <FakeDashboard />
+        <ScanResults findings={[]} />
       </div>
 
       {/* Boxes container - slides down and zooms when dashboard appears */}
