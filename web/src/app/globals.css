@@ -24,6 +24,8 @@ Main button color: #23863d
   --color-text-main: var(--text-main);
   --color-secondary: var(--secondary);
   --color-button-main: var(--button-main);
+
+  --animate-spin-slow: spin 3s linear infinite;
 }
 
 
@@ -67,6 +69,14 @@ Main button color: #23863d
   /* Text inside fields style*/
   .fieldText {
     @apply justify-center text-secondary text-base font-normal 
+  }
+
+  .severity-badge {
+    @apply px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border;
+  }
+
+  .code-block {
+    @apply font-mono text-sm bg-[#0d1117] text-emerald-400 p-4 rounded-lg border border-white/5 overflow-x-auto;
   }
 }
 
