@@ -1,5 +1,5 @@
 import "server-only";
-import { queryOne } from "@lib/database/remoteDataSource";
+import { query, queryOne } from "@lib/database/remoteDataSource";
 import { CreateScanFindingDTO, createScanFindingDTOSchema, ScanFinding, scanFindingSchema } from "./scanFindingSchema";
 
 /**
@@ -29,3 +29,25 @@ export async function createScanFinding(input: CreateScanFindingDTO): Promise<Sc
 
   return scanFindingSchema.parse(row);
 }
+
+
+/**
+ * Fetching scan finding by id, returning the {@link ScanFinding}.
+ */
+export async function getScanFindingById(id: String): Promise<ScanFinding[]> {
+  const rows = await query<ScanFinding[]>(
+      `
+        SELECT *
+        FROM scan_findings
+        WHERE job_id = $1
+        `,
+      [id],
+    );
+
+  if (!rows) {
+    throw new Error("Failed to get scan finding");
+  }
+
+  return rows.map((row) => scanFindingSchema.parse(row));
+}
+

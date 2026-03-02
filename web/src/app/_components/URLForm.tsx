@@ -8,9 +8,10 @@ import { useForm } from "react-hook-form";
 import { Island_Moments } from "next/font/google";
 import { Loader2 } from "lucide-react";
 import { SubmitButton } from "./SubmitButton";
-import { createScanJobServerAction } from "@/app/CreateScanJob";
+import { createScanJobServerAction, getScanFindingByIdServerAction, getScanJobByIdServerAction } from "@/app/ScanServerActions";
 import { createScanJob } from "@/lib/repository/scanJob/scanJobRepository";
 import { CreateScanJobDTO, createScanJobDTOSchema, ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
+import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 
 /**
  * Schema for url form.
@@ -27,7 +28,12 @@ export const urlFormSchema = z
 export type URLFormSchema = z.infer<typeof urlFormSchema>;
 
 
-export default function URLForm() {
+interface URLFormProps {
+    onScanStarted: (finding: ScanFinding[], job: ScanJob) => void;
+}
+
+
+export default function URLForm({ onScanStarted }: URLFormProps) {
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
     const form = useForm<URLFormSchema>({
@@ -57,11 +63,13 @@ export default function URLForm() {
             };
 
             const res = await response.json();
+        
             // TODO: handle errors for the validation call above
             if (res.valid === true) {
                 console.log("URL is valid, starting scan...");
                 // Creating the scan job in the database
                 const scanJob = await createScanJobServerAction(input);
+
                 // Starting the scanner, which runs all of the scan jobs currently in the database
                 // TODO: handle errors from the scan
                 try {
@@ -71,6 +79,16 @@ export default function URLForm() {
                         body: JSON.stringify({ url: data.url }),
                     });
                     console.log(response)
+                    const res = await response.json();
+                    console.log(res.scan_id)
+                    console.log(res)
+                    const findings = await getScanFindingByIdServerAction(res.scan_id)
+                    const scanJob = await getScanJobByIdServerAction(res.scan_id)
+
+                    if (findings) {
+                    // Send the finding back to the Home component
+                    onScanStarted(findings, scanJob); 
+                }
                 } catch (err) {
                     console.error(err)
                 }

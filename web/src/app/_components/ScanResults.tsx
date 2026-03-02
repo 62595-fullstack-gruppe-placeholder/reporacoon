@@ -3,20 +3,28 @@
 import { useState } from 'react';
 import { Triangle, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { ScanFinding } from '../../lib/repository/scanFinding/scanFindingSchema';
+import { getScanFindingByIdServerAction } from '../ScanServerActions';
+import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
+
 
 interface Props {
-  findings: ScanFinding[];
+  findings: ScanFinding[] | null;
+  job: ScanJob | null;
 }
 
-export default function ScanResults({ findings }: Props) {
+export default function ScanResults({ findings, job }: Props) {
+  if (findings == null || job == null) {
+    return
+  }
+
   return (  
     <div className="w-full max-w-4xl mx-auto space-y-4 font-sans p-4">
       
       {/* OUTER CONTAINER: "Scanned for: [Platform]" */}
-      <div className="border border-slate-300 rounded-md shadow-sm bg-white overflow-hidden">
+      <div className="border border-slate-300 rounded-md shadow-sm border border-green-200 bg-green-50 overflow-hidden">
         <div className="bg-slate-50 border-b border-slate-200 px-4 py-2">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Scanned the repo:  
+          <p className="box text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            Scanned the repo {job.repo_url}:  
           </p>
         </div>
 
@@ -61,7 +69,7 @@ function FindingItem({ finding }: { finding: ScanFinding }) {
         
         <div className="flex items-center gap-3 font-mono font-bold">
           <span className={severityColors[finding.severity]}>1</span>
-          <span className="text-slate-300">s</span> {/* Representing the small 's' or dot in sketch */}
+          <span className="text-slate-300">s</span>
           <span className="text-slate-400">10</span>
           <div className="flex items-center ml-2 text-slate-400">
             <Triangle size={12} className={`fill-current transition-transform ${isOpen ? 'rotate-180' : 'rotate-90'}`} />
@@ -74,10 +82,8 @@ function FindingItem({ finding }: { finding: ScanFinding }) {
         <div className="mx-4 mb-4 border border-slate-300 bg-[#f8f9fa] p-4 font-mono text-sm relative">
           <div className="flex justify-between items-start mb-4">
             <div className="space-y-1">
-              <span className="text-slate-900 font-bold border-b border-slate-400">file_path</span>
-              <p className="text-slate-600 mt-1">
-                {finding.file_path}:{finding.line_number}
-              </p>
+              <span className="text-slate-900 font-bold border-b border-slate-400">
+                file path: {finding.file_path}:{finding.line_number}</span>
             </div>
 
             {/* The Triangle Rule badge from sketch */}

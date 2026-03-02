@@ -29,3 +29,24 @@ export async function createScanJob(input: CreateScanJobDTO): Promise<ScanJob> {
 
   return scanJobSchema.parse(row);
 }
+
+
+/**
+ * Fetching scan finding by id, returning the {@link ScanFinding}.
+ */
+export async function getScanJobById(id: String): Promise<ScanJob> {
+  const row = await queryOne<ScanJob>(
+      `
+        SELECT *
+        FROM scan_jobs
+        WHERE id = $1
+        `,
+      [id],
+    );
+
+  if (!row) {
+    throw new Error("Failed to get scan job");
+  }
+
+  return scanJobSchema.parse(row);
+}

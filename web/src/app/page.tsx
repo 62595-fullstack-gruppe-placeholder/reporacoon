@@ -4,9 +4,20 @@ import { useState } from 'react';
 import Image from 'next/image';
 import URLForm from './_components/URLForm';
 import ScanResults from './_components/ScanResults';
+import { ScanFinding } from '@/lib/repository/scanFinding/scanFindingSchema';
+import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
 
 export default function Home() {
   const [isScanning, setIsScanning] = useState(false);
+  const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
+  const [scanJob, setScanJob] = useState<ScanJob | null>(null);
+
+  const handleScanSuccess = (findings: ScanFinding[], job: ScanJob) => {
+    setScanFindings(findings);
+    setScanJob(job);
+    setIsScanning(true);
+  };
+
 
   return (
     <div className="flex flex-col justify-center items-center gap-8">
@@ -32,7 +43,7 @@ export default function Home() {
             Mock Scan
           </button>
 
-          <URLForm />
+          <URLForm onScanStarted={handleScanSuccess}/>
         </div>
       </div>
 
@@ -48,7 +59,7 @@ export default function Home() {
           }
         `}
       >
-        <ScanResults findings={[]} />
+        <ScanResults findings={scanFindings} job={scanJob} />
       </div>
 
       {/* Boxes container - slides down and zooms when dashboard appears */}
