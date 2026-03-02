@@ -5,6 +5,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install git so subprocess calls to `git` work inside the container
+# The extra flags are minizing the size of git so the image remains as small as possible
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends git \
+	&& rm -rf /var/lib/apt/lists/*
 COPY logic.py .
 COPY api.py .
 COPY repository.py .
@@ -13,4 +19,4 @@ RUN mkdir -p /app/scanlogs
 
 EXPOSE 5001
 
-CMD ["python", "api.py"]
+CMD ["python", "-u", "api.py"]

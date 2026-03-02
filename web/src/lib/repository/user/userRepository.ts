@@ -32,8 +32,9 @@ export async function getUserById(id: string): Promise<User | null> {
 export async function createUser(input: CreateUserDTO): Promise<User> {
   const data = createUserDTOSchema.parse(input);
 
-  const row = await queryOne<User>(
-    `
+  try {
+    const row = await queryOne<User>(
+      `
       INSERT INTO users (email, password_hash)
       VALUES ($1, crypt($2, gen_salt('bf')))
       RETURNING
@@ -41,14 +42,24 @@ export async function createUser(input: CreateUserDTO): Promise<User> {
         email,
         email_confirmed
       `,
-    [data.email, data.password],
-  );
+      [data.email, data.password],
+    );
 
-  if (!row) {
-    throw new Error("Failed to insert user");
+    if (!row) {
+      throw new Error("Failed to insert user");
+    }
+
+    return userSchema.parse(row);
+
+  } catch (error: any) {
+    // Check for PostgreSQL Unique Violation error code
+    if (error.code === '23505') {
+      throw new Error("A user with this email already exists.");
+    }
+    
+    // Re-throw other unexpected errors
+    throw error;
   }
-
-  return userSchema.parse(row);
 }
 
 /**
@@ -80,9 +91,9 @@ export async function verifyUserCredentials(
      AND password_hash = crypt($2, password_hash)`,
     [loginDTO.email, loginDTO.password],
   );
-  console.log("query returned ", row)
+
   const parseResult = userSchema.safeParse(row);
-  console.log("parse result is", parseResult)
+
   return parseResult.success ? parseResult.data : null;
 }
 
