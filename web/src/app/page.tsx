@@ -10,9 +10,11 @@ import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJob, setScanJob] = useState<ScanJob | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
 
   const handleScanSuccess = (findings: ScanFinding[], job: ScanJob) => {
     setScanFindings(findings);
+    setIsScanning(true);
     setScanJob(job);
   };
 
@@ -37,6 +39,20 @@ export default function Home() {
         </div>
       </div>
 
+       {/* Dashboard appears with fade and slide down animation */}
+      <div
+        className={`
+          w-full max-w-6xl px-4
+          transition-all duration-700 ease-out
+          ${
+            isScanning 
+              ? 'opacity-100 translate-y-0 max-h-[1000px]' 
+              : 'opacity-0 -translate-y-10 max-h-0 overflow-hidden'
+          }
+        `}
+      >
+        <ScanResults findings={scanFindings} job={scanJob} />
+      </div>
 
       <div className="box w-80 h-72">
         <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">

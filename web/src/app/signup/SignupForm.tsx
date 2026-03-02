@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock } from "lucide-react";
 import { signup, SignupInput } from "./signup";
@@ -20,7 +21,10 @@ export function SignupForm() {
     },
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const onSubmit = form.handleSubmit(async (data: SignupFormSchema) => {
+    setIsLoading(true);
     const input: SignupInput = {
       email: data.email,
       password: data.password,
@@ -36,6 +40,7 @@ export function SignupForm() {
       } else {
         console.error(result.error);
       }
+      setIsLoading(false);
       return;
     }
 
@@ -127,7 +132,7 @@ export function SignupForm() {
           )}
         </div>
 
-        <SubmitButton text="Sign Up" loadingText="Creating Account..." />
+        <SubmitButton text="Sign Up" loadingText="Creating Account..." loading={isLoading} />
       </form>
     </div>
   );
