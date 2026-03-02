@@ -27,45 +27,6 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-<<<<<<< HEAD
-  try {
-    const { publicKey } = await loadKeys();
-    const verified = await jwtVerify(accessTokenCookie.value, publicKey, {
-      issuer: "reporacoon",
-      audience: "reporacoon",
-    });
-
-
-
-//check verified token contains user id in sub claim
-  const userId = verified.payload.sub;
-
-//if not, throw error
-  if (!userId) {
-    throw new Error("Token does not contain user id");
-  }
-
-//check if there is a user with the id in the token
-  const user = await getUserById(userId);
-  if (!user){
-    throw new Error("User not found");
-  }
-
-  if (!user.email_confirmed) {
-    log("user email not confirmed, redirecting to email confirmation page", LogLevel.debug)
-    return NextResponse.redirect(new URL("/confirm-email/pending", req.url));
-  }
-
-    // Email IS confirmed - allow the request to proceed to the requested page
-    log("user email confirmed, allowing access", LogLevel.debug);
-    return NextResponse.next();
-
-  } catch {
-    log("access token verification failed, redirecting to login", LogLevel.debug)
-    const res = NextResponse.redirect(new URL("/login", req.url));
-    res.cookies.delete("access-token");
-    return res;
-=======
   // Access token failed/missing, try Refresh Token
   if (refreshToken) {
     try {
@@ -90,7 +51,6 @@ export async function proxy(req: NextRequest) {
     } catch (refreshErr) {
       log("Refresh failed", LogLevel.error);
     }
->>>>>>> main
   }
 
   const res = NextResponse.redirect(new URL("/login", req.url));
