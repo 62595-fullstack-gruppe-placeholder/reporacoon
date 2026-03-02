@@ -43,7 +43,7 @@ def setParsingScanJobsToParsed(ids):
         if conn:
             conn.close()
 
-
+# Unused for now, but might be handy for managing size of DB later on
 def clearAllScanJobs():
     conn = None
     try:
@@ -57,6 +57,7 @@ def clearAllScanJobs():
         if conn:
             conn.close()
 
+# Used as a debug function currently
 def getAllScanFindings():
     conn = None
     try:
@@ -76,6 +77,20 @@ def insertScanFindings(job_id, file_path, line_number, code_snippet, severity, r
             cur.execute(
                 "INSERT INTO scan_findings (job_id, file_path, line_number, code_snippet, severity, rule) VALUES (%s, %s, %s, %s, %s, %s)",
                 (job_id, file_path, line_number, code_snippet, severity, rule),
+            )
+            conn.commit()
+    finally:
+        if conn:
+            conn.close()
+
+def insertDurationInScanJobs(duration, id):
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE scan_jobs SET duration = %s WHERE id = %s",
+                (duration, id),
             )
             conn.commit()
     finally:

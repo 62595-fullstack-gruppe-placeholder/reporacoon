@@ -11,8 +11,8 @@ from repository import *
 #------------------------------- basic flow -----------------------------------------------
 #  1. The API file gives the scanner a repo URL and a job ID
 #  2. The scanner clones the repo
-#  3. The scanner then recursively reads files from the repoand if there are any matches 
-#  with our regex below, the findings will be inserted into the scan_findings table
+#  3. The scanner then recursively reads files from the repo and if there are any matches 
+#  with the regex below, the findings will be inserted into the scan_findings table
 #  4. The cloned repo is deleted again
 #--------------------------------------------------------------------------------------------
 

@@ -16,9 +16,38 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    # start a PostgreSQL service container so the scraper tests can
+    # connect to a real database.  The repository code looks for
+    # DATABASE_URL or individual POSTGRES_*/DB_HOST/etc env vars, so
+    # we expose both forms below.
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: fisk
+          POSTGRES_DB: reporacoondb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: ./scraper
+
+    env:
+      # match the defaults used by the repository module so the
+      # tests can connect without further configuration
+      DB_HOST: localhost
+      DB_PORT: 5432
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: fisk
+      POSTGRES_DB: reporacoondb
+      DATABASE_URL: postgres://root:fisk@localhost:5432/reporacoondb
 
     steps:
     - uses: actions/checkout@v4
@@ -35,6 +64,9 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         # Ensure test tools are installed even if not in requirements.txt
         pip install pytest pytest-flask requests-mock 
+
+    - name: Wait for Postgres service
+      run: sleep 10
 
     - name: Run Unit & Integration Tests
       run: |
