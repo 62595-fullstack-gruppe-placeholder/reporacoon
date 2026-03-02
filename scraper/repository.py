@@ -43,7 +43,7 @@ def setParsingScanJobsToParsed(ids):
         if conn:
             conn.close()
 
-
+# Unused for now, but might be handy for managing size of DB later on
 def clearAllScanJobs():
     conn = None
     try:
@@ -57,6 +57,7 @@ def clearAllScanJobs():
         if conn:
             conn.close()
 
+# Used as a debug function currently
 def getAllScanFindings():
     conn = None
     try:

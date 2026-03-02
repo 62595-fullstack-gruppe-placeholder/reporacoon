@@ -56,3 +56,24 @@ export async function createRefreshToken(
 
   return refreshTokenSchema.parse(row);
 }
+
+
+/**
+ * Get refresh token by hash, returns validated {@link RefreshToken} or null.
+ */
+export async function getRefreshTokenByHash(
+  hash: string,
+): Promise<RefreshToken | null> {
+  const row = await queryOne<RefreshToken>(
+    `
+      SELECT id, user_id, token_hash, expires_at, revoked_at, created_at
+      FROM refresh_tokens
+      WHERE token_hash = $1
+      `,
+    [hash],
+  );
+
+  if (!row) return null;
+
+  return refreshTokenSchema.parse(row);
+}
