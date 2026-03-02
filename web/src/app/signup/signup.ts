@@ -7,7 +7,7 @@ import {
   createUserDTOSchema,
   SignupFormSchema,
 } from "@/lib/repository/user/userSchemas";
-import { sendConfirmationEmail } from "@/lib/email/emailConfirmationService";
+import { sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
 import { redirect } from "next/navigation";
 
 /**
