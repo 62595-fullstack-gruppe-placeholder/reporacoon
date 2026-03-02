@@ -18,7 +18,8 @@ export async function createScanJob(input: CreateScanJobDTO): Promise<ScanJob> {
         owner_id,
         priority,
         status,
-        created_at
+        created_at,
+        duration
       `,
     [data.repo_url, data.owner_id, data.priority],
   );

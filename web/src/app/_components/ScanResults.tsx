@@ -22,11 +22,12 @@ export default function ScanResults({ findings, job }: Props) {
       
       {/* OUTER CONTAINER: "Scanned for: [Platform]" */}
       <div className="border border-slate-300 rounded-md shadow-sm border border-green-200 bg-green-50 overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-200 px-4 py-2">
-          <p className="box text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Scanned the repo {job.repo_url}:  
-          </p>
-        </div>
+          <h1 className="text-[20px] font-bold text-slate-1000">
+            {job.repo_url}  
+          </h1>
+          <h3 className="text-[12px] font-bold text-slate-1000">
+            Scanned for: {job.duration} s:  
+          </h3>
 
         <div className="p-2 space-y-3">
           {findings.map((finding) => (
@@ -57,7 +58,7 @@ function FindingItem({ finding }: { finding: ScanFinding }) {
   };
 
   return (
-    <div className="border border-slate-200 rounded-sm overflow-hidden">
+    <div className="box border border-slate-200 rounded-sm overflow-hidden">
       {/* NAME ROW: [Rule Name] | [Severity Stats] */}
       <div 
         className="flex justify-between items-center px-4 py-3 cursor-pointer hover:bg-slate-50"
