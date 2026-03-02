@@ -39,41 +39,41 @@ export default function Home() {
         </div>
       </div>
 
-       {/* Dashboard appears with fade and slide down animation */}
+      {/* Dashboard appears with fade and slide down animation */}
       <div
         className={`
           w-full max-w-6xl px-4
           transition-all duration-700 ease-out
-          ${
-            isScanning 
-              ? 'opacity-100 translate-y-0 max-h-[1000px]' 
-              : 'opacity-0 -translate-y-10 max-h-0 overflow-hidden'
+          ${isScanning
+            ? 'opacity-100 translate-y-0 max-h-[1000px]'
+            : 'opacity-0 -translate-y-10 max-h-0 overflow-hidden'
           }
         `}
       >
         <ScanResults findings={scanFindings} job={scanJob} />
       </div>
+      <div className='inline-flex justify-start items-start gap-40'>
+        <div className="box w-80 h-72">
+          <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
+            Why?
+          </h1>
+          <p className="p self-stretch px-4 pt-2">
+            Have you ever lost 1000's of dollars because a junior
+            developer pushed an API key? Our goal is to prevent scenarios like this,
+            with security overviews and weekly reviews.
+          </p>
+        </div>
 
-      <div className="box w-80 h-72">
-        <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
-          Why?
-        </h1>
-        <p className="p self-stretch px-4 pt-2">
-          Have you ever lost 1000's of dollars because a junior
-          developer pushed an API key? Our goal is to prevent scenarios like this,
-          with security overviews and weekly reviews.
-        </p>
-      </div>
-
-      <div className="box w-80 h-72">
-        <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
-          How?
-        </h1>
-        <p className="p self-stretch px-4 pt-2">
-          Using a proprietary indexing technology,
-          Repo Raccoon searches your repository for any
-          vulnerabilites, like API keys or other secrets.
-        </p>
+        <div className="box w-80 h-72">
+          <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
+            How?
+          </h1>
+          <p className="p self-stretch px-4 pt-2">
+            Using a proprietary indexing technology,
+            Repo Raccoon searches your repository for any
+            vulnerabilites, like API keys or other secrets.
+          </p>
+        </div>
       </div>
     </div>
   );
