@@ -3,10 +3,21 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import URLForm from './_components/URLForm';
-import FakeDashboard from './_components/Dashboard';
+import ScanResults from './_components/ScanResults';
+import { ScanFinding } from '@/lib/repository/scanFinding/scanFindingSchema';
+import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
 
 export default function Home() {
+  const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
+  const [scanJob, setScanJob] = useState<ScanJob | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+
+  const handleScanSuccess = (findings: ScanFinding[], job: ScanJob) => {
+    setScanFindings(findings);
+    setIsScanning(true);
+    setScanJob(job);
+  };
+
 
   return (
     <div className="flex flex-col justify-center items-center gap-8">
@@ -24,15 +35,7 @@ export default function Home() {
         <div className="field flex items-center gap-2">
           <Image src="/searchIcon.svg" alt="" width={20} height={20} />
 
-          {/* Fake scan button */}
-          <button
-            onClick={() => setIsScanning(true)}
-            className="btn bg-button-main whitespace-nowrap"
-          >
-            Mock Scan
-          </button>
-
-          <URLForm />
+          <URLForm onScanStarted={handleScanSuccess} />
         </div>
       </div>
 
@@ -41,29 +44,15 @@ export default function Home() {
         className={`
           w-full max-w-6xl px-4
           transition-all duration-700 ease-out
-          ${
-            isScanning 
-              ? 'opacity-100 translate-y-0 max-h-[1000px]' 
-              : 'opacity-0 -translate-y-10 max-h-0 overflow-hidden'
+          ${isScanning
+            ? 'opacity-100 translate-y-0 max-h-[1000px]'
+            : 'opacity-0 -translate-y-10 max-h-0 overflow-hidden'
           }
         `}
       >
-        <FakeDashboard />
+        <ScanResults findings={scanFindings} job={scanJob} />
       </div>
-
-      {/* Boxes container - slides down and zooms when dashboard appears */}
-      <div
-        className={`
-          inline-flex justify-start items-start gap-40
-          transition-all duration-700 ease-out
-          origin-top
-          ${
-            isScanning 
-              ? 'scale-90 opacity-70 translate-y-8' 
-              : 'scale-100 opacity-100 translate-y-0'
-          }
-        `}
-      >
+      <div className='inline-flex justify-start items-start gap-40'>
         <div className="box w-80 h-72">
           <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
             Why?

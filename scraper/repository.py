@@ -75,7 +75,8 @@ def insertScanFindings(job_id, file_path, line_number, code_snippet, severity, r
         conn = get_connection()
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO scan_findings (job_id, file_path, line_number, code_snippet, severity, rule) VALUES (%s, %s, %s, %s, %s, %s)",
+                "INSERT INTO scan_findings (job_id, file_path, line_number, code_snippet, severity, rule) VALUES (%s, %s, %s, %s, %s, %s) " \
+                "ON CONFLICT DO NOTHING",
                 (job_id, file_path, line_number, code_snippet, severity, rule),
             )
             conn.commit()

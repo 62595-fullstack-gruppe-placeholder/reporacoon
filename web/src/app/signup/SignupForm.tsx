@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock } from "lucide-react";
 import { signup, SignupInput } from "./signup";
@@ -21,6 +22,7 @@ export function SignupForm() {
   });
 
   const onSubmit = form.handleSubmit(async (data: SignupFormSchema) => {
+    setIsLoading(true);
     const input: SignupInput = {
       email: data.email,
       password: data.password,
@@ -42,6 +44,8 @@ export function SignupForm() {
     form.reset();
     window.location.href = "/dashboard";
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="min-h-screen w-full flex justify-center pt-20 p-4">
@@ -127,7 +131,7 @@ export function SignupForm() {
           )}
         </div>
 
-        <SubmitButton text="Sign Up" loadingText="Creating Account..." />
+        <SubmitButton text="Sign Up" loadingText="Creating Account..." loading={isLoading} />
       </form>
     </div>
   );

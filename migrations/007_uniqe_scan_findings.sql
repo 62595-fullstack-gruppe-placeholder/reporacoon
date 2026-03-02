@@ -1,0 +1,1 @@
+ALTER TABLE scan_findings ADD CONSTRAINT unique_finding UNIQUE(job_id, file_path, line_number, rule, code_snippet);
