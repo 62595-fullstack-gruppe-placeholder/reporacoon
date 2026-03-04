@@ -22,9 +22,7 @@ services:
     restart: 'no'
 
   web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
+    image: ghcr.io/62595-fullstack-gruppe-placeholder/reporacoon/web:latest
     environment:
       DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
       NEXT_TELEMETRY_DISABLED: 1
@@ -46,9 +44,7 @@ services:
       - app-network
 
   scraper:
-    build:
-      context: ./scraper
-      dockerfile: Dockerfile
+    image: ghcr.io/62595-fullstack-gruppe-placeholder/reporacoon/scraper:latest
     environment:
       DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
     ports:
