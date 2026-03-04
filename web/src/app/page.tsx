@@ -12,17 +12,12 @@ export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJob, setScanJob] = useState<ScanJob | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [isDeepScan, setIsDeepScan] = useState(false);
 
   const handleScanSuccess = (findings: ScanFinding[], job: ScanJob) => {
     setScanFindings(findings);
     setIsScanning(true);
     setScanJob(job);
   };
-
-  const handleScanTypeChange = (isDeepScan: boolean) => {
-    setIsDeepScan(!isDeepScan)
-  }
 
   return (
     <div className="flex flex-col justify-center items-center gap-8">
@@ -42,7 +37,7 @@ export default function Home() {
 
           <URLForm onScanStarted={handleScanSuccess} />
         </div>
-        <ScanOptions/>
+        <ScanOptions isDisabled={true}/>
       </div>
 
       {/* Dashboard appears with fade and slide down animation */}
