@@ -5,42 +5,44 @@ import { cookies } from "next/headers";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const isJson = req.headers.get("accept")?.includes("application/json");
 
   if (!token) {
-    // Check if request expects JSON or redirect
-    if (req.headers.get("accept")?.includes("application/json")) {
-      return NextResponse.json({ success: false, error: "Missing token" });
-    }
-    return NextResponse.redirect(new URL("/confirm-email/error?reason=missing-token", req.url));
+    if (isJson) return NextResponse.json({ success: false, error: "Missing token" });
+    return NextResponse.redirect(new URL("/confirm-email/error?reason=missing-token", appUrl));
   }
 
   const result = await confirmEmail(token);
 
   if (!result.success) {
-    if (req.headers.get("accept")?.includes("application/json")) {
-      return NextResponse.json({ success: false, error: result.error });
-    }
+    if (isJson) return NextResponse.json({ success: false, error: result.error });
     return NextResponse.redirect(
-      new URL(`/confirm-email/error?reason=${encodeURIComponent(result.error)}`, req.url)
+      new URL(`/confirm-email/error?reason=${encodeURIComponent(result.error)}`, appUrl)
     );
   }
 
-  // Generate access token and set cookie
   const accessToken = await generateAccessToken(result.user);
-  const cookieStore = await cookies();
-  cookieStore.set("access-token", accessToken, {
+
+  if (isJson) {
+    const response = NextResponse.json({ success: true });
+    response.cookies.set("access-token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60,
+    });
+    return response;
+  }
+
+  const response = NextResponse.redirect(new URL("/dashboard", appUrl));
+  response.cookies.set("access-token", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60,
   });
-
-  // If request expects JSON, return success
-  if (req.headers.get("accept")?.includes("application/json")) {
-    return NextResponse.json({ success: true });
-  }
-
-  // Otherwise redirect to dashboard
-  return NextResponse.redirect(new URL("/dashboard", req.url));
+  return response;
 }
