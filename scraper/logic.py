@@ -17,7 +17,7 @@ from repository import *
 #--------------------------------------------------------------------------------------------
 
 class GitHubSecretScanner:
-    def __init__(self, repo_url, job_id, isDeepScan):
+    def __init__(self, repo_url, job_id, isDeepScan=False):
         self.repo_url = repo_url
         self.job_id = job_id
         self.scanned_files = 0

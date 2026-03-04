@@ -69,7 +69,7 @@ def getAllScanFindings():
         if conn:
             conn.close()
 
-def insertScanFindings(job_id, file_path, line_number, code_snippet, severity, rule, branch):
+def insertScanFindings(job_id, file_path, line_number, code_snippet, severity, rule, branch="main"):
     conn = None
     try:
         conn = get_connection()
