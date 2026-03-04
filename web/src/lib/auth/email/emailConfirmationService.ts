@@ -6,11 +6,13 @@ import {
   getEmailConfirmationByTokenHash,
   markEmailConfirmationUsed,
 } from "@/lib/repository/emailConfirmations/emailConfirmationRepository";
-import { markUserEmailConfirmed } from "@/lib/repository/user/userRepository";
+import { getUserById, markUserEmailConfirmed } from "@/lib/repository/user/userRepository";
+import { User } from "@/lib/repository/user/userSchemas";
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
+
 
 export async function sendConfirmationEmail(
   userId: string,
@@ -23,9 +25,9 @@ export async function sendConfirmationEmail(
 
   await createEmailConfirmation({ user_id: userId, token_hash: tokenHash, expires_at });
 
-  const confirmUrl = `${process.env.NEXT_PUBLIC_APP_URL}/confirm-email?token=${rawToken}`;
+ const confirmUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/confirm?token=${rawToken}`;
 
-  await sendEmail({
+  await sendEmail({ 
     to: userEmail,
     subject: "Confirm your email",
     html: `
@@ -38,10 +40,9 @@ export async function sendConfirmationEmail(
 }
 
 
-// confirm email function not implemented yet
 export async function confirmEmail(
   rawToken: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<{ success: true; user: User } | { success: false; error: string }> {
   const tokenHash = hashToken(rawToken);
   const confirmation = await getEmailConfirmationByTokenHash(tokenHash);
 
@@ -52,5 +53,8 @@ export async function confirmEmail(
   await markEmailConfirmationUsed(confirmation.id);
   await markUserEmailConfirmed(confirmation.user_id);
 
-  return { success: true };
+  const user = await getUserById(confirmation.user_id);
+  if (!user) return { success: false, error: "User not found" };
+
+  return { success: true, user };
 }
