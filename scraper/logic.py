@@ -17,11 +17,12 @@ from repository import *
 #--------------------------------------------------------------------------------------------
 
 class GitHubSecretScanner:
-    def __init__(self, repo_url, job_id):
+    def __init__(self, repo_url, job_id, isDeepScan):
         self.repo_url = repo_url
         self.job_id = job_id
         self.scanned_files = 0
         self.findings = defaultdict(list)
+        self.isDeepScan = isDeepScan
         
         # Create a requests session for HTTP requests
         self.session = requests.Session()
@@ -81,7 +82,6 @@ class GitHubSecretScanner:
     def clone_repo(self):
         self.write_log("Cloning repository...")
         temp_dir = tempfile.mkdtemp()
-        # TODO: add an option to search history and possibly more branches. History can be changed by modifying the depth flag (removing it) or adding the --mirror flag.
         try:
             subprocess.run(
                 ["git", "clone", "--depth", "1", self.repo_url, temp_dir],
@@ -131,7 +131,7 @@ class GitHubSecretScanner:
 
     # ---------------- Scanning ---------------- #
 
-    def scan_content(self, content, file_path):
+    def scan_content(self, content, file_path, branch):
         for secret_type, (pattern, severity) in self.patterns.items():
             for m in re.finditer(pattern, content, flags=re.MULTILINE):
                 match_text = m.group(0)
@@ -144,9 +144,9 @@ class GitHubSecretScanner:
                 if len(snippet) > 1000:
                     snippet = snippet[:1000]
 
-                insertScanFindings(self.job_id, file_path, line_number, snippet, severity, secret_type)
+                insertScanFindings(self.job_id, file_path, line_number, snippet, severity, secret_type, branch)
 
-    def scan_repository(self, repo_path):
+    def scan_repository(self, repo_path, branch):
         # TODO: add an upper limit of files to scan
         self.write_log("Scanning files locally...")
 
@@ -163,11 +163,68 @@ class GitHubSecretScanner:
 
                     relative_path = os.path.relpath(file_path, repo_path)
 
-                    self.scan_content(content, relative_path)
+                    self.scan_content(content, relative_path, branch)
                     self.scanned_files += 1
 
                 except Exception as e:
                     self.write_log(f"Error reading {file_path}: {e}")
+
+    def scan_all_branches(self, repo_path):
+        """
+        checkout every remote branch and scan its contents.
+        the repo has already been cloned with full history;
+        afterwards the working copy is restored to the original branch.
+        """
+        # remember where we started
+        proc = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        original = proc.stdout.strip()
+
+        # collect remote branch names (skip the HEAD pointer)
+        proc = subprocess.run(
+            ["git", "branch", "-r"],
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        branches = []
+        for line in proc.stdout.splitlines():
+            line = line.strip()
+            if "->" in line:
+                continue
+            if line.startswith("origin/"):
+                branches.append(line.replace("origin/", ""))
+
+        for branch in branches:
+            try:
+                subprocess.run(
+                    ["git", "checkout", branch],
+                    cwd=repo_path,
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except subprocess.CalledProcessError:
+                self.write_log(f"unable to checkout branch {branch}, skipping")
+                continue
+
+            self.write_log(f"scanning branch {branch}")
+            self.scan_repository(repo_path, branch)
+
+        # restore original checkout
+        subprocess.run(
+            ["git", "checkout", original],
+            cwd=repo_path,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
     # ---------------- Main ---------------- #
 
@@ -176,7 +233,12 @@ class GitHubSecretScanner:
 
         try:
             repo_path = self.clone_repo()
-            self.scan_repository(repo_path)
+            if self.isDeepScan:
+                # scan every branch, not just the default one
+                self.scan_all_branches(repo_path)
+            else:
+                # set scanned branch to main, as it is the only one scanned
+                self.scan_repository(repo_path, branch = "main")
 
         finally:
             if repo_path and os.path.exists(repo_path):
