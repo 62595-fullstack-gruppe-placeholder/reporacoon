@@ -22,7 +22,7 @@ export default function Dashboard({ user }: { user: any }) {
         setScanJob(job);
     };
     return (
-        <div>
+        <div className="flex flex-col justify-center items-center gap-8">
             <div className="px-4 py-10 inline-flex flex-col justify-start items-start gap-8 min-w-96 max-w-125">
                 This is a secret page that requires authentication.
                 <p>{JSON.stringify(user)}</p>
@@ -32,7 +32,7 @@ export default function Dashboard({ user }: { user: any }) {
 
                     <URLForm onScanStarted={handleScanSuccess} isDeepScan={isDeepScan} />
                 </div>
-                <ScanOptions isDisabled={false} onDeepChange={(isDeep) => setIsDeepScan(isDeep)}/>
+                <ScanOptions isDisabled={false} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
 
                 {/* Dashboard appears with fade and slide down animation */}
                 <div
@@ -45,8 +45,19 @@ export default function Dashboard({ user }: { user: any }) {
                         }
               `}
                 >
-                    <ScanResults findings={scanFindings} job={scanJob} />
                 </div>
+            </div>
+            <div
+                className={`
+                      w-full max-w-6xl px-4
+                      transition-all duration-700 ease-out
+                      ${isScanning
+                        ? 'opacity-100 translate-y-0 max-h-[1000px]'
+                        : 'opacity-0 -translate-y-10 max-h-0 overflow-hidden'
+                    }
+                    `}
+            >
+                <ScanResults findings={scanFindings} job={scanJob} />
             </div>
         </div>
     );

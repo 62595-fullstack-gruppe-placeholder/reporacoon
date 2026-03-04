@@ -83,12 +83,22 @@ class GitHubSecretScanner:
         self.write_log("Cloning repository...")
         temp_dir = tempfile.mkdtemp()
         try:
-            subprocess.run(
-                ["git", "clone", "--depth", "1", self.repo_url, temp_dir],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            if self.isDeepScan:
+                # full clone with all branches and history
+                subprocess.run(
+                    ["git", "clone", self.repo_url, temp_dir],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+            else:
+                # shallow clone - only default branch
+                subprocess.run(
+                    ["git", "clone", "--depth", "1", self.repo_url, temp_dir],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
             self.write_log("Repository cloned successfully.")
             return temp_dir
 
