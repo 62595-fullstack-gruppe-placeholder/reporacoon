@@ -30,6 +30,7 @@ services:
       NEXT_TELEMETRY_DISABLED: 1
       JWT_PRIVATE_KEY_PATH: /keys/private_key.pem
       JWT_PUBLIC_KEY_PATH: /keys/public_key.pem
+      NEXT_PUBLIC_APP_URL: http://localhost:3000 #should prolly change on server
     ports:
       - "3000:3000"
     volumes:
