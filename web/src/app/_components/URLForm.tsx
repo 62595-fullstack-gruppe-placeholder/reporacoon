@@ -86,11 +86,10 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
                     console.log(res)
                     const findings = await getScanFindingByIdServerAction(res.scan_id)
                     const job = await getScanJobByIdServerAction(res.scan_id)
-                    const scanJobs = [job]
 
                     if (findings) {
                     // Send the finding back to the Home component
-                    onScanStarted(findings, scanJobs); 
+                    onScanStarted(findings, job); 
                 }
                 } catch (err) {
                     console.error(err)
