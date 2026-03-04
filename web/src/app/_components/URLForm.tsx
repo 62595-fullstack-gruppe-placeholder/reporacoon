@@ -3,13 +3,9 @@
 import { FormEvent, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { url } from "inspector";
 import { useForm } from "react-hook-form";
-import { Island_Moments } from "next/font/google";
-import { Loader2 } from "lucide-react";
 import { SubmitButton } from "./SubmitButton";
 import { createScanJobServerAction, getScanFindingByIdServerAction, getScanJobByIdServerAction } from "@/app/ScanServerActions";
-import { createScanJob } from "@/lib/repository/scanJob/scanJobRepository";
 import { CreateScanJobDTO, createScanJobDTOSchema, ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 
@@ -29,7 +25,7 @@ export type URLFormSchema = z.infer<typeof urlFormSchema>;
 
 
 interface URLFormProps {
-    onScanStarted: (finding: ScanFinding[], job: ScanJob) => void;
+    onScanStarted: (finding: ScanFinding[], jobs: ScanJob[]) => void;
 }
 
 
@@ -83,11 +79,12 @@ export default function URLForm({ onScanStarted }: URLFormProps) {
                     console.log(res.scan_id)
                     console.log(res)
                     const findings = await getScanFindingByIdServerAction(res.scan_id)
-                    const scanJob = await getScanJobByIdServerAction(res.scan_id)
+                    const job = await getScanJobByIdServerAction(res.scan_id)
+                    const scanJobs = [job]
 
                     if (findings) {
                     // Send the finding back to the Home component
-                    onScanStarted(findings, scanJob); 
+                    onScanStarted(findings, scanJobs); 
                 }
                 } catch (err) {
                     console.error(err)
