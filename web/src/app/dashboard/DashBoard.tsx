@@ -12,14 +12,14 @@ import ScanResults from "../_components/ScanResults";
 
 export default function Dashboard({ user }: { user: any }) {
     const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
-    const [scanJob, setScanJob] = useState<ScanJob | null>(null);
+    const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
     const [isScanning, setIsScanning] = useState(false);
     const [isDeepScan, setIsDeepScan] = useState(false);
 
-    const handleScanSuccess = (findings: ScanFinding[], job: ScanJob) => {
+    const handleScanSuccess = (findings: ScanFinding[], jobs: ScanJob[]) => {
         setScanFindings(findings);
         setIsScanning(true);
-        setScanJob(job);
+        setScanJob(jobs);
     };
     return (
         <div className="flex flex-col justify-center items-center gap-8">
@@ -57,7 +57,7 @@ export default function Dashboard({ user }: { user: any }) {
                     }
                     `}
             >
-                <ScanResults findings={scanFindings} job={scanJob} />
+                <ScanResults findings={scanFindings} jobs={scanJobs} />
             </div>
         </div>
     );
