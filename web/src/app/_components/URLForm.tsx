@@ -25,7 +25,7 @@ export type URLFormSchema = z.infer<typeof urlFormSchema>;
 
 
 interface URLFormProps {
-    onScanStarted: (finding: ScanFinding[], job: ScanJob) => void;
+    onScanStarted: (finding: ScanFinding[], jobs: ScanJob[]) => void;
     isDeepScan: boolean;
 }
 
@@ -86,10 +86,11 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
                     console.log(res)
                     const findings = await getScanFindingByIdServerAction(res.scan_id)
                     const job = await getScanJobByIdServerAction(res.scan_id)
+                    const scanJobs = [job]
 
                     if (findings) {
                     // Send the finding back to the Home component
-                    onScanStarted(findings, job); 
+                    onScanStarted(findings, scanJobs); 
                 }
                 } catch (err) {
                     console.error(err)
