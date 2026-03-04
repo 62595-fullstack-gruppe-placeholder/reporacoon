@@ -77,7 +77,7 @@ def test_scan_endpoint(client):
         mock_scanner_instance.run.return_value = None    
         mock_scanner.return_value = mock_scanner_instance
         
-        response = client.post('/scan')
+        response = client.post('/scan', json=False)
         print(f"Status: {response.status_code}")
         print(f"JSON: {response.json}")
         assert response.status_code == 202
