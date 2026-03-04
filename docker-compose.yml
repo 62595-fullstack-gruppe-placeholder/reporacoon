@@ -21,16 +21,30 @@ services:
       "
     restart: 'no'
 
+  nginx: 
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+    networks:
+      - app-network
+    restart: unless-stopped
+
   web:
     image: ghcr.io/62595-fullstack-gruppe-placeholder/reporacoon/web:latest
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    pull_policy: always # always pull fresh images for deployment. overridden locally
     environment:
       DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
       NEXT_TELEMETRY_DISABLED: 1
       JWT_PRIVATE_KEY_PATH: /keys/private_key.pem
       JWT_PUBLIC_KEY_PATH: /keys/public_key.pem
-      NEXT_PUBLIC_APP_URL: http://localhost:3000 #should prolly change on server
-    ports:
-      - "3000:3000"
+      NEXT_PUBLIC_APP_URL: http://localhost #should prolly change on server
     volumes:
       - jwt-keys:/keys:ro # mount RSA keys as read only
     depends_on:
@@ -45,6 +59,10 @@ services:
 
   scraper:
     image: ghcr.io/62595-fullstack-gruppe-placeholder/reporacoon/scraper:latest
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    pull_policy: always # always pull fresh images for deployment. overridden locally
     environment:
       DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
     ports:
