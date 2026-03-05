@@ -83,7 +83,7 @@ export function ScanOptions({ isDisabled, onDeepChange}: Props) {
                                 Deep scan
                             </FieldLabel>
                             <FieldDescription>
-                                This scan will scan all files in all branches and through the history of the reposity. Deep scan is slower, but more thourugh
+                                This scan will scan all files in all branches and through the history of the reposity. Deep scan is slower, but more thorough
                             </FieldDescription>
                         </FieldContent>
                     </div>)}

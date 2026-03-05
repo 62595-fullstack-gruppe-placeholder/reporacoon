@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ShieldCheck, Zap, List, AlertTriangle } from 'lucide-react';
+import { ChevronDown, ShieldCheck, Zap, List, AlertTriangle, GitBranch } from 'lucide-react';
 import { ScanFinding } from '../../lib/repository/scanFinding/scanFindingSchema';
 import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
 
@@ -128,9 +128,8 @@ function FindingItem({ finding }: { finding: ScanFinding }) {
           <h3 className="text-sm font-bold text-text-main truncate max-w-[200px] md:max-w-md">
             {finding.rule?.replace(/_/g, ' ')}
           </h3>
-          <div className="flex items-center gap-2">
-            {/* TODO: Make this img white */}
-            <img src="/git-branch.svg" alt="branch icon" className='w-8 h-8'></img>
+          <div className="flex items-end gap-2">
+            <GitBranch className="w-6 h-6 text-white" />
             <h3 className='text-sm font-bold text-text-main'>Branch: {finding.branch}</h3>
           </div>
         </div>
