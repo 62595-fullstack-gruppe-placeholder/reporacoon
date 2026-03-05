@@ -6,6 +6,7 @@ import URLForm from './_components/URLForm';
 import ScanResults from './_components/ScanResults';
 import { ScanFinding } from '@/lib/repository/scanFinding/scanFindingSchema';
 import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
+import { ScanOptions } from './_components/ScanOptions';
 
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
@@ -87,8 +88,9 @@ export default function Home() {
         <div className="field flex items-center gap-2">
           <Image src="/searchIcon.svg" alt="" width={20} height={20} />
 
-          <URLForm onScanStarted={handleScanSuccess} />
+          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false}/>
         </div>
+        <ScanOptions isDisabled={true} />
       </div>
 
       {/* Dashboard appears with fade and slide down animation */}

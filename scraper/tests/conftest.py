@@ -102,7 +102,8 @@ def db_transaction():
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                     job_id UUID NOT NULL REFERENCES scan_jobs(id) ON DELETE CASCADE,
                     file_path TEXT NOT NULL, line_number INTEGER NOT NULL,
-                    code_snippet TEXT NOT NULL, severity Severity NOT NULL, rule TEXT NOT NULL
+                    code_snippet TEXT NOT NULL, severity Severity NOT NULL, rule TEXT NOT NULL,
+                    branch TEXT
                 );
             """)
         yield test_conn.real_conn

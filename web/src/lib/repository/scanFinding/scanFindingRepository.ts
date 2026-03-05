@@ -18,9 +18,10 @@ export async function createScanFinding(input: CreateScanFindingDTO): Promise<Sc
         line_number,
         code_snippet,
         severity,
-        rule
+        rule,
+        branch
       `,
-    [data.job_id, data.file_path, data.line_number, data.code_snippet, data.severity, data.rule],
+    [data.job_id, data.file_path, data.line_number, data.code_snippet, data.severity, data.rule, data.branch],
   );
 
   if (!row) {

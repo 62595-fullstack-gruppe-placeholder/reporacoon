@@ -77,7 +77,7 @@ def test_scan_endpoint(client):
         mock_scanner_instance.run.return_value = None    
         mock_scanner.return_value = mock_scanner_instance
         
-        response = client.post('/scan')
+        response = client.post('/scan', json={"isDeepScan": False})
         print(f"Status: {response.status_code}")
         print(f"JSON: {response.json}")
         assert response.status_code == 202
@@ -87,7 +87,7 @@ def test_scan_endpoint(client):
 
         mock_get_jobs.return_value = {}
         
-        response = client.post('/scan')
+        response = client.post('/scan', json={"isDeepScan": False})
         assert response.status_code == 200
         assert response.json['success'] is False
     
@@ -95,7 +95,7 @@ def test_scan_endpoint(client):
         mock_get_jobs.return_value = mock_pending_jobs
         mock_validate.return_value = (False, 'Bad URL', None)
         
-        response = client.post('/scan')
+        response = client.post('/scan', json={"isDeepScan": False})
         assert response.status_code == 400
         assert 'error' in response.json
 

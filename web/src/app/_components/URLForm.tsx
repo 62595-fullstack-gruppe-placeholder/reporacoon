@@ -26,10 +26,11 @@ export type URLFormSchema = z.infer<typeof urlFormSchema>;
 
 interface URLFormProps {
     onScanStarted: (finding: ScanFinding[], jobs: ScanJob[]) => void;
+    isDeepScan: boolean;
 }
 
 
-export default function URLForm({ onScanStarted }: URLFormProps) {
+export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
     const form = useForm<URLFormSchema>({
@@ -62,17 +63,22 @@ export default function URLForm({ onScanStarted }: URLFormProps) {
         
             // TODO: handle errors for the validation call above
             if (res.valid === true) {
-                console.log("URL is valid, starting scan...");
+                if (isDeepScan) {
+                    console.log("URL is valid, starting deep scan...");
+                } else {
+                    console.log("URL is valid, starting scan...");
+                }
                 // Creating the scan job in the database
                 const scanJob = await createScanJobServerAction(input);
 
                 // Starting the scanner, which runs all of the scan jobs currently in the database
                 // TODO: handle errors from the scan
                 try {
+                    
                     const response = await fetch("http://localhost:5001/scan", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ url: data.url }),
+                        body: JSON.stringify({ isDeepScan }),
                     });
                     console.log(response)
                     const res = await response.json();
