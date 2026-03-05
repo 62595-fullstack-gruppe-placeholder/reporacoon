@@ -83,7 +83,7 @@ class GitHubSecretScanner:
         self.write_log("Cloning repository...")
         temp_dir = tempfile.mkdtemp()
         try:
-            if self.isDeepScan:
+            if self.isDeepScan == True:
                 # full clone with all branches and history
                 subprocess.run(
                     ["git", "clone", self.repo_url, temp_dir],
@@ -240,10 +240,12 @@ class GitHubSecretScanner:
 
     def run(self):
         repo_path = None
+        print("running scanner of type: " + str(self.isDeepScan) + "which has type: " + str(type(self.isDeepScan)))
+        print("running scanner of type: " + str(self.isDeepScan))
 
         try:
             repo_path = self.clone_repo()
-            if self.isDeepScan:
+            if self.isDeepScan == True:
                 # scan every branch, not just the default one
                 self.scan_all_branches(repo_path)
             else:
