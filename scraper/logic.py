@@ -240,9 +240,6 @@ class GitHubSecretScanner:
 
     def run(self):
         repo_path = None
-        print("running scanner of type: " + str(self.isDeepScan) + "which has type: " + str(type(self.isDeepScan)))
-        print("running scanner of type: " + str(self.isDeepScan))
-
         try:
             repo_path = self.clone_repo()
             if self.isDeepScan == True:
