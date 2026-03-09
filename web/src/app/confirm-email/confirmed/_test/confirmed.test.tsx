@@ -9,7 +9,7 @@ vi.mock("next/navigation", () => ({
 
 const mockClose = vi.fn();
 const mockPostMessage = vi.fn();
-vi.stubGlobal("BroadcastChannel", vi.fn(() => ({
+vi.stubGlobal("BroadcastChannel", vi.fn().mockImplementation(() => ({
   postMessage: mockPostMessage,
   close: mockClose,
 })));

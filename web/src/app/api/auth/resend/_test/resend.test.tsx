@@ -33,6 +33,8 @@ const unconfirmedUser = {
 
 beforeEach(() => vi.clearAllMocks());
 
+
+
 describe("POST /api/auth/resend", () => {
   it("returns 400 if email is missing", async () => {
     const res = await POST(makeRequest({}));

@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 const mockClose = vi.fn();
 const mockChannel = { onmessage: null as any, close: mockClose };
-vi.stubGlobal("BroadcastChannel", vi.fn(() => mockChannel));
+vi.stubGlobal("BroadcastChannel", vi.fn().mockImplementation(() => mockChannel));
 vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
 
 Object.defineProperty(window, "location", {

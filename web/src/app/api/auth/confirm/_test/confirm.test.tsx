@@ -59,14 +59,14 @@ describe("GET /api/auth/confirm", () => {
       mockConfirmEmail.mockResolvedValue({ success: false, error: "Invalid token" });
       const res = await GET(makeRequest("bad-token"));
       expect(res.status).toBe(307);
-      expect(res.headers.get("location")).toContain("Invalid+token");
+      expect(res.headers.get("location")).toContain("Invalid%20token");
     });
 
     it("redirects to error page on expired token", async () => {
       mockConfirmEmail.mockResolvedValue({ success: false, error: "Token expired" });
       const res = await GET(makeRequest("expired-token"));
       expect(res.status).toBe(307);
-      expect(res.headers.get("location")).toContain("Token+expired");
+      expect(res.headers.get("location")).toContain("Token%20expired");
     });
 
     it("returns JSON error on invalid token when accept is application/json", async () => {
