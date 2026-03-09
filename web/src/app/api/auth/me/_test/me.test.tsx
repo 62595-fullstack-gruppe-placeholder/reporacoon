@@ -28,11 +28,10 @@ const fakeUser = {
 };
 
 const makeRequest = (cookie?: string) => {
-  const req = new NextRequest("http://localhost/api/auth/me");
-  if (cookie) {
-    req.headers.set("cookie", `access-token=${cookie}`);
-  }
-  return req;
+  const request = new Request("http://localhost/api/auth/me", {
+    headers: cookie ? { cookie: `access-token=${cookie}` } : {},
+  });
+  return new NextRequest(request);
 };
 
 beforeEach(() => vi.clearAllMocks());
