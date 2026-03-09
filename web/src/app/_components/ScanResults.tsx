@@ -4,11 +4,17 @@ import { useState } from 'react';
 import { ChevronDown, ShieldCheck, Zap, List, AlertTriangle, GitBranch } from 'lucide-react';
 import { ScanFinding } from '../../lib/repository/scanFinding/scanFindingSchema';
 import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
+import { float32 } from 'zod';
 
 interface Props {
   findings: ScanFinding[] | null;
   jobs: ScanJob[] | null; // Changed to plural
 }
+
+type MergedFinding = Omit<ScanFinding, "branch"> & {
+    branches: string[];
+    branchesText: string;
+  };
 
 export default function ScanResults({ findings, jobs }: Props) {
   if (!findings || !jobs || jobs.length === 0) return null;
@@ -20,20 +26,61 @@ export default function ScanResults({ findings, jobs }: Props) {
     CRITICAL: 3,
   };
 
+  
+
+  const mergeFindings = (findingsForJob: ScanFinding[]): MergedFinding[] => {
+    const map = new Map<string, MergedFinding>();
+
+    for (const f of findingsForJob) {
+      const key = `${f.line_number}-${f.rule}-${f.code_snippet}-${f.severity}`;
+      const existing = map.get(key);
+
+      if (existing) {
+        if (!existing.branches.includes(f.branch)) {
+          existing.branches.push(f.branch);
+          existing.branchesText = existing.branches.join(", ");
+        }
+      } else {
+        const branches = [f.branch];
+        map.set(key, {
+          ...f,
+          branches,
+          branchesText: branches.join(", "),
+        });
+      }
+    }
+
+    return Array.from(map.values());
+  };
+
   return (
     <div className="w-full space-y-6">
-      {jobs.map((job) => (
-        <JobAccordion
-          key={job.id || job.repo_url}
-          job={job}
-          findings={findings.filter(f => f.job_id === job.id).sort((f1, f2) => severityOrder[f2.severity] - severityOrder[f1.severity])}
-        />
-      ))}
+      {jobs.map((job) => {
+        const jobFindings = findings
+          .filter(f => f.job_id === job.id)
+          .sort((f1, f2) => severityOrder[f2.severity] - severityOrder[f1.severity]);
+
+        const mergedFindings = mergeFindings(jobFindings);
+
+        const properFindings: ScanFinding[] = mergedFindings.map(mf => ({
+          ...mf,
+          branch: mf.branchesText, // pick first branch
+        }));
+
+        // use mergedFindings directly
+        return (
+          <JobAccordion
+            key={job.id || job.repo_url}
+            job={job}
+            findings={mergedFindings} 
+          />
+        );
+      })}
     </div>
   );
 }
 
-function JobAccordion({ job, findings }: { job: ScanJob; findings: ScanFinding[] }) {
+function JobAccordion({ job, findings }: { job: ScanJob; findings: MergedFinding[] }) {
   const [isMainOpen, setIsMainOpen] = useState(false);
 
   return (
@@ -112,14 +159,14 @@ function JobAccordion({ job, findings }: { job: ScanJob; findings: ScanFinding[]
   );
 }
 
-function FindingItem({ finding }: { finding: ScanFinding }) {
+function FindingItem({ finding }: { finding: MergedFinding }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const severityMap: Record<string, string> = {
     CRITICAL: "bg-purple-500/10 text-purple-400 border-purple-500/20",
     HIGH: "bg-red-500/10 text-red-400 border-red-500/20",
     MEDIUM: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-    LOW: "bg-green-500/10 text-blue-400 border-blue-500/20",
+    LOW: "bg-green-500/10 text-green-400 border-green-500/20",
   };
 
   return (
@@ -137,7 +184,7 @@ function FindingItem({ finding }: { finding: ScanFinding }) {
           </h3>
           <div className="flex items-end gap-2">
             <GitBranch className="w-6 h-6 text-white" />
-            <h3 className='text-sm font-bold text-text-main'>Branch: {finding.branch}</h3>
+            <h3 className='text-sm font-bold text-text-main'>Branch: {finding.branches.join(" + ")}</h3>
           </div>
         </div>
         <ChevronDown size={16} className={`text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} />

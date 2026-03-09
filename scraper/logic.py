@@ -154,6 +154,7 @@ class GitHubSecretScanner:
                 if len(snippet) > 1000:
                     snippet = snippet[:1000]
 
+                self.write_log("Found secret!")
                 insertScanFindings(self.job_id, file_path, line_number, snippet, severity, secret_type, branch)
 
     def scan_repository(self, repo_path, branch):
