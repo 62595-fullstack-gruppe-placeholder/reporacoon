@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 
 export default function ConfirmEmailPendingPage() {
@@ -23,6 +22,18 @@ export default function ConfirmEmailPendingPage() {
       }
     };
     return () => channel.close();
+  }, []);
+
+  // Polling fallback — catches same-tab confirmation or different browser
+  useEffect(() => {
+    const poll = setInterval(async () => {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        clearInterval(poll);
+        window.location.href = "/dashboard";
+      }
+    }, 3000);
+    return () => clearInterval(poll);
   }, []);
 
   const handleResend = async () => {
@@ -51,7 +62,6 @@ export default function ConfirmEmailPendingPage() {
           <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400 animate-ping opacity-75" />
           <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400" />
         </div>
-
         <h1 className="text-3xl font-semibold text-gray-100 mb-3 tracking-tight">
           Check your inbox
         </h1>
@@ -61,7 +71,6 @@ export default function ConfirmEmailPendingPage() {
         <p className="text-gray-600 text-sm mb-10">
           This page will close automatically once confirmed{dots}
         </p>
-
         <button
           onClick={handleResend}
           disabled={loading || resent}
