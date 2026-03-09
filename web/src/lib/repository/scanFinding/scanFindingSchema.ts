@@ -11,6 +11,7 @@ export const scanFindingSchema = z.object({
   code_snippet: z.string(),
   severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
   rule: z.string(),
+  branch: z.string(),
 });
 
 /**
@@ -28,6 +29,7 @@ export const createScanFindingDTOSchema = z.object({
   code_snippet: z.string(),
   severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
   rule: z.string(),
+  branch: z.string(),
 });
 
 /**
