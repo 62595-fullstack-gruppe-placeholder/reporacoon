@@ -107,3 +107,10 @@ export async function markUserEmailConfirmed(userId: string): Promise<void> {
   );
 }
 
+export async function getUserByEmail(email: string): Promise<User | null> {
+  return queryOne<User>(
+    "SELECT * FROM users WHERE email = $1",
+    [email]
+  );
+}
+
