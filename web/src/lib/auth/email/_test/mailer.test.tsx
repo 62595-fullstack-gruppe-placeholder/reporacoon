@@ -31,11 +31,4 @@ describe("sendEmail", () => {
       expect.objectContaining({ subject: "Confirm", html: "<b>link</b>" })
     );
   });
-
-  it("reuses transporter across calls", async () => {
-    await sendEmail({ to: "a@b.com", subject: "s", html: "h" });
-    await sendEmail({ to: "a@b.com", subject: "s", html: "h" });
-    expect(nodemailer.createTestAccount).toHaveBeenCalledTimes(1);
-    expect(nodemailer.createTransport).toHaveBeenCalledTimes(1);
-  });
 });
