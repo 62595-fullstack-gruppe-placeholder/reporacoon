@@ -4,7 +4,7 @@ import { getFuture, getNow } from "../timeUtil";
 import { loadKeys } from "./keys";
 import { getUserById } from "../repository/user/userRepository";
 import crypto from "crypto";
-import { createRefreshToken, getRefreshTokenById } from "../repository/refreshToken/refreshTokenRepository";
+import { createRefreshToken, getRefreshTokenByHash, getRefreshTokenById } from "../repository/refreshToken/refreshTokenRepository";
 
 
 /**
@@ -30,23 +30,12 @@ export async function generateAccessToken(user: User): Promise<string> {
 
  
 /**
- * Generate a refresh token JWT for a given user.
- * @param user the user for whom to generate the refresh token JWT.
- * @returns promise of refresh token JWT for the given user.
+ * Generate a refresh token for a given user.
+ * @param user the user for whom to generate the refresh token.
+ * @returns promise of refresh token for the given user.
  */
 export async function generateRefreshToken(user: User): Promise<string> {
-  const { privateKey } = await loadKeys();
-
-  const jwt = new SignJWT({
-    sub: user.id,
-    iat: getNow(),
-    exp: getFuture(60 * 60 * 24 * 7), // 7 Days
-    iss: "reporacoon",
-    aud: "reporacoon-refresh",
-  }).setProtectedHeader({ alg: "RS256", kid: "reporacoon-001" });
-
-  const tokenString = await jwt.sign(privateKey);
-
+  const tokenString = crypto.randomBytes(32).toString("base64url"); 
   const tokenHash = crypto.createHash("sha256").update(tokenString).digest("hex");
 
   await createRefreshToken({
@@ -64,19 +53,17 @@ export async function generateRefreshToken(user: User): Promise<string> {
  * @param refreshToken the refresh token JWT to generete the new access token
  */
 export async function refreshAccessToken(refreshToken: string) {
-  const { publicKey } = await loadKeys();
-
   try {
-    const { payload } = await jwtVerify(refreshToken, publicKey, {
-      issuer: "reporacoon",
-      audience: "reporacoon-refresh",
-    });
-
-    const jti = payload.jti as string;
-    const userId = payload.sub as string;
-
-    const storedToken = await getRefreshTokenById(jti);
+    
     const incomingHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
+    const storedToken = await getRefreshTokenByHash(incomingHash)
+    
+    const userId = storedToken?.id
+    
+    if (!userId) {
+      throw new Error("Token has no userId");
+    }
 
     if (!storedToken || storedToken.revoked_at !== null) {
       throw new Error("Token revoked or missing");
@@ -92,7 +79,7 @@ export async function refreshAccessToken(refreshToken: string) {
       throw new Error("User not found in database");
     }
     
-    return await generateAccessToken(user);
+    return {accessToken: await generateAccessToken(user), user};
 
   } catch (error) {
     console.error("Refresh failed:", error);

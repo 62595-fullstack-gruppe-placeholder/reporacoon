@@ -1,7 +1,7 @@
 "use server";
 
-import { generateAccessToken } from "@/lib/auth/accessToken";
-import { setAccessTokenCookie } from "@/lib/auth/cookies";
+import { generateAccessToken, generateRefreshToken } from "@/lib/auth/accessToken";
+import { setAccessTokenCookie, setRefreshTokenCookie } from "@/lib/auth/cookies";
 import { verifyUserCredentials } from "@/lib/repository/user/userRepository";
 import {
   type CredentialsDTO,
@@ -25,5 +25,6 @@ export async function login(input: CredentialsDTO) {
   }
 
   await setAccessTokenCookie(await generateAccessToken(user));
+  await setRefreshTokenCookie(await generateRefreshToken(user));
   redirect("/dashboard");
 }
