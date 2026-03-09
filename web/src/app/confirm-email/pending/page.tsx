@@ -24,7 +24,7 @@ export default function ConfirmEmailPendingPage() {
     return () => channel.close();
   }, []);
 
-  // Polling fallback — catches same-tab confirmation or different browser
+  
   useEffect(() => {
     const poll = setInterval(async () => {
       const res = await fetch("/api/auth/me");
@@ -36,6 +36,9 @@ export default function ConfirmEmailPendingPage() {
     return () => clearInterval(poll);
   }, []);
 
+
+
+  //doesnt work for now, need to create create resend page
   const handleResend = async () => {
     setLoading(true);
     const email = localStorage.getItem("pending_confirmation_email") ?? "";
@@ -69,7 +72,7 @@ export default function ConfirmEmailPendingPage() {
           We sent a confirmation link to your email address.
         </p>
         <p className="text-gray-600 text-sm mb-10">
-          This page will close automatically once confirmed{dots}
+          This page will redirect automatically once confirmed{dots}
         </p>
         <button
           onClick={handleResend}
