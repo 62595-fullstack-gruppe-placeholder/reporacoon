@@ -12,14 +12,21 @@ interface Props {
 
 export default function ScanResults({ findings, jobs }: Props) {
   if (!findings || !jobs || jobs.length === 0) return null;
+  // Used for sorting the findings
+  const severityOrder = {
+    LOW: 0,
+    MEDIUM: 1,
+    HIGH: 2,
+    CRITICAL: 3,
+  };
 
   return (
     <div className="w-full space-y-6">
       {jobs.map((job) => (
-        <JobAccordion 
-          key={job.id || job.repo_url} 
-          job={job} 
-          findings={findings.filter(f => f.job_id === job.id)} 
+        <JobAccordion
+          key={job.id || job.repo_url}
+          job={job}
+          findings={findings.filter(f => f.job_id === job.id).sort((f1, f2) => severityOrder[f2.severity] - severityOrder[f1.severity])}
         />
       ))}
     </div>
@@ -31,7 +38,7 @@ function JobAccordion({ job, findings }: { job: ScanJob; findings: ScanFinding[]
 
   return (
     <div className="box border border-secondary/10 overflow-hidden shadow-xl transition-all duration-300">
-      <div 
+      <div
         className="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 transition-colors"
         onClick={() => setIsMainOpen(!isMainOpen)}
       >
@@ -54,23 +61,23 @@ function JobAccordion({ job, findings }: { job: ScanJob; findings: ScanFinding[]
             <div className="flex flex-col items-end">
               <span className="text-[10px] uppercase font-bold text-secondary">Duration</span>
               <div className="flex items-center gap-1.5 text-sm font-mono text-text-main">
-                 <Zap size={12} className="text-orange-400" />
-                 <span>{job.duration || 0}s</span>
+                <Zap size={12} className="text-orange-400" />
+                <span>{job.duration || 0}s</span>
               </div>
             </div>
 
             <div className="flex flex-col items-end">
               <span className="text-[10px] uppercase font-bold text-secondary">Status</span>
               <div className="flex items-center gap-1.5 text-sm font-mono text-button-main font-bold">
-                 <span className="capitalize">{job.status}</span>
+                <span className="capitalize">{job.status}</span>
               </div>
             </div>
 
             <div className="flex flex-col items-end">
               <span className="text-[10px] uppercase font-bold text-secondary">Findings</span>
               <div className="flex items-center gap-1.5 text-sm font-mono text-red-500 font-bold">
-                 <AlertTriangle size={12} />
-                 <span>{findings.length}</span>
+                <AlertTriangle size={12} />
+                <span>{findings.length}</span>
               </div>
             </div>
           </div>
@@ -87,12 +94,12 @@ function JobAccordion({ job, findings }: { job: ScanJob; findings: ScanFinding[]
             <List size={16} />
             <span className="text-xs font-bold uppercase tracking-tighter">Detailed Analysis</span>
           </div>
-          
+
           <div className="space-y-3">
             {findings.map((finding) => (
               <FindingItem key={finding.id} finding={finding} />
             ))}
-            
+
             {findings.length === 0 && (
               <div className="p-8 text-center border-2 border-dashed border-secondary/10 rounded-xl">
                 <p className="text-secondary font-mono text-sm">No vulnerabilities detected for this job. 🦝</p>
@@ -117,7 +124,7 @@ function FindingItem({ finding }: { finding: ScanFinding }) {
 
   return (
     <div className="bg-background/40 border border-white/5 rounded-xl overflow-hidden transition-all hover:border-white/20">
-      <div 
+      <div
         className="flex justify-between items-center px-4 py-3 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
