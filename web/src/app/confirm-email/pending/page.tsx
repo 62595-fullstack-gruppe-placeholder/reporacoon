@@ -36,8 +36,6 @@ export default function ConfirmEmailPendingPage() {
     return () => clearInterval(poll);
   }, []);
 
-
-
   //doesnt work for now, need to create create resend page
   const handleResend = async () => {
     setLoading(true);
