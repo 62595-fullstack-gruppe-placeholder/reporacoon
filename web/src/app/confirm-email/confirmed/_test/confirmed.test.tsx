@@ -1,4 +1,3 @@
-// src/app/confirm-email/confirmed/_test/confirmed.test.tsx
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
 
@@ -9,10 +8,14 @@ vi.mock("next/navigation", () => ({
 
 const mockClose = vi.fn();
 const mockPostMessage = vi.fn();
-vi.stubGlobal("BroadcastChannel", vi.fn().mockImplementation(() => ({
-  postMessage: mockPostMessage,
-  close: mockClose,
-})));
+
+class MockBroadcastChannel {
+  onmessage: any = null;
+  postMessage = mockPostMessage;
+  close = mockClose;
+  constructor(_name: string) {}
+}
+vi.stubGlobal("BroadcastChannel", MockBroadcastChannel);
 
 import ConfirmedPage from "../page";
 
