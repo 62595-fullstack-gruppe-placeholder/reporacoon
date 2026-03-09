@@ -1,7 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { sendEmail } from "../mailer";
+
+
+import { sendConfirmationEmail, confirmEmail } from "../emailConfirmationService";
+import {
+  createEmailConfirmation,
+  getEmailConfirmationByTokenHash,
+  markEmailConfirmationUsed,
+} from "@/lib/repository/emailConfirmations/emailConfirmationRepository";
+import { getUserById, markUserEmailConfirmed } from "@/lib/repository/user/userRepository";
+
+
+
 
 vi.mock("server-only", () => ({}));
-vi.mock("./mailer", () => ({ sendEmail: vi.fn().mockResolvedValue({}) }));
+vi.mock("../mailer", () => ({ sendEmail: vi.fn().mockResolvedValue({}) }));
 vi.mock("@/lib/repository/emailConfirmations/emailConfirmationRepository", () => ({
   createEmailConfirmation: vi.fn().mockResolvedValue({}),
   getEmailConfirmationByTokenHash: vi.fn(),
@@ -12,14 +25,6 @@ vi.mock("@/lib/repository/user/userRepository", () => ({
   markUserEmailConfirmed: vi.fn().mockResolvedValue({}),
 }));
 
-import { sendConfirmationEmail, confirmEmail } from "../emailConfirmationService";
-import { sendEmail } from "../mailer";
-import {
-  createEmailConfirmation,
-  getEmailConfirmationByTokenHash,
-  markEmailConfirmationUsed,
-} from "@/lib/repository/emailConfirmations/emailConfirmationRepository";
-import { getUserById, markUserEmailConfirmed } from "@/lib/repository/user/userRepository";
 
 const mockSendEmail = vi.mocked(sendEmail);
 const mockCreate = vi.mocked(createEmailConfirmation);
