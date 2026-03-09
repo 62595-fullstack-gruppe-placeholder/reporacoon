@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,35 +9,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Spinner } from "@/components/ui/spinner";
 import { User } from "@/lib/repository/user/userSchemas";
-import { CircleUserRound } from "lucide-react";
+import { CircleUserRoundIcon, LogOutIcon } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { logout } from "../_globalActions/logout";
 
 type AccountDropdownProps = {
   user: User;
 };
 
 export default function AccountDropdown({ user }: AccountDropdownProps) {
-  if (!user) return null;
+  const [logoutLoading, setLogoutLoading] = useState<boolean>(false);
+
+  const handleLogout = () => {
+    setLogoutLoading(true);
+    logout().then(() => {
+      setLogoutLoading(false);
+    });
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={""} alt="User avatar" /> {/* optional */}
-            <AvatarFallback>
-              <CircleUserRound className="h-5 w-5" />
-            </AvatarFallback>
-          </Avatar>
+        <Button variant="ghost" className="rounded-full">
+          <CircleUserRoundIcon className="size-8" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <div className="flex flex-col space-y-1 p-2">
+          <p className="text-xs text-muted-foreground">You are logged in as</p>
           <p className="text-sm font-medium leading-none">{user.email}</p>
-          <p className="text-xs leading-none text-muted-foreground">
-            ID: {user.id}
-          </p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -48,12 +50,19 @@ export default function AccountDropdown({ user }: AccountDropdownProps) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onSelect={async (e) => {
+          onSelect={(e) => {
             e.preventDefault();
-            // TODO: insert logout
+            handleLogout();
           }}
         >
-          Log out
+          <div className="flex w-full flex-row justify-between text-red-500">
+            {logoutLoading ? <p>Logging out...</p> : <p>Log out</p>}
+            {logoutLoading ? (
+              <Spinner />
+            ) : (
+              <LogOutIcon className="text-red-500" />
+            )}
+          </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
