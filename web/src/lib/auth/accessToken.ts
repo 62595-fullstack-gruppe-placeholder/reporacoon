@@ -2,7 +2,6 @@ import { User } from "../repository/user/userSchemas";
 import { SignJWT, jwtVerify } from "jose";
 import { getFuture, getNow } from "../timeUtil";
 import { loadKeys } from "./keys";
-import { setAccessTokenCookie } from "./cookies";
 import { getUserById } from "../repository/user/userRepository";
 import crypto from "crypto";
 import { createRefreshToken, getRefreshTokenById } from "../repository/refreshToken/refreshTokenRepository";
