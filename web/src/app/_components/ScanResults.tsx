@@ -119,7 +119,7 @@ function FindingItem({ finding }: { finding: ScanFinding }) {
     CRITICAL: "bg-purple-500/10 text-purple-400 border-purple-500/20",
     HIGH: "bg-red-500/10 text-red-400 border-red-500/20",
     MEDIUM: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-    LOW: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    LOW: "bg-green-500/10 text-blue-400 border-blue-500/20",
   };
 
   return (
