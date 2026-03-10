@@ -22,7 +22,7 @@ export default function Header({ user }: { user: User | null }) {
         </div>
 
         <div id="header-cont" className="w-1/2">
-          <Links isDashboard={isDashboard} />
+          <Links pathname={pathname} />
         </div>
 
         <div id="header-right">
@@ -33,29 +33,75 @@ export default function Header({ user }: { user: User | null }) {
   );
 }
 
-function Links({ isDashboard }: { isDashboard: boolean }) {
+type HeaderLinkItem = { href: string; label: string };
+
+const publicHeaderItems: HeaderLinkItem[] = [
+  {
+    href: "/features",
+    label: "Features",
+  },
+  {
+    href: "/pricing",
+    label: "Pricing",
+  },
+  {
+    href: "/faq",
+    label: "FAQ",
+  },
+  {
+    href: "/legal",
+    label: "Legal",
+  },
+];
+
+const dashboardHeaderItems: HeaderLinkItem[] = [
+  {
+    href: "/dashboard",
+    label: "My dashboard",
+  },
+  {
+    href: "/dashboard/jobs",
+    label: "Previous jobs",
+  },
+  {
+    href: "/dashboard/recurring",
+    label: "Recurring jobs",
+  },
+  {
+    href: "/dashboard/rules",
+    label: "Scan rules",
+  },
+  {
+    href: "/dashboard/account",
+    label: "My account",
+  },
+];
+
+function Links({ pathname }: { pathname: string }) {
+  const isDashboard = pathname.startsWith("/dashboard");
+  const links = isDashboard ? dashboardHeaderItems : publicHeaderItems;
   return (
     <div className="flex flex-row items-center w-full justify-between">
-      {isDashboard ? (
-        <>
-          <HeaderLink href="">Previous jobs</HeaderLink>
-          <HeaderLink href="">Recurring jobs</HeaderLink>
-          <HeaderLink href="">Scan rules</HeaderLink>
-          <HeaderLink href="">My account</HeaderLink>
-        </>
-      ) : (
-        <>
-          <HeaderLink href="">Features</HeaderLink>
-          <HeaderLink href="">Pricing</HeaderLink>
-          <HeaderLink href="">FAQ</HeaderLink>
-          <HeaderLink href="">Legal</HeaderLink>
-        </>
-      )}
+      {links.map((link, index) => {
+        const currentlySelected = pathname === link.href
+        return (
+          <HeaderLink current={currentlySelected} key={`link-${index}`} href={link.href}>
+            {link.label}
+          </HeaderLink>
+        );
+      })}
     </div>
   );
 }
 
-function HeaderLink({ href, children }: { href: string; children: string }) {
+function HeaderLink({ href, children, current }: { href: string; children: string; current?: boolean }) {
+  if (current === true) {
+    return (
+    <div className="text-xl underline underline-offset-4 text-foreground">
+      <Link href={href}>{children}</Link>
+    </div>
+  );
+  }
   return (
     <div className="text-xl hover:underline underline-offset-4">
       <Link href={href}>{children}</Link>
