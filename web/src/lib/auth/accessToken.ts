@@ -41,7 +41,7 @@ export async function generateRefreshToken(user: User): Promise<string> {
   await createRefreshToken({
     user_id: user.id,
     token_hash: tokenHash,
-    expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(), 
+    expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), 
   });
 
   return tokenString;
