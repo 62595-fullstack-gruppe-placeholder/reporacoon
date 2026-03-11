@@ -49,10 +49,9 @@ describe("refreshAccessToken", () => {
   it("should successfully return a new access token and user", async () => {
     const mockUser = { id: mockUserId, email: "test@test.com", email_confirmed: true };
 
-    // FIX: Ensure 'user_id' exists in the mock because your code now uses 'storedToken.user_id'
     vi.mocked(tokenRepo.getRefreshTokenByHash).mockResolvedValue({
-      user_id: mockUserId,      // Matches 'const userId = storedToken?.user_id'
-      token_hash: expectedHash, // Matches 'storedToken.token_hash !== incomingHash'
+      user_id: mockUserId,      
+      token_hash: expectedHash,
       revoked_at: null,
       expires_at: new Date(Date.now() + 10000),
     } as any);
@@ -69,7 +68,7 @@ describe("refreshAccessToken", () => {
   it("should fail if the token hash does not match", async () => {
     vi.mocked(tokenRepo.getRefreshTokenByHash).mockResolvedValue({
       user_id: mockUserId,
-      token_hash: "completely-different-hash", // This will trigger the mismatch throw
+      token_hash: "completely-different-hash",
       revoked_at: null,
     } as any);
 
