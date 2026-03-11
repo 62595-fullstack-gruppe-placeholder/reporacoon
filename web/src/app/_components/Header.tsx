@@ -9,10 +9,8 @@ import AccountDropdown from "./AccountDropdown";
 export default function Header({ user }: { user: User | null }) {
   const pathname = usePathname();
 
-  const isDashboard = pathname.startsWith("/dashboard");
-
   return (
-    <header>
+    <header data-testid="header">
       <div className="flex flex-row justify-between border-b border-box py-3 px-10 w-full items-center">
         <div id="header-left" className="flex flex-row items-center gap-4">
           <Link href="/">
@@ -83,9 +81,13 @@ function Links({ pathname }: { pathname: string }) {
   return (
     <div className="flex flex-row items-center w-full justify-between">
       {links.map((link, index) => {
-        const currentlySelected = pathname === link.href
+        const currentlySelected = pathname === link.href;
         return (
-          <HeaderLink current={currentlySelected} key={`link-${index}`} href={link.href}>
+          <HeaderLink
+            current={currentlySelected}
+            key={`link-${index}`}
+            href={link.href}
+          >
             {link.label}
           </HeaderLink>
         );
@@ -94,13 +96,21 @@ function Links({ pathname }: { pathname: string }) {
   );
 }
 
-function HeaderLink({ href, children, current }: { href: string; children: string; current?: boolean }) {
+function HeaderLink({
+  href,
+  children,
+  current,
+}: {
+  href: string;
+  children: string;
+  current?: boolean;
+}) {
   if (current === true) {
     return (
-    <div className="text-xl underline underline-offset-4 text-foreground">
-      <Link href={href}>{children}</Link>
-    </div>
-  );
+      <div className="text-xl underline underline-offset-4 text-foreground">
+        <Link href={href}>{children}</Link>
+      </div>
+    );
   }
   return (
     <div className="text-xl hover:underline underline-offset-4">
@@ -112,13 +122,17 @@ function HeaderLink({ href, children, current }: { href: string; children: strin
 function AuthButtons({ user }: { user: User | null }) {
   if (user) {
     return (
-      <div className="">
+      <div data-user-name="authed" data-testid="authbuttons">
         <AccountDropdown user={user} />
       </div>
     );
   }
   return (
-    <div className="items-center inline-flex h-10 justify-end gap-8">
+    <div
+      data-user-name="guest"
+      data-testid="authbuttons"
+      className="items-center inline-flex h-10 justify-end gap-8"
+    >
       <button className="bg-button-main btn">
         <Link href="/signup">Sign up</Link>
       </button>

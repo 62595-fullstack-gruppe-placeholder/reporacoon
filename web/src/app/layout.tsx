@@ -21,7 +21,7 @@ export default async function RootLayout({
   const user = await getUser();
   return (
     <html lang="en" className={inter.variable}>
-      <body className={`antialiased`}>
+      <body className={`antialiased`} data-testid="body">
         <Header user={user}/>
         {children}
       </body>
