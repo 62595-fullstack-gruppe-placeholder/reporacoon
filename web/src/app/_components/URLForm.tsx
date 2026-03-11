@@ -60,7 +60,7 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
             };
 
             const res = await response.json();
-        
+
             // TODO: handle errors for the validation call above
             if (res.valid === true) {
                 if (isDeepScan) {
@@ -74,7 +74,7 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
                 // Starting the scanner, which runs all of the scan jobs currently in the database
                 // TODO: handle errors from the scan
                 try {
-                    
+
                     const response = await fetch("http://localhost:5001/scan", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -89,9 +89,9 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
                     const scanJobs = [job]
 
                     if (findings) {
-                    // Send the finding back to the Home component
-                    onScanStarted(findings, scanJobs); 
-                }
+                        // Send the finding back to the Home component
+                        onScanStarted(findings, scanJobs);
+                    }
                 } catch (err) {
                     console.error(err)
                 }
@@ -123,7 +123,7 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
                 <p className="mt-1 text-sm text-red-600">
                     {form.formState.errors.url.message}
                 </p>)}
-            <SubmitButton text="Start Scanning" loadingText="Scanning..." loading={isLoading}/>
+            <SubmitButton text="Start Scanning" loadingText="Scanning..." loading={isLoading} />
         </form>
     )
 }
