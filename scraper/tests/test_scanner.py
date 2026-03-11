@@ -75,14 +75,64 @@ def test_scan_repository(mock_get_connection, insert_helpers):
             content = f.read()
 
         matched = False
+
         for name, (pattern, severity) in scanner.patterns.items():
             if re.search(pattern, content, flags=re.MULTILINE | re.IGNORECASE):
                 matched = True
                 break
 
         assert matched, "no secret pattern matched content of thisFileShouldBeChecked.py"
+        
+        # count "Found secret!"
+        found_secret_count = 0
+        original_write_log = scanner.write_log
+
+        def counting_write_log(message):
+            nonlocal found_secret_count
+            if "Found secret!" in message:
+                found_secret_count += 1
+            # still call the original logger if you want normal output
+            original_write_log(message)
+
+        scanner.write_log = counting_write_log
+
+        scanner.scan_repository(repo_path, branch="main")
+
+        assert found_secret_count == 4, f"expected 4 secrets, got {found_secret_count}"
 
     finally:
         if repo_path and os.path.exists(repo_path):
             shutil.rmtree(repo_path)
 
+# Test that the scanning works by checking if it will find exposed secrets in our 
+# test repository while ignoring files not in the "text_extension" list
+def test_scan_deep(mock_get_connection, insert_helpers):
+    url = "https://github.com/62595-fullstack-gruppe-placeholder/testrepo"
+
+    # create a scan job so inserted findings can reference it
+    _insert_user, _insert_scan_job = insert_helpers
+    job_id = _insert_scan_job(repo_url=url, status="PENDING")
+
+    scanner = GitHubSecretScanner(url, job_id, isDeepScan=True)
+    repo_path = scanner.clone_repo()
+    try:
+        # count "Found secret!"
+        found_secret_count = 0
+        original_write_log = scanner.write_log
+
+        def counting_write_log(message):
+            nonlocal found_secret_count
+            if "Found secret!" in message:
+                found_secret_count += 1
+            # still call the original logger if you want normal output
+            original_write_log(message)
+
+        scanner.write_log = counting_write_log
+
+        scanner.scan_all_branches(repo_path)
+
+        assert found_secret_count == 11, f"expected 4 secrets, got {found_secret_count}"
+
+    finally:
+        if repo_path and os.path.exists(repo_path):
+            shutil.rmtree(repo_path)
