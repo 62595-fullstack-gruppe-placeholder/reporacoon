@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Error({
   error,
@@ -37,7 +36,7 @@ export default function Error({
           >
             Try again
           </button>
-          
+          <a
             href="/"
             className="py-3 px-6 rounded-xl border border-gray-800 bg-gray-900 text-gray-200 text-sm font-medium transition-all hover:border-gray-700 hover:bg-gray-800"
           >
