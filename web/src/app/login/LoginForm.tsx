@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Mail, Lock } from "lucide-react";
-import { useFormStatus } from "react-dom";
 import { login } from "./login";
 import {
   CredentialsDTO,
@@ -11,10 +10,11 @@ import {
   loginFormSchema,
 } from "@/lib/repository/user/userSchemas";
 import { SubmitButton } from "../_components/SubmitButton";
-import { boolean } from "zod";
 import { useState } from "react";
 
 export function LoginForm() {
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<LoginFormSchema>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -33,7 +33,6 @@ export function LoginForm() {
     form.reset();
   });
 
-  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="min-h-screen w-full flex justify-center pt-20 p-4">
@@ -98,7 +97,7 @@ export function LoginForm() {
         </div>
 
         <div className="pt-2">
-          <SubmitButton text="Log in" loadingText="Logging in..." loading={isLoading}/>
+          <SubmitButton text="Log in" loadingText="Logging in..." loading={isLoading} />
         </div>
       </form>
     </div>
