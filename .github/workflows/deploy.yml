@@ -54,3 +54,4 @@ jobs:
           docker compose pull
           docker compose up -d --remove-orphans
           docker compose ps
+          nohup docker system prune -a -f > /tmp/docker-prune.log 2>&1 &
