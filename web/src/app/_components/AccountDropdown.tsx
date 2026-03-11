@@ -45,7 +45,7 @@ export default function AccountDropdown({ user }: AccountDropdownProps) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/profile">My account</Link>
+            <Link href="/dashboard/account">My account</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
