@@ -1,0 +1,91 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+
+const mockClose = vi.fn();
+let mockChannelInstance: { onmessage: any; close: typeof mockClose };
+
+class MockBroadcastChannel {
+  onmessage: any = null;
+  close = mockClose;
+  constructor(_name: string) {
+    mockChannelInstance = this;
+  }
+}
+vi.stubGlobal("BroadcastChannel", MockBroadcastChannel);
+vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+
+Object.defineProperty(window, "location", {
+  value: { href: "" },
+  writable: true,
+});
+
+import ConfirmEmailPendingPage from "../page";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  window.location.href = "";
+  localStorage.setItem("pending_confirmation_email", "test@test.com");
+  vi.mocked(fetch).mockResolvedValue({ ok: false } as any);
+});
+
+describe("ConfirmEmailPendingPage", () => {
+  it("renders heading", () => {
+    render(<ConfirmEmailPendingPage />);
+    expect(screen.getByText(/check your inbox/i)).toBeInTheDocument();
+  });
+
+  it("renders resend button", () => {
+    render(<ConfirmEmailPendingPage />);
+    expect(screen.getByRole("button", { name: /resend confirmation email/i })).toBeInTheDocument();
+  });
+
+  it("calls resend API with email from localStorage", async () => {
+    render(<ConfirmEmailPendingPage />);
+    fireEvent.click(screen.getByRole("button", { name: /resend confirmation email/i }));
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/api/auth/resend", expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ email: "test@test.com" }),
+      }));
+    });
+  });
+
+  it("shows sent feedback after resend", async () => {
+    render(<ConfirmEmailPendingPage />);
+    fireEvent.click(screen.getByRole("button", { name: /resend confirmation email/i }));
+    await waitFor(() => {
+      expect(screen.getByText(/✓ email sent/i)).toBeInTheDocument();
+    });
+  });
+
+  it("disables button while loading", async () => {
+    vi.mocked(fetch).mockReturnValue(new Promise(() => {}) as any);
+    render(<ConfirmEmailPendingPage />);
+    fireEvent.click(screen.getByRole("button", { name: /resend confirmation email/i }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /sending/i })).toBeDisabled();
+    });
+  });
+
+  it("redirects to dashboard when polling returns ok", async () => {
+    vi.mocked(fetch).mockResolvedValue({ ok: true } as any);
+    render(<ConfirmEmailPendingPage />);
+    await waitFor(() => {
+      expect(window.location.href).toBe("/dashboard");
+    }, { timeout: 5000 });
+  });
+
+  it("redirects to dashboard on broadcast confirmed message", async () => {
+    render(<ConfirmEmailPendingPage />);
+    await waitFor(() => expect(mockChannelInstance).toBeDefined());
+    mockChannelInstance.onmessage({ data: "confirmed" } as MessageEvent);
+    expect(window.location.href).toBe("/dashboard");
+  });
+
+  it("does not redirect on irrelevant broadcast message", async () => {
+    render(<ConfirmEmailPendingPage />);
+    await waitFor(() => expect(mockChannelInstance).toBeDefined());
+    mockChannelInstance.onmessage({ data: "something-else" } as MessageEvent);
+    expect(window.location.href).toBe("");
+  });
+});

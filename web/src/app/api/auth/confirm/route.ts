@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost";
   const isJson = req.headers.get("accept")?.includes("application/json");
 
   if (!token) {
@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
     return response;
   }
 
-  const response = NextResponse.redirect(new URL("/dashboard", appUrl));
+  
+  const response = NextResponse.redirect(new URL("/confirm-email/confirmed", appUrl));
   response.cookies.set("access-token", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

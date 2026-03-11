@@ -5,21 +5,25 @@ import { type User } from "../repository/user/userSchemas";
 import { claimsToUser } from "./jwt";
 
 /**
- * Get the currently 
- * @returns 
+ * Get the currently
+ * @returns
  */
 export async function getUser(): Promise<User | null> {
-  const accessTokenCookie = await getAccessTokenCookie();
+  try {
+    const accessTokenCookie = await getAccessTokenCookie();
 
-  if (!accessTokenCookie) {
+    if (!accessTokenCookie) {
+      return null;
+    }
+
+    const { publicKey } = await loadKeys();
+    const { payload } = await jwtVerify(accessTokenCookie.value, publicKey, {
+      issuer: "reporacoon",
+      audience: "reporacoon",
+    });
+
+    return claimsToUser(payload);
+  } catch {
     return null;
   }
-
-  const { publicKey } = await loadKeys();
-  const { payload } = await jwtVerify(accessTokenCookie.value, publicKey, {
-    issuer: "reporacoon",
-    audience: "reporacoon",
-  });
-
-  return claimsToUser(payload);
 }

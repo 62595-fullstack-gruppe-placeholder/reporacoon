@@ -6,7 +6,7 @@ const ACCESS_TOKEN_COOKIE_NAME = "access-token"
 const REFRESH_TOKEN_COOKIE_NAME = "refresh-token"
 
 export async function getAccessTokenCookie() {
-    return (await cookies()).get(ACCESS_TOKEN_COOKIE_NAME)
+  return (await cookies()).get(ACCESS_TOKEN_COOKIE_NAME);
 }
 
 export async function setAccessTokenCookie(accessToken: string) {

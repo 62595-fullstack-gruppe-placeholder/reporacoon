@@ -106,21 +106,25 @@ def test_get_all_scan_findings(mock_get_connection, insert_helpers):
 # Including:
 #  - Proper insertion
 #  - Type checking for job_id, file_path, line_number, code_snippet, severity, rule
-def test_insert_scan_findings(mock_get_connection, insert_helpers):
-    _, insert_scan = insert_helpers
-    jid = insert_scan("bar")
+def test_insert_scan_findings(db_transaction, mock_get_connection, insert_helpers):
+    _, insert_scan_job = insert_helpers
+    jid = insert_scan_job("bar")  # writes to test transaction
 
-    insertScanFindings(jid, "/file", 10, "abc", "MEDIUM", "ruleY")
+    repository.insertScanFindings(jid, "/file", 10, "abc", "MEDIUM", "ruleY")
 
-    with repository.get_connection().cursor() as cur:
+    with db_transaction.cursor() as cur:  
         cur.execute(
-            "SELECT job_id, file_path, line_number, code_snippet, severity, rule FROM scan_findings",
+            "SELECT job_id, file_path, line_number, code_snippet, severity, rule "
+            "FROM scan_findings WHERE job_id = %s", 
+            (jid,),
         )
         row = cur.fetchone()
-    assert row == (jid, "/file", 10, "abc", "MEDIUM", "ruleY")
+        assert row == (jid, "/file", 10, "abc", "MEDIUM", "ruleY")
 
+    # Type validation test
     with pytest.raises(psycopg2.Error):
-        insertScanFindings(jid, "/bad", "notint", "x", "LOW", "r")
+        repository.insertScanFindings(jid, "/bad", "notint", "x", "LOW", "r")
+
 
 # Test the functionality of the insertDurationInScanJobs function
 # Including:
