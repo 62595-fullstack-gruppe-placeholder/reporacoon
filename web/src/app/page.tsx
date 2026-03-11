@@ -74,7 +74,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col justify-center items-center gap-8">
-      <div className="px-4 py-10 inline-flex flex-col justify-start items-start gap-8 min-w-96 max-w-125">
+      <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
         <h1 className="h1">
           Sniff out vulnerabilities in seconds
         </h1>
