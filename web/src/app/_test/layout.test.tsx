@@ -1,108 +1,74 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import Layout from '../layout';
+import { describe, it, expect, vi, type Mock } from "vitest";
+import { render, screen } from "@testing-library/react";
+import RootLayout from "../layout";
+import * as authModule from "@/lib/auth/userFromToken";
 
-// Mock the Google Font
-vi.mock('next/font/google', () => ({
-  Inter: () => ({
-    variable: '--font-inter',
-    subsets: ['latin'],
-  }),
+// Mock the async getUser function
+vi.mock("@/lib/auth/userFromToken", () => ({
+  getUser: vi.fn(),
 }));
 
-// Mock CSS imports
-vi.mock('./globals.css', () => ({}));
+vi.mock("next/navigation", () => ({
+  usePathname: vi.fn().mockReturnValue("path"),
+}));
 
-describe('RootLayout', () => {
-  it('renders the logo icon', () => {
-    // Render the layout
+// Mock the Header component
+vi.mock("./_components/Header", () => ({
+  default: ({ user }: { user: any }) => (
+    <header data-testid="header" data-user-name={user?.name || "guest"}>
+      Header for {user?.name || "guest"}
+    </header>
+  ),
+}));
+
+// Mock Next.js font to avoid font loading issues
+vi.mock("next/font/google", () => ({
+  Inter: vi.fn(() => ({
+    variable: "--font-inter",
+    className: "",
+  })),
+}));
+
+vi.mock("server-only", () => ({}));
+
+describe("RootLayout", () => {
+  it("renders Header with user data", async () => {
+    const mockUser = { email: "johndoe@example.com" };
+    (authModule.getUser as Mock).mockResolvedValue(mockUser);
+
+    render(await RootLayout({ children: <div>Content</div> } as any));
+
+    const header = screen.getByTestId("header");
+    expect(header).toBeInTheDocument();
+    const authButtons = screen.getByTestId("authbuttons");
+    expect(authButtons).toBeInTheDocument();
+    expect(authButtons).toHaveAttribute("data-user-name", "authed");
+  });
+
+  it("renders children content", async () => {
+    const mockUser = { name: "Test User" };
+    (authModule.getUser as Mock).mockResolvedValue(mockUser);
+
     render(
-      <Layout>
-        <div data-testid="test-child">Content</div>
-      </Layout>
+      await RootLayout({
+        children: <div data-testid="children">Page content</div>,
+      } as any),
     );
 
-    // Find the image
-    const logo = screen.getByAltText('logo');
-    expect(logo).toBeInTheDocument();
+    const children = screen.getByTestId("children");
+    expect(children).toBeInTheDocument();
+    expect(children).toHaveTextContent("Page content");
   });
-});
 
-describe("RootLayout", () => {
-  it('logo links to the correct page', () => {
-    render(<Layout><div>child</div></Layout>);
+  it("handles guest user (null) correctly", async () => {
+    (authModule.getUser as Mock).mockResolvedValue(null);
 
-    // Finds the <a> tag inside the button
-    const logoLink = screen.getByRole('link', { name: /logo/i });
+    render(await RootLayout({ children: <div>Content</div> } as any));
 
-    expect(logoLink).toHaveAttribute('href', '/');  
-  });
-});
-
-describe('RootLayout', () => {
-  it('renders the title icon', () => {
-    // Render the layout
-    render(
-      <Layout>
-        <div data-testid="test-child">Content</div>
-      </Layout>
-    );
-
-    // Find the title
-    const title = screen.getByText("Repo Racoon");
-    expect(title).toBeInTheDocument();
-  });
-});
-
-describe("RootLayout", () => {
-  it("renders the signup button", () => {
-    // Render signup button
-    render(
-      <Layout>
-        <div data-testid="test-child">Content</div>
-      </Layout>
-    );
-    
-    // Find the signup button
-    const signUpBtn = screen.getByRole('button', { name: /sign up/i });
-    expect(signUpBtn).toBeInTheDocument();
-  });
-});
-
-describe("RootLayout", () => {
-  it('links to the correct signup page', () => {
-    render(<Layout><div>child</div></Layout>);
-
-    // Finds the <a> tag inside the button
-    const signUpLink = screen.getByRole('link', { name: /sign up/i });
-
-    expect(signUpLink).toHaveAttribute('href', '/signup');  
-  });
-});
-
-describe("RootLayout", () => {
-  it("renders the Log in button", () => {
-    // Render login button
-    render(
-      <Layout>
-        <div data-testid="test-child">Content</div>
-      </Layout>
-    );
-    
-    // Find the login button
-    const logInBtn = screen.getByRole('button', { name: /log in/i });
-    expect(logInBtn).toBeInTheDocument();
-
-  });
-});
-
-describe("RootLayout", () => {
-  it('links to the correct login page', () => {
-    render(<Layout><div>child</div></Layout>);
-
-    // Finds the <a> tag inside the button
-    const logInLink = screen.getByRole('link', { name: /log in/i });
-
-    expect(logInLink).toHaveAttribute('href', '/login');  
+    const header = screen.getByTestId("header");
+    expect(header).toBeInTheDocument();
+    const authButtons = screen.getByTestId("authbuttons");
+    expect(authButtons).toBeInTheDocument();
+    expect(authButtons).toHaveAttribute("data-user-name", "guest");
   });
 });

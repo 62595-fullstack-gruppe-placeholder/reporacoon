@@ -23,7 +23,7 @@ export default function Dashboard({ user }: { user: any }) {
     };
     return (
         <div className="flex flex-col justify-center items-center gap-8">
-            <div className="px-4 py-10 inline-flex flex-col justify-start items-start gap-8 min-w-96 max-w-125">
+            <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
                 This is a secret page that requires authentication.
                 <p>{JSON.stringify(user)}</p>
 
