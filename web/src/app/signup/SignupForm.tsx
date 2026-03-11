@@ -42,7 +42,8 @@ export function SignupForm() {
     }
 
     form.reset();
-    window.location.href = "/dashboard";
+localStorage.setItem("pending_confirmation_email", data.email); // add here
+window.location.href = "/dashboard";
   });
 
   const [isLoading, setIsLoading] = useState(false);
