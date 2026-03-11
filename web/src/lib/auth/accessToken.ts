@@ -59,7 +59,7 @@ export async function refreshAccessToken(refreshToken: string) {
 
     const storedToken = await getRefreshTokenByHash(incomingHash)
     
-    const userId = storedToken?.id
+    const userId = storedToken?.user_id
     
     if (!userId) {
       throw new Error("Token has no userId");
