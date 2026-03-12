@@ -38,8 +38,8 @@ export async function signup(input: SignupInput) {
       return { success: true as const, error: undefined};
   }
   catch (error: any) {
-    console.log(error.message);
-    if (error.message === "A user with this email already exists.") {
+    // Add any other relevant error cases here
+    if (error.message?.includes("already exists")) {
       return { success: false as const, error: "That email is already taken." };
     }
     return { success: false as const,  error: "An unexpected error occurred." };
