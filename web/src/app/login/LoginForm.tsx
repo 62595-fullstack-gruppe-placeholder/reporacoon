@@ -29,7 +29,12 @@ export function LoginForm() {
       email: data.email,
       password: data.password,
     };
-    await login(input);
+    
+    if (await login(input) === false) {
+      console.error("Invalid credentials")
+      setIsLoading(false);
+    }
+
     form.reset();
   });
 

@@ -21,7 +21,7 @@ export async function login(input: CredentialsDTO) {
   });
 
   if (!user) {
-    throw new Error("Invalid email or password");
+    return false;
   }
 
   await setAccessTokenCookie(await generateAccessToken(user));

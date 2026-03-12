@@ -3,6 +3,7 @@ import "./globals.css";
 import { getUser } from "@/lib/auth/userFromToken";
 import Header from "./_components/Header";
 import { Metadata } from "next";
+import { Toaster } from "@/components/ui/sonner"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,6 +25,7 @@ export default async function RootLayout({
       <body className={`antialiased`} data-testid="body">
         <Header user={user}/>
         {children}
+        <Toaster />
       </body>
     </html>
   );
