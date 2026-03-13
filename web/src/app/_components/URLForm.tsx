@@ -50,6 +50,7 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
         };
 
         const result = await execute(input);
+        console.log("Form data:", data)
 
         if (result.success) {
             onScanStarted(result.findings, result.jobs);
