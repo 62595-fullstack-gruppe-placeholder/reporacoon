@@ -14,16 +14,22 @@ import { redirect } from "next/navigation";
  * @param input a {@link CredentialsDTO}.
  */
 export async function login(input: CredentialsDTO) {
-  const parsed = credentialsDTOSchema.parse(input);
-  const user = await verifyUserCredentials({
-    email: parsed.email,
-    password: parsed.password,
-  });
+  try {
+    const parsed = credentialsDTOSchema.parse(input);
+    const user = await verifyUserCredentials({
+      email: parsed.email,
+      password: parsed.password,
+    });
 
-  if (!user) {
-    return false;
+    if (!user) {
+      return { success: false as const, error: "Invalid credentials." };
+    }
+    await setAccessTokenCookie(await generateAccessToken(user));
+    redirect("/dashboard"); 
+  }
+  catch (error: any) {
+    return { success: false as const, error: "An unexpected error occurred." };
   }
 
-  await setAccessTokenCookie(await generateAccessToken(user));
-  redirect("/dashboard");
+  
 }
