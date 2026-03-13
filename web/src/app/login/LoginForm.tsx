@@ -14,6 +14,7 @@ import { SubmitButton } from "../_components/SubmitButton";
 import { boolean } from "zod";
 import { useState } from "react";
 import { useServerAction } from "@/lib/hooks/useServerAction";
+import { redirect } from "next/navigation";
 
 export function LoginForm() {
   const form = useForm<LoginFormSchema>({
@@ -36,6 +37,7 @@ export function LoginForm() {
 
     if (result.success) {
       form.reset();
+      redirect("/dashboard");
     }
   });
 
