@@ -53,7 +53,7 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
 
         if (result.success) {
             onScanStarted(result.findings, result.jobs);
-            form.reset();
+            form.reset({ url: "" });
         }
         // Error: toast shows automatically via useServerAction
     });
@@ -66,6 +66,7 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
                 id="url"
                 type="text"
                 {...form.register("url")}
+                onChange={() => form.clearErrors("url")}
                 className='fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate' placeholder="Paste a GitHub/GitLab URL" />
             {form.formState.errors.url && (
                 <p className="mt-1 text-sm text-red-600">
