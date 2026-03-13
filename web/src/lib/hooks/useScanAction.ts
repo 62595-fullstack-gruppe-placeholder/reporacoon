@@ -12,10 +12,10 @@ export function useScanAction() {
     return new Promise((resolve) => {
       startTransition(async () => {
         const result = await scan(input);
-        if (!result.success) {
-          toast.error(result.error);
+        if (result.success) {
+            toast.success("Scan started successfully!");
         }  else {
-          toast.success("Scan started successfully!");
+            toast.error(result.error);
         }
         resolve(result);
       });
