@@ -3,7 +3,7 @@ import { useTransition, useCallback } from "react";
 import { serverActionError, showServerActionErrorToast } from "../serverActionError";
 
 
-export function useServerAction<T extends (...args: any[]) => Promise<serverActionError>>(
+export function useServerAction<T extends (...args: any[]) => Promise<any>>(
   action: T
 ) {
   const [isPending, startTransition] = useTransition();
