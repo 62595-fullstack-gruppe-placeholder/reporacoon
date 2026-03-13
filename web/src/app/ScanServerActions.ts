@@ -53,7 +53,7 @@ export type ScanResult = {
 export async function scan(input: CreateScanJobDTO & { url: string; isDeepScan: boolean }): Promise<ScanResult> {
   try {
     // 1. Validate URL with Python service
-    const validateResponse = await fetch("http://localhost:5001/validate", {
+    const validateResponse = await fetch("http://host.docker.internal:5001/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: input.url }),
@@ -76,7 +76,7 @@ export async function scan(input: CreateScanJobDTO & { url: string; isDeepScan: 
     });
 
     // 3. Start scanner
-    const scanResponse = await fetch("http://localhost:5001/scan", {
+    const scanResponse = await fetch("http://host.docker.internal:5001/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isDeepScan: input.isDeepScan }),
