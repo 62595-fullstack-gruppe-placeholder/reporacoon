@@ -54,6 +54,8 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
         if (result.success) {
             onScanStarted(result.findings, result.jobs);
             form.reset();
+        } else {
+            form.reset()
         }
         // Error: toast shows automatically via useServerAction
     });
