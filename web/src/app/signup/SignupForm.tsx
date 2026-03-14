@@ -33,7 +33,7 @@ export function SignupForm() {
 
 
     // Only redirect on success
-    if (result.success) {
+    if (result && result.success) {
       form.reset();
       localStorage.setItem("pending_confirmation_email", data.email);
       window.location.href = "/dashboard";
