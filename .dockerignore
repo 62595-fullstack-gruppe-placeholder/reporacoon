@@ -1,3 +1,5 @@
 web/node_modules
 web/lighthouse-report.html
 web/.lighthouseci
+web/.next
+web/node_modules
