@@ -16,7 +16,7 @@ import { useScanAction } from "@/lib/hooks/useScanAction";
  */
 export const urlFormSchema = z
     .object({
-        url: z.string().url("Invalid URL"),
+        url: z.string().url("Invalid url"),
     });
 
 
@@ -41,10 +41,6 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
     });
 
     const onSubmit = form.handleSubmit(async (data) => {
-        // Reset immediately for clean state
-        form.reset();
-        form.clearErrors();
-
         const input = {
             url: data.url,
             repo_url: data.url,
@@ -54,11 +50,9 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
         };
 
         const result = await execute(input);
-        console.log("Form data:", data)
 
         if (result.success) {
             onScanStarted(result.findings, result.jobs);
-            form.reset({ url: "" });
         }
         // Error: toast shows automatically via useServerAction
     });
