@@ -35,12 +35,13 @@ export async function signup(input: SignupInput) {
       console.log("Email sent successfully");
 
       await setAccessTokenCookie(await generateAccessToken(user));
-      return { success: true };
+      return { success: true as const, error: undefined};
   }
   catch (error: any) {
-    if (error.message === "A user with this email already exists.") {
-      return { error: "That email is already taken." };
+    // Add any other relevant error cases here
+    if (error.message?.includes("already exists")) {
+      return { success: false as const, error: "That email is already taken." };
     }
-    return { error: "An unexpected error occurred." };
+    return { success: false as const,  error: "An unexpected error occurred." };
   }
 }
