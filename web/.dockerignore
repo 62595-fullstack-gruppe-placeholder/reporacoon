@@ -1,0 +1,52 @@
+# Dependencies (installed in Docker)
+node_modules
+
+# Build output (built in Docker)
+.next
+.next/cache
+out
+dist
+build
+
+# Git & OS
+.git
+.gitignore
+.DS_Store
+Thumbs.db
+
+# Environment & secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing & coverage
+coverage
+.nyc_output
+**/tests
+**/__tests__
+**/*.test.*
+**/*.spec.*
+jest.config.js
+
+# IDE & editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs & temp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+tmp/
+temp/
+
+# Docker & docs
+Dockerfile*
+docker-compose*
+.dockerignore
+README.md
+docs/

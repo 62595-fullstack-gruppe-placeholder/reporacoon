@@ -41,6 +41,10 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
     });
 
     const onSubmit = form.handleSubmit(async (data) => {
+        // Reset immediately for clean state
+        form.reset();
+        form.clearErrors();
+
         const input = {
             url: data.url,
             repo_url: data.url,

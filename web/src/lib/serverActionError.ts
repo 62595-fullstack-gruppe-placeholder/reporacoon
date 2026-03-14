@@ -15,6 +15,7 @@ export type serverActionError = serverActionFailure | serverActionSuccess;
 
 
 export function showServerActionErrorToast(result: serverActionError) {
+  if (!result) return;
   if (result.success) {
     toast.success("Success!");
   } else {
