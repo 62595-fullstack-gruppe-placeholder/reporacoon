@@ -1,6 +1,7 @@
 import "server-only";
 import { query, queryOne } from "@lib/database/remoteDataSource";
 import {
+  ChangePasswordDTO,
   CreateUserDTO,
   createUserDTOSchema,
   CredentialsDTO,
@@ -50,13 +51,12 @@ export async function createUser(input: CreateUserDTO): Promise<User> {
     }
 
     return userSchema.parse(row);
-
   } catch (error: any) {
     // Check for PostgreSQL Unique Violation error code
-    if (error.code === '23505') {
+    if (error.code === "23505") {
       throw new Error("A user with this email already exists.");
     }
-    
+
     // Re-throw other unexpected errors
     throw error;
   }
@@ -101,16 +101,34 @@ export async function verifyUserCredentials(
  * marks mail as confirmed. note: this does not check if the user exists, so it will succeed even if the user id is invalid.
  */
 export async function markUserEmailConfirmed(userId: string): Promise<void> {
-  await queryOne(
-    `UPDATE users SET email_confirmed = true WHERE id = $1`,
-    [userId]
-  );
+  await queryOne(`UPDATE users SET email_confirmed = true WHERE id = $1`, [
+    userId,
+  ]);
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
-  return queryOne<User>(
-    "SELECT * FROM users WHERE email = $1",
-    [email]
+  return queryOne<User>("SELECT * FROM users WHERE email = $1", [email]);
+}
+
+/**
+ * Change a user's password. Requires the current password and fails if it doesn't match.
+ * @param dto a {@link ChangePasswordDTO}.
+ */
+export async function changeUserPassword(
+  dto: ChangePasswordDTO,
+): Promise<void> {
+  await queryOne(
+    `UPDATE users SET password_hash = crypt($3, gen_salt('bf'))
+     WHERE id = $1
+     AND password_hash = crypt($2, password_hash)`,
+    [dto.userId, dto.currentPassword, dto.newPassword],
   );
 }
 
+/**
+ * Delete a user, setting the owner of their scan jobs to null.
+ * @param userId id of the user to delete.
+ */
+export async function deleteUser(userId: string) {
+  await queryOne(`DELETE FROM users WHERE id = $1`, [userId]);
+}
