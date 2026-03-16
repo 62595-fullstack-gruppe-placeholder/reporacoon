@@ -4,7 +4,8 @@ import { getFuture, getNow } from "../timeUtil";
 import { loadKeys } from "./keys";
 import { getUserById } from "../repository/user/userRepository";
 import crypto from "crypto";
-import { createRefreshToken, getRefreshTokenByHash, getRefreshTokenById } from "../repository/refreshToken/refreshTokenRepository";
+import { createRefreshToken, getRefreshTokenByHash, getRefreshTokenById, revokeUserRefreshTokens } from "../repository/refreshToken/refreshTokenRepository";
+import { withTransaction } from "../database/remoteDataSource";
 
 
 /**
@@ -28,23 +29,27 @@ export async function generateAccessToken(user: User): Promise<string> {
   return await jwt.sign(privateKey);
 }
 
- 
+
 /**
  * Generate a refresh token for a given user.
  * @param user the user for whom to generate the refresh token.
  * @returns promise of refresh token for the given user.
  */
 export async function generateRefreshToken(user: User): Promise<string> {
-  const tokenString = crypto.randomBytes(32).toString("base64url"); 
+  const tokenString = crypto.randomBytes(32).toString("base64url");
   const tokenHash = crypto.createHash("sha256").update(tokenString).digest("hex");
 
-  await createRefreshToken({
-    user_id: user.id,
-    token_hash: tokenHash,
-    expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), 
-  });
+  return await withTransaction(async (tx) => {
+    await revokeUserRefreshTokens(user.id, tx);
 
-  return tokenString;
+    await createRefreshToken({
+      user_id: user.id,
+      token_hash: tokenHash,
+      expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+    }, tx);
+
+    return tokenString;
+  });
 }
 
 
@@ -54,17 +59,17 @@ export async function generateRefreshToken(user: User): Promise<string> {
  */
 export async function refreshAccessToken(refreshToken: string) {
   try {
-    
+
     const incomingHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
     const storedToken = await getRefreshTokenByHash(incomingHash)
-    
+
     const userId = storedToken?.user_id
-    
+
     if (!userId) {
       throw new Error("Token has no userId");
     }
-    
+
     if (!storedToken || storedToken.revoked_at !== null) {
       throw new Error("Token revoked or missing");
     }
@@ -78,12 +83,12 @@ export async function refreshAccessToken(refreshToken: string) {
     }
 
     const user = await getUserById(userId);
-    
+
     if (!user) {
       throw new Error("User not found in database");
     }
-    
-    return {accessToken: await generateAccessToken(user), user};
+
+    return { accessToken: await generateAccessToken(user), user };
 
   } catch (error) {
     console.error("Refresh failed:", error);
