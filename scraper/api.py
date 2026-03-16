@@ -133,7 +133,8 @@ def start_scan():
     try:
         data = getAllPendingScanJobs()
         isDeepScan = request.json.get("isDeepScan", False)
-        
+        extensions = request.json.get("extensions", set())
+        print("EXTENSIOnS ===========: " + extensions)
         if not data:
             return jsonify({'success': False, 'message': 'No pending scan jobs'}), 200
 
@@ -145,7 +146,7 @@ def start_scan():
             
             scan_id = id
             # TODO: Add multithreading here (Main work of scanning & cloning)
-            scanner = GitHubSecretScanner(url, id, isDeepScan)
+            scanner = GitHubSecretScanner(url, id, isDeepScan, extensions)
 
             start = time.time()
 

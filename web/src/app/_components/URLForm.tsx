@@ -29,10 +29,11 @@ export type URLFormSchema = z.infer<typeof urlFormSchema>;
 interface URLFormProps {
     onScanStarted: (finding: ScanFinding[], jobs: ScanJob[]) => void;
     isDeepScan: boolean;
+    extensions: Set<string>
 }
 
 
-export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
+export default function URLForm({ onScanStarted, isDeepScan, extensions}: URLFormProps) {
     const { execute, isPending } = useScanAction();
 
     const form = useForm<URLFormSchema>({
@@ -47,8 +48,9 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
             owner_id: null,
             priority: 1,
             isDeepScan,
+            extensions,
         };
-
+        console.log(extensions)
         const result = await execute(input);
 
         if (result.success) {

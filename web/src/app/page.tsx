@@ -7,11 +7,32 @@ import ScanResults from './_components/ScanResults';
 import { ScanFinding } from '@/lib/repository/scanFinding/scanFindingSchema';
 import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
 import { ScanOptions } from './_components/ScanOptions';
+import { IgnoreSettingsButtons } from './_components/IgnoreSettings';
 
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+
+  // All of the file extensions that the scanner will search
+  const extensions = new Set<string>(['.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
+        '.html', '.htm', '.xml', '.json', '.yml', '.yaml', '.toml', '.ini',
+        '.cfg', '.conf', '.config', '.env', '.sh', '.bash', '.zsh', '.fish',
+        '.ps1', '.bat', '.cmd', '.txt', '.rst', '.tex', '.csv',
+        '.sql', '.css', '.scss', '.sass', '.less', '.vue', '.svelte',
+        '.swift', '.kt', '.kts', '.rs', '.scala', '.clj', '.elm',
+        '.ex', '.exs', '.erl', '.hrl', '.hs', '.lhs', '.lua', '.pl',
+        '.pm', '.r', '.R', '.dart', '.fs', '.fsx', '.fsi', '.fsscript',
+        '.dockerfile', 'Dockerfile', '.gitignore', '.gitattributes',
+        '.npmrc', '.yarnrc', '.piprc', '.pypirc', '.gemrc', '.bowerrc',
+        '.eslintrc', '.prettierrc', '.babelrc', '.editorconfig',
+        'Makefile', 'CMakeLists.txt', 'build.gradle', 'pom.xml',
+        'package.json', 'package-lock.json', 'yarn.lock', 'Gemfile',
+        'Podfile', 'Cargo.toml', 'go.mod', 'requirements.txt',
+        'Pipfile', 'Pipfile.lock', 'environment.yml', 'setup.py'])
+
+  const [selected, setSelected] = useState(extensions);
+
   
   // Puts the scanjob and scanjob findings in local storage. 
   // If the scanjobs are older than a day, they would get deleted
@@ -88,9 +109,10 @@ export default function Home() {
         <div className="field flex items-center gap-2">
           <Image src="/searchIcon.svg" alt="" width={20} height={20} />
 
-          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false}/>
+          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} extensions={selected}/>
         </div>
         <ScanOptions isDisabled={true} />
+        <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={extensions}/>
       </div>
 
       {/* Dashboard appears with fade and slide down animation */}
