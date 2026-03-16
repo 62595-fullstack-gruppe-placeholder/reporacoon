@@ -56,9 +56,12 @@ export function AccountDashboard({ user }: { user: User }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-box/30 flex flex-col justify-center items-center py-12 px-4">
       <div className="box max-w-md w-full p-8 space-y-6 shadow-2xl">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 pt-6 border-b border-border/50">
           <h1 className="h1">Welcome back!</h1>
-          <p className="p">{user.email.split("@")[0]}</p>
+          <h2 className="h2">{user.email.split("@")[0]}</h2>
+          <h2 className="fieldText h2 opacity-75">
+            Email: {user.email}
+          </h2>
         </div>
 
         <div className="space-y-3">
@@ -163,12 +166,6 @@ export function AccountDashboard({ user }: { user: User }) {
             </div>
           </form>
         )}
-
-        <div className="pt-6 border-t border-border/50">
-          <p className="fieldText text-xs text-center opacity-75">
-            Email: {user.email}
-          </p>
-        </div>
       </div>
 
       {showDeleteModal && (
