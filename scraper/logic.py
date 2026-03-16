@@ -17,7 +17,7 @@ from repository import *
 #--------------------------------------------------------------------------------------------
 
 class GitHubSecretScanner:
-    def __init__(self, repo_url, job_id, isDeepScan=False, extensions={'.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
+    def __init__(self, repo_url, job_id, isDeepScan=False, extensions=['.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
         '.html', '.htm', '.xml', '.json', '.yml', '.yaml', '.toml', '.ini',
         '.cfg', '.conf', '.config', '.env', '.sh', '.bash', '.zsh', '.fish',
         '.ps1', '.bat', '.cmd', '.txt', '.rst', '.tex', '.csv',
@@ -31,7 +31,7 @@ class GitHubSecretScanner:
         'Makefile', 'CMakeLists.txt', 'build.gradle', 'pom.xml',
         'package.json', 'package-lock.json', 'yarn.lock', 'Gemfile',
         'Podfile', 'Cargo.toml', 'go.mod', 'requirements.txt',
-        'Pipfile', 'Pipfile.lock', 'environment.yml', 'setup.py'}):
+        'Pipfile', 'Pipfile.lock', 'environment.yml', 'setup.py']):
         self.repo_url = repo_url
         self.job_id = job_id
         self.scanned_files = 0
@@ -126,7 +126,7 @@ class GitHubSecretScanner:
 
     def is_text_file(self, filename):
         text_extensions = self.extensions
-        return filename.lower().endswith(tuple(text_extensions))
+        return filename.lower().endswith(text_extensions)
 
     def find_line_number(self, content, match):
         """Return (line_number, line_text) for the first line containing match.
