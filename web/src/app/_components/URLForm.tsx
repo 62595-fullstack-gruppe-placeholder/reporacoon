@@ -57,7 +57,7 @@ export default function URLForm(props: URLFormProps) {
         {...form.register("url")}
         onChange={() => form.clearErrors("url")}
         className="fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate"
-        placeholder="Paste a GitHub/GitLab URL"
+        placeholder="Paste a public Git repository URL"
       />
       {form.formState.errors.url && (
         <p className="mt-1 text-sm text-red-600">
@@ -65,7 +65,7 @@ export default function URLForm(props: URLFormProps) {
         </p>
       )}
       <SubmitButton
-        text="Start Scanning"
+        text="Start scan"
         loadingText="Scanning..."
         loading={isPending}
       />
