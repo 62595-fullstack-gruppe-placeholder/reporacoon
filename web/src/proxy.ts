@@ -19,7 +19,7 @@ export async function proxy(req: NextRequest) {
   try {
     const refreshToken = req.cookies.get("refresh-token")?.value;
   
-    const currentUser = await getUser()
+    let currentUser = await getUser()
     if (!currentUser) {
       if (!refreshToken) {
         await deleteAccessTokenCookie()
@@ -27,15 +27,19 @@ export async function proxy(req: NextRequest) {
         return NextResponse.redirect(new URL("/login", req.url));
       }
       const {accessToken: newAccessToken, user} = await refreshAccessToken(refreshToken);
-      await setAccessTokenCookie(newAccessToken);
+      await setAccessToken  Cookie(newAccessToken);
       await setRefreshTokenCookie(await generateRefreshToken(user));
-      return NextResponse.next();
+
+      currentUser = user;
     }
   
     if (!currentUser.email_confirmed) {
       log("User email not confirmed, redirecting to email confirmation page", LogLevel.debug);
       return NextResponse.redirect(new URL("/confirm-email/pending", req.url));
     }
+
+      return NextResponse.next();
+
   }
   catch {
     // TODO make error page
