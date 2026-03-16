@@ -1,6 +1,6 @@
 "use client";
 import { useTransition, useCallback } from "react";
-import { serverActionError, showServerActionErrorToast } from "../serverActionError";
+import { serverActionResponse, showServerActionResponseToast } from "../serverActionError";
 
 
 export function useServerAction<T extends (...args: any[]) => Promise<any>>(
@@ -8,11 +8,11 @@ export function useServerAction<T extends (...args: any[]) => Promise<any>>(
 ) {
   const [isPending, startTransition] = useTransition();
 
-  const execute = useCallback(async (...args: Parameters<T>): Promise<serverActionError> => {
+  const execute = useCallback(async (...args: Parameters<T>): Promise<serverActionResponse> => {
     return new Promise((resolve) => {
       startTransition(async () => {
         const result = await action(...args);
-        showServerActionErrorToast(result);
+        showServerActionResponseToast(result);
         resolve(result);
       });
     });

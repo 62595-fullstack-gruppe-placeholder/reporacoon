@@ -11,10 +11,10 @@ interface serverActionFailure {
     error: string;
 }
 
-export type serverActionError = serverActionFailure | serverActionSuccess;
+export type serverActionResponse = serverActionFailure | serverActionSuccess;
 
 
-export function showServerActionErrorToast(result: serverActionError) {
+export function showServerActionResponseToast(result: serverActionResponse) {
   if (!result) return;
   if (result.success) {
     toast.success("Success!");
