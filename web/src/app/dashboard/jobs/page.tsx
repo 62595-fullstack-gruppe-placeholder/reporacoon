@@ -3,6 +3,9 @@ import JobsTable from "@/app/_components/JobsTable";
 import { getUserScanJobs } from "@/lib/repository/scanJob/scanJobRepository";
 import { getUser } from "@/lib/auth/userFromToken";
 
+// force dynamic rendering for this page
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const user = await getUser();
 
