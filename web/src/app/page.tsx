@@ -12,40 +12,40 @@ export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  
+
   // Puts the scanjob and scanjob findings in local storage. 
   // If the scanjobs are older than a day, they would get deleted
   useEffect(() => {
-  const savedResults = localStorage.getItem('raccoon_scanjob_history');
-  if (savedResults) {
-    try {
-      const { findings, jobs } = JSON.parse(savedResults);
-      
-      const ONE_DAY = 24 * 60 * 60 * 1000;
-      const now = Date.now();
+    const savedResults = localStorage.getItem('raccoon_scanjob_history');
+    if (savedResults) {
+      try {
+        const { findings, jobs } = JSON.parse(savedResults);
 
-      const freshJobs = jobs.filter((job: any) => (now - job.scannedAt) < ONE_DAY);
-      const freshJobIds = new Set(freshJobs.map((j: any) => j.id));
-      const freshFindings = findings.filter((f: any) => freshJobIds.has(f.job_id));
+        const ONE_DAY = 24 * 60 * 60 * 1000;
+        const now = Date.now();
 
-      if (freshJobs.length > 0) {
-        setScanFindings(freshFindings);
-        setScanJob(freshJobs);
-        setIsScanning(true);
-        
-        localStorage.setItem('raccoon_scanjob_history', JSON.stringify({
-          findings: freshFindings,
-          jobs: freshJobs
-        }));
-      } else {
-        localStorage.removeItem('raccoon_scanjob_history');
+        const freshJobs = jobs.filter((job: any) => (now - job.scannedAt) < ONE_DAY);
+        const freshJobIds = new Set(freshJobs.map((j: any) => j.id));
+        const freshFindings = findings.filter((f: any) => freshJobIds.has(f.job_id));
+
+        if (freshJobs.length > 0) {
+          setScanFindings(freshFindings);
+          setScanJob(freshJobs);
+          setIsScanning(true);
+
+          localStorage.setItem('raccoon_scanjob_history', JSON.stringify({
+            findings: freshFindings,
+            jobs: freshJobs
+          }));
+        } else {
+          localStorage.removeItem('raccoon_scanjob_history');
+        }
+      } catch (err) {
+        console.error("Failed to load/clean history:", err);
       }
-    } catch (err) {
-      console.error("Failed to load/clean history:", err);
     }
-  }
-}, []);
-  
+  }, []);
+
   // Combines the new jobs and findings with the old ones and updates the local storage
   const handleScanSuccess = (newFindings: ScanFinding[], newJobs: ScanJob[]) => {
     const now = Date.now();
@@ -68,9 +68,9 @@ export default function Home() {
     localStorage.setItem('raccoon_scanjob_history', JSON.stringify({
       findings: updatedFindings,
       jobs: updatedJobs
-  }));
-};
-  
+    }));
+  };
+
 
   return (
     <div className="flex flex-col justify-center items-center gap-8">
@@ -88,7 +88,7 @@ export default function Home() {
         <div className="field flex items-center gap-2">
           <Image src="/searchIcon.svg" alt="" width={20} height={20} />
 
-          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false}/>
+          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} />
         </div>
         <ScanOptions isDisabled={true} />
       </div>
@@ -106,7 +106,7 @@ export default function Home() {
       >
         <ScanResults findings={scanFindings} jobs={scanJobs} />
         {isScanning && (
-          <button 
+          <button
             onClick={() => {
               localStorage.removeItem('raccoon_scanjob_history');
               setIsScanning(false);
@@ -120,26 +120,34 @@ export default function Home() {
         )}
       </div>
       <div className='inline-flex justify-start items-start gap-40'>
-        <div className="box w-80 h-72">
-          <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
-            Why?
-          </h1>
-          <p className="p self-stretch px-4 pt-2">
-            Have you ever lost 1000's of dollars because a junior
-            developer pushed an API key? Our goal is to prevent scenarios like this,
-            with security overviews and weekly reviews.
-          </p>
-        </div>
+        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-20 w-full max-w-4xl px-4">
+          <div className="box !bg-background/40 backdrop-blur-md border border-secondary/10 overflow-hidden shadow-xl p-8 flex-1 min-h-[300px] transition-all hover:border-white/20">
+            <div className="flex items-center gap-4 mb-6">
+              <div>
+                <h2 className="text-3xl font-black text-text-main">Why?</h2>
+              </div>
+            </div>
 
-        <div className="box w-80 h-72">
-          <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
-            How?
-          </h1>
-          <p className="p self-stretch px-4 pt-2">
-            Using a proprietary indexing technology,
-            Repo Raccoon searches your repository for any
-            vulnerabilites, like API keys or other secrets.
-          </p>
+            <p className="p text-left leading-relaxed border-t border-secondary/10 pt-4 text-secondary">
+              Have you ever lost 1000's of dollars because a junior
+              developer pushed an API key? Our goal is to prevent scenarios like this
+              with automated security overviews and weekly reviews.
+            </p>
+          </div>
+
+          <div className="box !bg-background/40 backdrop-blur-md border border-secondary/10 overflow-hidden shadow-xl p-8 flex-1 min-h-[300px] transition-all hover:border-white/20">
+            <div className="flex items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-3xl font-black text-text-main">How?</h1>
+              </div>
+            </div>
+
+            <p className="p text-left leading-relaxed border-t border-secondary/10 pt-4 text-secondary">
+              Using proprietary indexing technology,
+              Repo Raccoon sniffs through your repository history to identify
+              vulnerabilities like hardcoded API keys, database credentials, or hidden secrets.
+            </p>
+          </div>
         </div>
       </div>
     </div>
