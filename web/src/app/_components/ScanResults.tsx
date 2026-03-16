@@ -148,7 +148,7 @@ function JobAccordion({
             </div>
           </div>
           <div onClick={(e) => e.stopPropagation()}>
-            <CopyLinkButton label="Share scan" />
+            <CopyLinkButton label="Share scan" link={`${process.env.NEXT_PUBLIC_APP_URL}/share/${job.id}`} />
           </div>
           <div
             className={`transition-transform duration-300 ${isMainOpen ? "rotate-180" : ""}`}
