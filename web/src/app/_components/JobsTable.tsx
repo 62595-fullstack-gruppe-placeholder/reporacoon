@@ -1,12 +1,21 @@
-import Link from "next/link";
-import { ShieldCheck, Zap, AlertTriangle, GitBranch } from "lucide-react";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { ShieldCheck, Zap, AlertTriangle } from "lucide-react";
 import { ScanJobWithFindingsCount } from "@/lib/repository/scanJob/scanJobSchemas";
+import Link from "next/link";
 
 interface Props {
   jobs: ScanJobWithFindingsCount[];
 }
 
 export default function JobsTable({ jobs }: Props) {
+  const router = useRouter();
+
+  const handleRowClick = (jobId: string) => {
+    router.push(`/dashboard/job/${jobId}`);
+  };
+
   if (jobs.length === 0) {
     return (
       <div className="p-12 text-center">
@@ -44,15 +53,13 @@ export default function JobsTable({ jobs }: Props) {
           {jobs.map((job) => (
             <tr
               key={job.id}
-              className="border-b border-secondary/5 hover:bg-white/5 transition-colors"
+              className="border-b border-secondary/5 hover:bg-white/5 transition-colors cursor-pointer"
+              onClick={() => handleRowClick(job.id)}
             >
               <td className="p-4">
-                <Link
-                  href={`/dashboard/job/${job.id}`}
-                  className="font-black text-text-main hover:text-button-main transition-colors truncate max-w-xs block"
-                >
+                <span className="font-black text-text-main hover:text-button-main transition-colors truncate max-w-xs block">
                   {job.repo_url.split("/").slice(-2).join("/")}
-                </Link>
+                </span>
               </td>
               <td className="p-4">
                 <span
@@ -76,7 +83,7 @@ export default function JobsTable({ jobs }: Props) {
               <td className="p-4">
                 <div className="flex items-center gap-1.5 text-sm font-mono text-red-500 font-bold">
                   <AlertTriangle size={12} />
-                  <span>{job.findings_count || 0}</span>
+                  <span>{job.findings_count}</span>
                 </div>
               </td>
               <td className="p-4">

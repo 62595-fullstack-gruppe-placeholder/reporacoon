@@ -16,6 +16,7 @@ import { CopyLinkButton } from "./CopyLinkButton";
 interface Props {
   findings: ScanFinding[] | null;
   jobs: ScanJob[] | null; // Changed to plural
+  startOpen?: boolean;
 }
 
 type MergedFinding = Omit<ScanFinding, "branch"> & {
@@ -23,7 +24,7 @@ type MergedFinding = Omit<ScanFinding, "branch"> & {
   branchesText: string;
 };
 
-export default function ScanResults({ findings, jobs }: Props) {
+export default function ScanResults({ findings, jobs, startOpen }: Props) {
   if (!findings || !jobs || jobs.length === 0) return null;
   // Used for sorting the findings
   const severityOrder = {
@@ -80,6 +81,7 @@ export default function ScanResults({ findings, jobs }: Props) {
             key={job.id || job.repo_url}
             job={job}
             findings={mergedFindings}
+            startOpen
           />
         );
       })}
@@ -90,11 +92,13 @@ export default function ScanResults({ findings, jobs }: Props) {
 function JobAccordion({
   job,
   findings,
+  startOpen,
 }: {
   job: ScanJob;
   findings: MergedFinding[];
+  startOpen?: boolean;
 }) {
-  const [isMainOpen, setIsMainOpen] = useState(false);
+  const [isMainOpen, setIsMainOpen] = useState(startOpen ?? false);
 
   return (
     <div className="box border border-secondary/10 overflow-hidden shadow-xl transition-all duration-300">
@@ -148,7 +152,10 @@ function JobAccordion({
             </div>
           </div>
           <div onClick={(e) => e.stopPropagation()}>
-            <CopyLinkButton label="Share scan" link={`${process.env.NEXT_PUBLIC_APP_URL}/share/${job.id}`} />
+            <CopyLinkButton
+              label="Share scan"
+              link={`${process.env.NEXT_PUBLIC_APP_URL}/share/${job.id}`}
+            />
           </div>
           <div
             className={`transition-transform duration-300 ${isMainOpen ? "rotate-180" : ""}`}
