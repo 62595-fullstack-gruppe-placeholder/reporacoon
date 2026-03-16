@@ -4,7 +4,7 @@ import ScanResults from "@/app/_components/ScanResults";
 import URLForm from "@/app/_components/URLForm";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
-import { GitBranch, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import { useState } from "react";
 
 export function TryItYourself({
@@ -36,11 +36,6 @@ export function TryItYourself({
               </p>
             </>
           )}
-        </div>
-
-        {/* URL Form - matches landing page style */}
-        <div className="field flex items-center gap-2 justify-center max-w-md mx-auto">
-          <GitBranch className="text-secondary" size={20} />
           <URLForm
             onScanStarted={(findings, jobs) => {
               setJob(jobs[0]);

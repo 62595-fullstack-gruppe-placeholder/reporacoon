@@ -7,6 +7,8 @@ import { SubmitButton } from "./SubmitButton";
 import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { useScanAction } from "@/lib/hooks/useScanAction";
+import Image from "next/image";
+import { Search } from "lucide-react";
 
 /**
  * Schema for url form.
@@ -50,25 +52,32 @@ export default function URLForm(props: URLFormProps) {
   });
 
   return (
-    <form onSubmit={onSubmit} className="flex items-center flex-1 w-full gap-8">
-      <input
-        id="url"
-        type="text"
-        {...form.register("url")}
-        onChange={() => form.clearErrors("url")}
-        className="fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate"
-        placeholder="Paste a public Git repository URL"
-      />
-      {form.formState.errors.url && (
-        <p className="mt-1 text-sm text-red-600">
-          {form.formState.errors.url.message}
-        </p>
-      )}
-      <SubmitButton
-        text="Start scan"
-        loadingText="Scanning..."
-        loading={isPending}
-      />
-    </form>
+    <div className="field flex items-center gap-2">
+      <Search width={20} height={20} color="#a1b5a6" strokeWidth={2} />
+
+      <form
+        onSubmit={onSubmit}
+        className="flex items-center flex-1 w-full gap-8"
+      >
+        <input
+          id="url"
+          type="text"
+          {...form.register("url")}
+          onChange={() => form.clearErrors("url")}
+          className="fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate"
+          placeholder="Paste a public Git repository URL"
+        />
+        {form.formState.errors.url && (
+          <p className="mt-1 text-sm text-red-600">
+            {form.formState.errors.url.message}
+          </p>
+        )}
+        <SubmitButton
+          text="Start scan"
+          loadingText="Scanning..."
+          loading={isPending}
+        />
+      </form>
+    </div>
   );
 }
