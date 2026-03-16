@@ -159,6 +159,9 @@ Main button color: #23863d
   .h1 {
     @apply justify-center text-text-main text-5xl font-black leading-[60px]
   }
+  .h2 {
+    @apply justify-center text-text-main text-3xl font-black leading-[60px]
+  }
   /* Main paragraph style*/
   .p {
     @apply justify-center text-text-main text-base font-normal leading-6

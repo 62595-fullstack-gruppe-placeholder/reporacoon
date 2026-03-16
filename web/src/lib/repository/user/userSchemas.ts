@@ -28,15 +28,20 @@ export const createUserDTOSchema = z.object({
 export type CreateUserDTO = z.infer<typeof createUserDTOSchema>;
 
 /**
+ * Schema used to validate passwords.
+ */
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .max(100);
+
+/**
  * Schema for signup form.
  */
 export const signupFormSchema = z
   .object({
     email: z.email("Invalid email"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .max(100),
+    password: passwordSchema,
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -48,6 +53,20 @@ export const signupFormSchema = z
  * Signup form data.
  */
 export type SignupFormSchema = z.infer<typeof signupFormSchema>;
+
+/**
+ * Schema used to validate change password DTO.
+ */
+export const changePasswordDTOSchema = z.object({
+  userId: z.string(),
+  currentPassword: z.string(),
+  newPassword: passwordSchema,
+})
+
+/**
+ * DTO for changing a user's password.
+ */
+export type ChangePasswordDTO = z.infer<typeof changePasswordDTOSchema>
 
 /**
  * DTO for authentication credentials.
