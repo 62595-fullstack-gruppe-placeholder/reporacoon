@@ -13,10 +13,10 @@ export default function Header({ user }: { user: User | null }) {
     <header data-testid="header">
       <div className="flex flex-row justify-between border-b border-box py-3 px-10 w-full items-center">
         <div id="header-left" className="flex flex-row items-center gap-4">
-          <Link href="/">
+          <Link href="/" className="flex flex-row gap-4">
             <Image src="/logo.png" alt="logo" width="32" height="32" />
-          </Link>
           <p className="text-main-text text-2xl font-bold">Repo Racoon</p>
+          </Link>
         </div>
 
         <div id="header-cont" className="w-1/2">
