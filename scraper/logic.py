@@ -126,7 +126,7 @@ class GitHubSecretScanner:
 
     def is_text_file(self, filename):
         text_extensions = self.extensions
-        return filename.lower().endswith(text_extensions)
+        return filename.lower().endswith(tuple(text_extensions))
 
     def find_line_number(self, content, match):
         """Return (line_number, line_text) for the first line containing match.

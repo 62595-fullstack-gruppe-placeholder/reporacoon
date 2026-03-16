@@ -134,7 +134,6 @@ def start_scan():
         data = getAllPendingScanJobs()
         isDeepScan = request.json.get("isDeepScan", False)
         extensions = request.json.get("extensions", [])
-        print("EXTENSIONS=asdadads===== " + str(extensions))
         if not data:
             return jsonify({'success': False, 'message': 'No pending scan jobs'}), 200
 

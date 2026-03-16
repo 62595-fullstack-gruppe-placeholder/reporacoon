@@ -79,7 +79,7 @@ export async function scan(input: CreateScanJobDTO & { url: string; isDeepScan: 
     const scanResponse = await fetch("http://host.docker.internal:5001/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isDeepScan: input.isDeepScan, extensions: input.extensions }),
+      body: JSON.stringify({ isDeepScan: input.isDeepScan, extensions: Array.from(input.extensions) }),
     });
 
     const scanData = await scanResponse.json();
