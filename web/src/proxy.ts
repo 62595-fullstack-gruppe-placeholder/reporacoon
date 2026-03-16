@@ -27,7 +27,7 @@ export async function proxy(req: NextRequest) {
         return NextResponse.redirect(new URL("/login", req.url));
       }
       const {accessToken: newAccessToken, user} = await refreshAccessToken(refreshToken);
-      await setAccessToken  Cookie(newAccessToken);
+      await setAccessTokenCookie(newAccessToken);
       await setRefreshTokenCookie(await generateRefreshToken(user));
 
       currentUser = user;
