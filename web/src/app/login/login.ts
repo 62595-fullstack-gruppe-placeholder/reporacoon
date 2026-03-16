@@ -25,13 +25,10 @@ export async function login(input: CredentialsDTO) {
       return { success: false as const, error: "Invalid credentials." };
     }
     await setAccessTokenCookie(await generateAccessToken(user));
+    await setRefreshTokenCookie(await generateRefreshToken(user));
     return { success: true as const, error: undefined};
   }
   catch (error: any) {
     return { success: false as const, error: "An unexpected error occurred." };
   }
-
-  await setAccessTokenCookie(await generateAccessToken(user));
-  await setRefreshTokenCookie(await generateRefreshToken(user));
-  redirect("/dashboard");
 }
