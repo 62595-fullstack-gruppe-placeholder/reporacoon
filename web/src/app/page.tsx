@@ -73,11 +73,13 @@ export default function Home() {
 
 
   return (
-    <div className="flex flex-col justify-center items-center gap-8">
-      <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
+    <div className="py-10 flex flex-col justify-center items-center gap-8">
+      <div className="gap-8">
         <h1 className="h1">
           Sniff out vulnerabilities in seconds
         </h1>
+      </div>
+      <div className="px-4 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
 
         <p className="p">
           Repo Raccoon scrapes public repositories to provide
