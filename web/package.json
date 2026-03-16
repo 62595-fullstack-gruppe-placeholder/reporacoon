@@ -2,6 +2,18 @@
   "name": "reporaccoonfrontend",
   "version": "0.1.0",
   "private": true,
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "onFail": "warn",
+      "version": "11.11.1"
+    },
+    "runtime": {
+      "name": "node",
+      "onFail": "warn",
+      "version": "24"
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
