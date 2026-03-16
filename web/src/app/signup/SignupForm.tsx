@@ -10,6 +10,7 @@ import {
   SignupFormSchema,
 } from "@/lib/repository/user/userSchemas";
 import { SubmitButton } from "../_components/SubmitButton";
+import { useServerAction } from "@/lib/hooks/useServerAction";
 
 export function SignupForm() {
   const form = useForm<SignupFormSchema>({
@@ -21,32 +22,23 @@ export function SignupForm() {
     },
   });
 
+  const { execute, isPending } = useServerAction(signup);
+
   const onSubmit = form.handleSubmit(async (data: SignupFormSchema) => {
-    setIsLoading(true);
     const input: SignupInput = {
       email: data.email,
       password: data.password,
     };
-    const result = await signup(input);
+    const result = await execute(input);
 
-    if (result?.error) {
-      if (result.error.toLowerCase().includes("email")) {
-        form.setError("email", {
-          type: "manual",
-          message: result.error,
-        });
-      } else {
-        console.error(result.error);
-      }
-      return;
+
+    // Only redirect on success
+    if (result && result.success) {
+      form.reset();
+      localStorage.setItem("pending_confirmation_email", data.email);
+      window.location.href = "/dashboard";
     }
-
-    form.reset();
-localStorage.setItem("pending_confirmation_email", data.email); // add here
-window.location.href = "/dashboard";
   });
-
-  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="min-h-screen w-full flex justify-center pt-20 p-4">
@@ -54,11 +46,11 @@ window.location.href = "/dashboard";
         onSubmit={onSubmit}
         className="h-fit w-full max-w-md p-8 rounded-xl shadow-lg border border-green-200 bg-green-50 backdrop-blur-sm space-y-6">
         <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-gray-900">Sign up</h1>
-        <p className="text-sm text-gray-500">
-          Enter your credentials to sign up as a user
-        </p>
-      </div>
+          <h1 className="text-2xl font-bold text-gray-900">Sign up</h1>
+          <p className="text-sm text-gray-500">
+            Enter your credentials to sign up as a user
+          </p>
+        </div>
 
         <div>
           <label
@@ -92,15 +84,15 @@ window.location.href = "/dashboard";
             Password
           </label>
           <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  {...form.register("password")}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all"
-                />
-              </div>
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              {...form.register("password")}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all"
+            />
+          </div>
           {form.formState.errors.password && (
             <p className="mt-1 text-sm text-red-500">
               {form.formState.errors.password.message}
@@ -116,15 +108,15 @@ window.location.href = "/dashboard";
             Confirm Password
           </label>
           <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  {...form.register("confirmPassword")}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all"
-                />
-              </div>
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              id="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              {...form.register("confirmPassword")}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all"
+            />
+          </div>
           {form.formState.errors.confirmPassword && (
             <p className="mt-1 text-sm text-red-500">
               {form.formState.errors.confirmPassword.message}
@@ -132,7 +124,7 @@ window.location.href = "/dashboard";
           )}
         </div>
 
-        <SubmitButton text="Sign Up" loadingText="Creating Account..." loading={isLoading} />
+        <SubmitButton text="Sign Up" loadingText="Creating Account..." loading={isPending} />
       </form>
     </div>
   );

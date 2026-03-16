@@ -69,6 +69,18 @@ def getAllScanFindings():
         if conn:
             conn.close()
 
+# Used as a debug function currently
+def getScanFindingById(id):
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM scan_findings WHERE job_id = %s", (id,),)
+            return cur.fetchall()
+    finally:
+        if conn:
+            conn.close()       
+
 def insertScanFindings(job_id, file_path, line_number, code_snippet, severity, rule, branch="main"):
     conn = None
     try:

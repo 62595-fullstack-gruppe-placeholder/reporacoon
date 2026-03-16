@@ -5,16 +5,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { SubmitButton } from "./SubmitButton";
-import { createScanJobServerAction, getScanFindingByIdServerAction, getScanJobByIdServerAction } from "@/app/ScanServerActions";
+import { createScanJobServerAction, getScanFindingByIdServerAction, getScanJobByIdServerAction, scan, ScanResult } from "@/app/ScanServerActions";
 import { CreateScanJobDTO, createScanJobDTOSchema, ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
+import { useServerAction } from "@/lib/hooks/useServerAction";
+import { useScanAction } from "@/lib/hooks/useScanAction";
 
 /**
  * Schema for url form.
  */
 export const urlFormSchema = z
     .object({
-        url: z.string().url("Invalid URL"),
+        url: z.string().url("Invalid url"),
     });
 
 
@@ -31,83 +33,28 @@ interface URLFormProps {
 
 
 export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const { execute, isPending } = useScanAction();
 
     const form = useForm<URLFormSchema>({
         resolver: zodResolver(urlFormSchema),
-        defaultValues: {
-            url: "",
-        },
+        defaultValues: { url: "" },
     });
 
     const onSubmit = form.handleSubmit(async (data) => {
-        setIsLoading(true);
-        // LOGIC: 
-        // 1. Validate that the URL is actually a Github/Gitlab URL
-        // 2. Add the URL to a scanjob in the database with a status of "pending"
-        // 3. Start the python scraper so it runs all the pending scanjobs in the database
-        try {
-            const response = await fetch("http://localhost:5001/validate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url: data.url }),
-            });
+        const input = {
+            url: data.url,
+            repo_url: data.url,
+            owner_id: null,
+            priority: 1,
+            isDeepScan,
+        };
 
-            const input: CreateScanJobDTO = {
-                repo_url: data.url,
-                owner_id: null, // TODO: Get the actual user ID from the session
-                priority: 1, // TODO: Allow the user to set the priority
-            };
+        const result = await execute(input);
 
-            const res = await response.json();
-        
-            // TODO: handle errors for the validation call above
-            if (res.valid === true) {
-                if (isDeepScan) {
-                    console.log("URL is valid, starting deep scan...");
-                } else {
-                    console.log("URL is valid, starting scan...");
-                }
-                // Creating the scan job in the database
-                const scanJob = await createScanJobServerAction(input);
-
-                // Starting the scanner, which runs all of the scan jobs currently in the database
-                // TODO: handle errors from the scan
-                try {
-                    
-                    const response = await fetch("http://localhost:5001/scan", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ isDeepScan }),
-                    });
-                    console.log(response)
-                    const res = await response.json();
-                    console.log(res.scan_id)
-                    console.log(res)
-                    const findings = await getScanFindingByIdServerAction(res.scan_id)
-                    const job = await getScanJobByIdServerAction(res.scan_id)
-                    const scanJobs = [job]
-
-                    if (findings) {
-                    // Send the finding back to the Home component
-                    onScanStarted(findings, scanJobs); 
-                }
-                } catch (err) {
-                    console.error(err)
-                }
-
-            } else {
-                // TODO: show this to the user
-                console.log("URL is invalid, please enter a valid GitHub/GitLab URL.");
-            }
-
-
-            form.reset();
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsLoading(false);
+        if (result.success) {
+            onScanStarted(result.findings, result.jobs);
         }
+        // Error: toast shows automatically via useServerAction
     });
 
 
@@ -118,12 +65,13 @@ export default function URLForm({ onScanStarted, isDeepScan }: URLFormProps) {
                 id="url"
                 type="text"
                 {...form.register("url")}
+                onChange={() => form.clearErrors("url")}
                 className='fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate' placeholder="Paste a GitHub/GitLab URL" />
             {form.formState.errors.url && (
                 <p className="mt-1 text-sm text-red-600">
                     {form.formState.errors.url.message}
                 </p>)}
-            <SubmitButton text="Start Scanning" loadingText="Scanning..." loading={isLoading}/>
+            <SubmitButton text="Start Scanning" loadingText="Scanning..." loading={isPending} />
         </form>
     )
 }
