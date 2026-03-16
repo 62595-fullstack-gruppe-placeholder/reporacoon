@@ -35,7 +35,7 @@ export async function createScanJob(input: CreateScanJobDTO): Promise<ScanJob> {
 /**
  * Fetching scan finding by id, returning the {@link ScanFinding}.
  */
-export async function getScanJobById(id: String): Promise<ScanJob> {
+export async function getScanJobById(id: string): Promise<ScanJob> {
   const row = await queryOne<ScanJob>(
       `
         SELECT *
