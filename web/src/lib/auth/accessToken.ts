@@ -64,9 +64,13 @@ export async function refreshAccessToken(refreshToken: string) {
     if (!userId) {
       throw new Error("Token has no userId");
     }
-
+    
     if (!storedToken || storedToken.revoked_at !== null) {
       throw new Error("Token revoked or missing");
+    }
+
+    if (storedToken.expires_at.getTime() <= Date.now()) {
+      throw new Error("Token is expired");
     }
 
     if (storedToken.token_hash !== incomingHash) {
