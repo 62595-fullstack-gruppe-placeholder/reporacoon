@@ -11,6 +11,8 @@ import {
 } from "@/lib/repository/user/userSchemas";
 import { SubmitButton } from "../_components/SubmitButton";
 import { useState } from "react";
+import { useServerAction } from "@/lib/hooks/useServerAction";
+import { redirect } from "next/navigation";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,14 +25,20 @@ export function LoginForm() {
     },
   });
 
+  const { execute, isPending } = useServerAction(login);
+
   const onSubmit = form.handleSubmit(async (data: LoginFormSchema) => {
-    setIsLoading(true);
     const input: CredentialsDTO = {
       email: data.email,
       password: data.password,
     };
-    await login(input);
-    form.reset();
+    
+    const result = await execute(input);
+
+    if (result.success) {
+      form.reset();
+      redirect("/dashboard");
+    }
   });
 
 
@@ -97,7 +105,7 @@ export function LoginForm() {
         </div>
 
         <div className="pt-2">
-          <SubmitButton text="Log in" loadingText="Logging in..." loading={isLoading} />
+          <SubmitButton text="Log in" loadingText="Logging in..." loading={isPending}/>
         </div>
       </form>
     </div>
