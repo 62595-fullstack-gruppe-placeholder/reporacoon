@@ -8,7 +8,6 @@ import {
   SignupFormSchema,
 } from "@/lib/repository/user/userSchemas";
 import { sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
-import { redirect } from "next/navigation";
 
 /**
  * Input to signup server action.

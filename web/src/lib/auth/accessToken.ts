@@ -1,10 +1,10 @@
 import { User } from "../repository/user/userSchemas";
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT } from "jose";
 import { getFuture, getNow } from "../timeUtil";
 import { loadKeys } from "./keys";
 import { getUserById } from "../repository/user/userRepository";
 import crypto from "crypto";
-import { createRefreshToken, getRefreshTokenByHash, getRefreshTokenById, revokeUserRefreshTokens } from "../repository/refreshToken/refreshTokenRepository";
+import { createRefreshToken, getRefreshTokenByHash, revokeUserRefreshTokens } from "../repository/refreshToken/refreshTokenRepository";
 import { withTransaction } from "../database/remoteDataSource";
 
 

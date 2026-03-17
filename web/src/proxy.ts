@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { loadKeys } from "./lib/auth/keys";
-import { jwtVerify } from "jose";
-import { deleteAccessTokenCookie, deleteRefreshTokenCookie, getAccessTokenCookie, setAccessTokenCookie, setRefreshTokenCookie } from "./lib/auth/cookies";
+import { deleteAccessTokenCookie, deleteRefreshTokenCookie, setAccessTokenCookie, setRefreshTokenCookie } from "./lib/auth/cookies";
 import { log, LogLevel } from "@/lib/log";
-import { getUserById } from "@/lib/repository/user/userRepository";
-import { userClaimsSchema } from "./lib/auth/authSchemas";
-import { claimsToUser } from "./lib/auth/jwt";
 import { getUser } from "./lib/auth/userFromToken";
-import { generateAccessToken, generateRefreshToken, refreshAccessToken } from "./lib/auth/accessToken";
+import { generateRefreshToken, refreshAccessToken } from "./lib/auth/accessToken";
 
 /**
  * Proxy running in front of protected pages. Handles access token verification.
