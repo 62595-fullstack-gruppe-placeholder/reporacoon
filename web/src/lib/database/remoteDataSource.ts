@@ -43,7 +43,29 @@ export async function query<T = unknown>(
 export async function queryOne<T = unknown>(
   text: string,
   params?: any[],
+  client?: pg.PoolClient | pg.Pool, 
 ): Promise<T | null> {
-  const rows = await query<T>(text, params);
-  return rows[0] ?? null;
+  const executor = client || pool; 
+  const result = await executor.query(text, params);
+  return (result.rows[0] as T) ?? null;
+}
+
+/**
+ * Executes a callback within a database transaction.
+ */
+export async function withTransaction<T>(
+  callback: (client: pg.PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await callback(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
