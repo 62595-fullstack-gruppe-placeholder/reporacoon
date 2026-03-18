@@ -1,5 +1,6 @@
 "use server";
 
+import { getUser } from "@/lib/auth/userFromToken";
 import { getFindingsByJobId } from "@/lib/repository/scanFinding/scanFindingRepository";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { createScanJob, getScanJobById } from "@/lib/repository/scanJob/scanJobRepository";
@@ -70,7 +71,7 @@ export async function scan(input: CreateScanJobDTO & { url: string; isDeepScan: 
     // 2. Create scan job
     await createScanJobServerAction({
       repo_url: input.url,
-      owner_id: null, // TODO: get from session/cookie
+      owner_id: (await getUser())?.id ?? null,
       priority: 1,
     });
 
