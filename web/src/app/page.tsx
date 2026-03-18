@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import URLForm from './_components/URLForm';
-import ScanResults from './_components/ScanResults';
-import { ScanFinding } from '@/lib/repository/scanFinding/scanFindingSchema';
-import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
-import { ScanOptions } from './_components/ScanOptions';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import URLForm from "./_components/URLForm";
+import ScanResults from "./_components/ScanResults";
+import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
+import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
+import { ScanOptions } from "./_components/ScanOptions";
 
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
@@ -47,15 +47,18 @@ export default function Home() {
   }, []);
 
   // Combines the new jobs and findings with the old ones and updates the local storage
-  const handleScanSuccess = (newFindings: ScanFinding[], newJobs: ScanJob[]) => {
+  const handleScanSuccess = (
+    newFindings: ScanFinding[],
+    newJobs: ScanJob[],
+  ) => {
     const now = Date.now();
-    const jobsWithTime = newJobs.map(job => ({ ...job, scannedAt: now }));
+    const jobsWithTime = newJobs.map((job) => ({ ...job, scannedAt: now }));
 
     setScanFindings((prev) => (prev ? [...prev, ...newFindings] : newFindings));
     setScanJob((prev) => (prev ? [...prev, ...jobsWithTime] : jobsWithTime));
     setIsScanning(true);
 
-    const existingData = localStorage.getItem('raccoon_scanjob_history');
+    const existingData = localStorage.getItem("raccoon_scanjob_history");
     let updatedFindings = newFindings;
     let updatedJobs = jobsWithTime;
 
@@ -65,33 +68,27 @@ export default function Home() {
       updatedJobs = [...jobs, ...jobsWithTime];
     }
 
-    localStorage.setItem('raccoon_scanjob_history', JSON.stringify({
-      findings: updatedFindings,
-      jobs: updatedJobs
-    }));
+    localStorage.setItem(
+      "raccoon_scanjob_history",
+      JSON.stringify({
+        findings: updatedFindings,
+        jobs: updatedJobs,
+      }),
+    );
   };
 
-
   return (
-    <div className="py-10 flex flex-col justify-center items-center gap-8">
-      <div className="gap-8">
-        <h1 className="h1">
-          Sniff out vulnerabilities in seconds
-        </h1>
-      </div>
-      <div className="px-4 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
+    <div className="flex flex-col justify-center items-center gap-8">
+      <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
+        <h1 className="h1">Sniff out vulnerabilities in seconds</h1>
 
         <p className="p">
-          Repo Raccoon scrapes public repositories to provide
-          comprehensive security overviews, helping you identify and
-          address potential weaknesses.
+          Repo Raccoon scrapes public repositories to provide comprehensive
+          security overviews, helping you identify and address potential
+          weaknesses.
         </p>
 
-        <div className="field flex items-center gap-2">
-          <Image src="/searchIcon.svg" alt="" width={20} height={20} />
-
-          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} />
-        </div>
+        <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} />
         <ScanOptions isDisabled={true} />
       </div>
 
@@ -100,9 +97,10 @@ export default function Home() {
         className={`
           w-full max-w-6xl px-4
           transition-all duration-700 ease-out
-          ${isScanning
-            ? 'opacity-100 translate-y-0 max-h-[1000px]'
-            : 'opacity-0 -translate-y-10 max-h-0 overflow-hidden'
+          ${
+            isScanning
+              ? "opacity-100 translate-y-0 max-h-[1000px]"
+              : "opacity-0 -translate-y-10 max-h-0 overflow-hidden"
           }
         `}
       >
@@ -110,7 +108,7 @@ export default function Home() {
         {isScanning && (
           <button
             onClick={() => {
-              localStorage.removeItem('raccoon_scanjob_history');
+              localStorage.removeItem("raccoon_scanjob_history");
               setIsScanning(false);
               setScanFindings(null);
               setScanJob(null);
@@ -121,35 +119,26 @@ export default function Home() {
           </button>
         )}
       </div>
-      <div className='inline-flex justify-start items-start gap-40'>
-        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-20 w-full max-w-4xl px-4">
-          <div className="box !bg-background/40 backdrop-blur-md border border-secondary/10 overflow-hidden shadow-xl p-8 flex-1 min-h-[300px] transition-all hover:border-white/20">
-            <div className="flex items-center gap-4 mb-6">
-              <div>
-                <h2 className="text-3xl font-black text-text-main">Why?</h2>
-              </div>
-            </div>
+      <div className="inline-flex justify-start items-start gap-40">
+        <div className="box w-80 h-72">
+          <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
+            Why?
+          </h1>
+          <p className="p self-stretch px-4 pt-2">
+            Have you ever lost 1000's of dollars because a junior developer
+            pushed an API key? Our goal is to prevent scenarios like this, with
+            security overviews and weekly reviews.
+          </p>
+        </div>
 
-            <p className="p text-left leading-relaxed border-t border-secondary/10 pt-4 text-secondary">
-              Have you ever lost 1000's of dollars because a junior
-              developer pushed an API key? Our goal is to prevent scenarios like this
-              with automated security overviews and weekly reviews.
-            </p>
-          </div>
-
-          <div className="box !bg-background/40 backdrop-blur-md border border-secondary/10 overflow-hidden shadow-xl p-8 flex-1 min-h-[300px] transition-all hover:border-white/20">
-            <div className="flex items-center gap-4 mb-6">
-              <div>
-                <h1 className="text-3xl font-black text-text-main">How?</h1>
-              </div>
-            </div>
-
-            <p className="p text-left leading-relaxed border-t border-secondary/10 pt-4 text-secondary">
-              Using proprietary indexing technology,
-              Repo Raccoon sniffs through your repository history to identify
-              vulnerabilities like hardcoded API keys, database credentials, or hidden secrets.
-            </p>
-          </div>
+        <div className="box w-80 h-72">
+          <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
+            How?
+          </h1>
+          <p className="p self-stretch px-4 pt-2">
+            Using a proprietary indexing technology, Repo Raccoon searches your
+            repository for any vulnerabilites, like API keys or other secrets.
+          </p>
         </div>
       </div>
     </div>

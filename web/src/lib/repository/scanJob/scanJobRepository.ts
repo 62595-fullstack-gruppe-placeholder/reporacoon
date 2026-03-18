@@ -1,6 +1,13 @@
 import "server-only";
-import { queryOne } from "@lib/database/remoteDataSource";
-import { CreateScanJobDTO, createScanJobDTOSchema, ScanJob, scanJobSchema } from "./scanJobSchemas";
+import { query, queryOne } from "@lib/database/remoteDataSource";
+import {
+  CreateScanJobDTO,
+  createScanJobDTOSchema,
+  ScanJob,
+  scanJobSchema,
+  scanJobWithFindingsCount,
+  ScanJobWithFindingsCount,
+} from "./scanJobSchemas";
 
 /**
  * Create a new scan job from {@link CreateScanJobDTO}, returning the created {@link ScanJob}.
@@ -31,23 +38,45 @@ export async function createScanJob(input: CreateScanJobDTO): Promise<ScanJob> {
   return scanJobSchema.parse(row);
 }
 
-
 /**
  * Fetching scan finding by id, returning the {@link ScanFinding}.
  */
-export async function getScanJobById(id: String): Promise<ScanJob> {
+export async function getScanJobById(id: string): Promise<ScanJob> {
   const row = await queryOne<ScanJob>(
-      `
+    `
         SELECT *
         FROM scan_jobs
         WHERE id = $1
         `,
-      [id],
-    );
+    [id],
+  );
 
   if (!row) {
     throw new Error("Failed to get scan job");
   }
 
   return scanJobSchema.parse(row);
+}
+
+export async function getUserScanJobs(
+  userId: string,
+  limit: number = 100,
+): Promise<ScanJobWithFindingsCount[]> {
+  const rows = await query<any>(
+    `
+    SELECT 
+      sj.*, 
+      COALESCE(COUNT(f.id), 0)::INTEGER as findings_count
+    FROM scan_jobs sj
+    LEFT JOIN scan_findings f ON f.job_id = sj.id
+    WHERE sj.owner_id = $1
+    GROUP BY sj.id, sj.repo_url, sj.status, sj.owner_id, sj.priority, 
+             sj.created_at, sj.duration
+    ORDER BY sj.created_at DESC
+    LIMIT $2
+  `,
+    [userId, limit],
+  );
+
+  return rows.map((row) => scanJobWithFindingsCount.parse(row));
 }
