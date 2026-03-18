@@ -35,5 +35,6 @@ describe("logout", () => {
       expect(deleteRefreshTokenCookie).toHaveBeenCalled();
       expect(getUser).toHaveBeenCalled();
       expect(revokeUserRefreshTokens).toHaveBeenCalledWith("mock-user-id");
+      expect(revokeUserRefreshTokens).toHaveBeenCalledBefore(deleteAccessTokenCookie as Mock)
   })
 });

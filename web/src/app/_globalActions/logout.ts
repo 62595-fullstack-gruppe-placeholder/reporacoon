@@ -6,9 +6,9 @@ import { revokeUserRefreshTokens } from "@/lib/repository/refreshToken/refreshTo
 import { redirect } from "next/navigation";
 
 export async function logout() {
-  await deleteAccessTokenCookie();
-  await deleteRefreshTokenCookie();
   const user = await getUser();
   if (user) await revokeUserRefreshTokens(user.id);
+  await deleteAccessTokenCookie();
+  await deleteRefreshTokenCookie();
   redirect("/");
 }
