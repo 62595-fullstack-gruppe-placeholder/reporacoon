@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Mail, Lock } from "lucide-react";
-import { useFormStatus } from "react-dom";
 import { login } from "./login";
 import {
   CredentialsDTO,
@@ -11,12 +10,13 @@ import {
   loginFormSchema,
 } from "@/lib/repository/user/userSchemas";
 import { SubmitButton } from "../_components/SubmitButton";
-import { boolean } from "zod";
 import { useState } from "react";
 import { useServerAction } from "@/lib/hooks/useServerAction";
 import { redirect } from "next/navigation";
 
 export function LoginForm() {
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<LoginFormSchema>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {

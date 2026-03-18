@@ -7,9 +7,9 @@ export const refreshTokenSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   token_hash: z.string(),
-  expires_at: z.iso.datetime({ offset: true }),
-  revoked_at: z.iso.datetime({ offset: true }).nullable().optional(),
-  created_at: z.iso.datetime({ offset: true }).nullable().optional(),
+  expires_at: z.coerce.date(),
+  revoked_at: z.coerce.date().nullable().optional(),
+  created_at: z.coerce.date().nullable().optional(),
 });
 
 /**
@@ -23,7 +23,7 @@ export type RefreshToken = z.infer<typeof refreshTokenSchema>;
 export const createRefreshTokenDTOSchema = z.object({
   user_id: z.string(),
   token_hash: z.string(),
-  expires_at: z.iso.datetime({ offset: true }),
+  expires_at: z.coerce.date(),
 });
 
 /**

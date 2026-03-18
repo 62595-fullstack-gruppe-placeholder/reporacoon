@@ -19,6 +19,18 @@ export const scanJobSchema = z.object({
 export type ScanJob = z.infer<typeof scanJobSchema>;
 
 /**
+ * {@link scanJobSchema} including the amount of findings for the job.
+ */
+export const scanJobWithFindingsCount = scanJobSchema.extend({
+  findings_count: z.number(),
+})
+
+/**
+ * Represents a scan job with extended with the amount of findings.
+ */
+export type ScanJobWithFindingsCount = z.infer<typeof scanJobWithFindingsCount>
+
+/**
  * DTO for creating a scan job in the `scan_jobs` table.
  */
 export const createScanJobDTOSchema = z.object({

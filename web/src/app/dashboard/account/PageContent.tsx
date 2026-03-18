@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { changePassword } from "./changePassword";
 import { deleteAccount } from "./deleteAccount";
+import { toast } from "sonner";
 
 const formSchema = z
   .object({
@@ -37,13 +38,13 @@ export function AccountDashboard({ user }: { user: User }) {
 
   const handlePasswordChange = (data: PasswordFormData) => {
     startTransition(async () => {
-      // TODO: toasts
       try {
         await changePassword(data);
         passwordForm.reset();
         setShowPasswordForm(false);
+        toast.success("Password updated")
       } catch (error) {
-        console.error("Password change failed:", error);
+        toast.error("Failed to update password")
       }
     });
   };
