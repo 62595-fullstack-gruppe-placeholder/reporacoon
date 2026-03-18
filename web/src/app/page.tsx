@@ -13,10 +13,10 @@ export default function Home() {
   const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
   const [isScanning, setIsScanning] = useState(false);
 
-  // Puts the scanjob and scanjob findings in local storage.
+  // Puts the scanjob and scanjob findings in local storage. 
   // If the scanjobs are older than a day, they would get deleted
   useEffect(() => {
-    const savedResults = localStorage.getItem("raccoon_scanjob_history");
+    const savedResults = localStorage.getItem('raccoon_scanjob_history');
     if (savedResults) {
       try {
         const { findings, jobs } = JSON.parse(savedResults);
@@ -24,28 +24,21 @@ export default function Home() {
         const ONE_DAY = 24 * 60 * 60 * 1000;
         const now = Date.now();
 
-        const freshJobs = jobs.filter(
-          (job: any) => now - job.scannedAt < ONE_DAY,
-        );
+        const freshJobs = jobs.filter((job: any) => (now - job.scannedAt) < ONE_DAY);
         const freshJobIds = new Set(freshJobs.map((j: any) => j.id));
-        const freshFindings = findings.filter((f: any) =>
-          freshJobIds.has(f.job_id),
-        );
+        const freshFindings = findings.filter((f: any) => freshJobIds.has(f.job_id));
 
         if (freshJobs.length > 0) {
           setScanFindings(freshFindings);
           setScanJob(freshJobs);
           setIsScanning(true);
 
-          localStorage.setItem(
-            "raccoon_scanjob_history",
-            JSON.stringify({
-              findings: freshFindings,
-              jobs: freshJobs,
-            }),
-          );
+          localStorage.setItem('raccoon_scanjob_history', JSON.stringify({
+            findings: freshFindings,
+            jobs: freshJobs
+          }));
         } else {
-          localStorage.removeItem("raccoon_scanjob_history");
+          localStorage.removeItem('raccoon_scanjob_history');
         }
       } catch (err) {
         console.error("Failed to load/clean history:", err);
