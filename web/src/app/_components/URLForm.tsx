@@ -7,7 +7,6 @@ import { SubmitButton } from "./SubmitButton";
 import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { useScanAction } from "@/lib/hooks/useScanAction";
-import Image from "next/image";
 import { Search } from "lucide-react";
 
 /**
