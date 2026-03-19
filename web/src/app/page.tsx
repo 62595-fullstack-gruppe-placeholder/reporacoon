@@ -8,32 +8,17 @@ import { ScanFinding } from '@/lib/repository/scanFinding/scanFindingSchema';
 import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
 import { ScanOptions } from './_components/ScanOptions';
 import { IgnoreSettingsButtons } from './_components/IgnoreSettings';
+import { extensionsUtil } from '@/lib/utils';
 
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
   const [isScanning, setIsScanning] = useState(false);
 
-  // All of the file extensions that the scanner will search
-  const extensions = new Set<string>(['.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
-        '.html', '.htm', '.xml', '.json', '.yml', '.yaml', '.toml', '.ini',
-        '.cfg', '.conf', '.config', '.env', '.sh', '.bash', '.zsh', '.fish',
-        '.ps1', '.bat', '.cmd', '.txt', '.rst', '.tex', '.csv',
-        '.sql', '.css', '.scss', '.sass', '.less', '.vue', '.svelte',
-        '.swift', '.kt', '.kts', '.rs', '.scala', '.clj', '.elm',
-        '.ex', '.exs', '.erl', '.hrl', '.hs', '.lhs', '.lua', '.pl',
-        '.pm', '.r', '.R', '.dart', '.fs', '.fsx', '.fsi', '.fsscript',
-        '.dockerfile', 'Dockerfile', '.gitignore', '.gitattributes',
-        '.npmrc', '.yarnrc', '.piprc', '.pypirc', '.gemrc', '.bowerrc',
-        '.eslintrc', '.prettierrc', '.babelrc', '.editorconfig',
-        'Makefile', 'CMakeLists.txt', 'build.gradle', 'pom.xml',
-        'package.json', 'package-lock.json', 'yarn.lock', 'Gemfile',
-        'Podfile', 'Cargo.toml', 'go.mod', 'requirements.txt',
-        'Pipfile', 'Pipfile.lock', 'environment.yml', 'setup.py'])
-
+  const extensions = extensionsUtil;
   const [selected, setSelected] = useState(extensions);
 
-  
+
   // Puts the scanjob and scanjob findings in local storage. 
   // If the scanjobs are older than a day, they would get deleted
   useEffect(() => {
@@ -91,8 +76,6 @@ export default function Home() {
       jobs: updatedJobs
   }));
 };
-  
-
   return (
     <div className="flex flex-col justify-center items-center gap-8">
       <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">

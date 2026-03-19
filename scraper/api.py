@@ -15,11 +15,6 @@ from logic import GitHubSecretScanner
 app = Flask(__name__)
 CORS(app)
 
-#todo look into redis for prod
-active_scans = {}
-scan_results = {}
-
-
 
 #------------------------------- list of endpoints -----------------------------------------------
 # GET    /health                - Health check
