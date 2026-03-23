@@ -19,7 +19,6 @@ export async function proxy(req: NextRequest) {
     let currentUser = await getUser()
     if (!currentUser || forceRefresh) {
       if (!refreshToken) {
-        if (req.nextUrl.pathname.startsWith("/dashboard") || req.nextUrl.pathname.startsWith("/subscription") )
         await deleteAccessTokenCookie()
         await deleteRefreshTokenCookie()
         return NextResponse.redirect(new URL("/login", req.url));
@@ -54,5 +53,5 @@ export async function proxy(req: NextRequest) {
  * Specifies that the proxy runs in front of the /dashboard and /subscription paths.
  */
 export const config = {
-  matcher: ["/:path*"]
+  matcher: ["/dashboard/:path*", "/subscription/:path*"]
 };
