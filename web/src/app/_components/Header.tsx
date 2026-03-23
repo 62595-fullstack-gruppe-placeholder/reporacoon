@@ -66,7 +66,7 @@ const dashboardHeaderItems: HeaderLinkItem[] = [
     label: "Recurring jobs",
   },
   {
-    href: "/dashboard/rules",
+    href: "/dashboard/settings",
     label: "Scan rules",
   },
   {
