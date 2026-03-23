@@ -12,12 +12,55 @@ import requests
 from repository import *
 from logic import GitHubSecretScanner
 
+VALID_INTERVALS = {"HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
+
 app = Flask(__name__)
 CORS(app)
 
 #todo look into redis for prod
 active_scans = {}
 scan_results = {}
+
+
+# ---- Background scheduler ----
+
+def run_recursive_scan(scan):
+    repo_url = scan["repo_url"]
+    is_deep_scan = scan["is_deep_scan"]
+    recursive_id = scan["id"]
+
+    try:
+        job_id = insertScanJob(repo_url, recursive_scan_id=recursive_id)
+        scanner = GitHubSecretScanner(repo_url, job_id, is_deep_scan)
+
+        start = time.time()
+        scanner.run()
+        end = time.time()
+
+        insertDurationInScanJobs(math.floor(end - start), job_id)
+        setParsingScanJobsToParsed([str(job_id)])
+        updateRecursiveScanAfterRun(recursive_id)
+
+        print(f"[scheduler] Recursive scan complete for {repo_url} (job {job_id})")
+    except Exception as e:
+        print(f"[scheduler] Error scanning {repo_url}: {e}")
+
+
+def scheduler_loop():
+    while True:
+        try:
+            due = getDueRecursiveScans()
+            for scan in due:
+                t = threading.Thread(target=run_recursive_scan, args=(scan,), daemon=True)
+                t.start()
+        except Exception as e:
+            print(f"[scheduler] Error fetching due scans: {e}")
+        time.sleep(60)
+
+
+if os.environ.get("DISABLE_SCHEDULER") != "1":
+    _scheduler = threading.Thread(target=scheduler_loop, daemon=True)
+    _scheduler.start()
 
 
 
@@ -181,6 +224,88 @@ def start_scan():
         return jsonify({'error': str(e)}), 500
 
 
+# ---- Recursive scan endpoints ----
+# POST   /recursive-scan             - Create a recurring scan schedule
+# GET    /recursive-scan             - List all recurring scan schedules
+# DELETE /recursive-scan/<id>        - Delete a schedule
+# PATCH  /recursive-scan/<id>/toggle - Pause or resume a schedule
+
+
+@app.route('/recursive-scan', methods=['POST'])
+def create_recursive_scan():
+    try:
+        data = request.get_json()
+        if not data or 'url' not in data or 'interval' not in data:
+            return jsonify({'error': 'url and interval are required'}), 400
+
+        url = data['url']
+        interval = data['interval'].upper()
+        is_deep_scan = data.get('isDeepScan', False)
+
+        if interval not in VALID_INTERVALS:
+            return jsonify({'error': f'interval must be one of {sorted(VALID_INTERVALS)}'}), 400
+
+        is_valid, message, _ = validate_github_url(url)
+        if not is_valid:
+            return jsonify({'error': message}), 400
+
+        scan_id, next_run_at = insertRecursiveScan(url, interval, is_deep_scan)
+
+        # Run the first scan immediately in the background
+        first_scan = {"id": scan_id, "repo_url": url, "is_deep_scan": is_deep_scan}
+        threading.Thread(target=run_recursive_scan, args=(first_scan,), daemon=True).start()
+
+        return jsonify({
+            'success': True,
+            'id': str(scan_id),
+            'repo_url': url,
+            'interval': interval,
+            'is_deep_scan': is_deep_scan,
+            'next_run_at': next_run_at.isoformat(),
+        }), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/recursive-scan', methods=['GET'])
+def list_recursive_scans():
+    try:
+        scans = getAllRecursiveScans()
+        for s in scans:
+            s['id'] = str(s['id'])
+            if s['last_run_at']:
+                s['last_run_at'] = s['last_run_at'].isoformat()
+            if s['next_run_at']:
+                s['next_run_at'] = s['next_run_at'].isoformat()
+            s['created_at'] = s['created_at'].isoformat()
+        return jsonify(scans), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/recursive-scan/<scan_id>', methods=['DELETE'])
+def remove_recursive_scan(scan_id):
+    try:
+        deleted = deleteRecursiveScan(scan_id)
+        if not deleted:
+            return jsonify({'error': 'Not found'}), 404
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/recursive-scan/<scan_id>/toggle', methods=['PATCH'])
+def toggle_recursive_scan_route(scan_id):
+    try:
+        is_active = toggleRecursiveScan(scan_id)
+        if is_active is None:
+            return jsonify({'error': 'Not found'}), 404
+        return jsonify({'success': True, 'is_active': is_active}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # main entry point
 if __name__ == '__main__':
     print("\n" + "="*70)
@@ -188,9 +313,14 @@ if __name__ == '__main__':
     print("="*70)
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("\nAvailable endpoints:")
-    print("  GET    /health              - Health check")
-    print("  POST   /validate             - Validate GitHub URL")
-    print("  POST   /scan                  - Start async scan")
+    print("  GET    /health                          - Health check")
+    print("  POST   /validate                        - Validate GitHub URL")
+    print("  POST   /scan                            - Start async scan")
+    #recursive
+    print("  POST   /recursive-scan                  - Create recurring scan")
+    print("  GET    /recursive-scan                  - List recurring scans")
+    print("  DELETE /recursive-scan/<id>             - Delete recurring scan")
+    print("  PATCH  /recursive-scan/<id>/toggle      - Pause/resume recurring scan")
     print("="*70)
     print(f"\nServer running on: http://0.0.0.0:5001")
     print("="*70 + "\n")
