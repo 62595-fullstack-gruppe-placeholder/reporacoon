@@ -7,7 +7,7 @@ import { ScanOptions } from "@/app/_components/ScanOptions";
 import { useState, useEffect } from "react";
 import { extensionsUtil } from "@/lib/utils";
 import { SubmitButton } from "@/app/_components/SubmitButton";
-import { Settings } from "@/lib/repository/user/userSchemas";
+import { Settings, settingsSchema } from "@/lib/repository/user/userSchemas";
 
 
 interface ScanSettingsFormProps {
@@ -21,9 +21,6 @@ export function ScanSettingsForm({ initialSettings }: ScanSettingsFormProps) {
   );
   const [isDeepScan, setIsDeepScan] = useState(initialSettings.isDeep);
 
-  // Initialize extensions set from initial settings
-  const allExtensions = extensionsUtil
-
   // Update local state when initialSettings change (from server revalidation)
   useEffect(() => {
     setSelectedExtensions(new Set(initialSettings.extensions));
@@ -33,7 +30,6 @@ export function ScanSettingsForm({ initialSettings }: ScanSettingsFormProps) {
   const handleSave = async (formData: FormData) => {
     // Convert Set back to array for server action
     const extensionsArray = Array.from(selectedExtensions);
-
     formData.set("extensions", extensionsArray.join(","));
     formData.set("isDeep", isDeepScan.toString());
 
@@ -46,13 +42,14 @@ export function ScanSettingsForm({ initialSettings }: ScanSettingsFormProps) {
       <form action={handleSave} className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-125 max-w-125">
         {/* Extensions selector - unchecked = ignore (scan) */}
         <IgnoreSettingsButtons
-          extensions={allExtensions}
+          extensions={selectedExtensions}
           onSelectedChange={setSelectedExtensions}
         />
 
         {/* Deep scan toggle */}
         <ScanOptions
           isDisabled={false}
+          isDeep={initialSettings.isDeep}
           onDeepChange={setIsDeepScan}
         />
 

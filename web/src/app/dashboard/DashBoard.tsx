@@ -10,18 +10,17 @@ import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 import ScanResults from "../_components/ScanResults";
 import { IgnoreSettingsButtons } from "../_components/IgnoreSettings";
-import { extensionsUtil } from "@/lib/utils";
+import { Settings } from "@/lib/repository/user/userSchemas";
 
-export default function Dashboard({ user }: { user: any }) {
+export default function Dashboard({ user, settings }: { user: any, settings: Settings }) {
     const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
     const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
     const [isScanning, setIsScanning] = useState(false);
-    const [isDeepScan, setIsDeepScan] = useState(false);
-
-    const extensions = extensionsUtil;
+    
+    const extensions = new Set<string>(settings.extensions);
+    const [isDeepScan, setIsDeepScan] = useState(settings.isDeep);
     const [selected, setSelected] = useState(extensions);
-
-
+    
     const handleScanSuccess = (findings: ScanFinding[], jobs: ScanJob[]) => {
         setScanFindings(findings);
         setIsScanning(true);
@@ -38,8 +37,8 @@ export default function Dashboard({ user }: { user: any }) {
 
                     <URLForm onScanStarted={handleScanSuccess} isDeepScan={isDeepScan} extensions={selected} />
                 </div>
-                <ScanOptions isDisabled={false} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
-                <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={extensions}/>
+                <ScanOptions isDisabled={false} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
+                <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={selected}/>
                     
 
                 {/* Dashboard appears with fade and slide down animation */}
