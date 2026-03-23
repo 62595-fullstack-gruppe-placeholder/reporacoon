@@ -1,8 +1,7 @@
-"use client";
 import Settings from "./Settings";
 
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
   return (
     <Settings/>
   );

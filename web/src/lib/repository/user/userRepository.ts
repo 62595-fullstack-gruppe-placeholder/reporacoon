@@ -5,6 +5,8 @@ import {
   CreateUserDTO,
   createUserDTOSchema,
   CredentialsDTO,
+  Settings,
+  settingsSchema,
   User,
   userSchema,
 } from "./userSchemas";
@@ -25,6 +27,33 @@ export async function getUserById(id: string): Promise<User | null> {
   if (!row) return null;
 
   return userSchema.parse(row);
+}
+
+/**
+ * Get user settings by id, returns validated {@link Settings} or null.
+ */
+export async function getUserSettingsById(id: string): Promise<Settings | null> {
+  const row = await queryOne<Settings>(
+    `
+      SELECT user_settings
+      FROM users
+      WHERE id = $1
+      `,
+    [id],
+  );
+
+  if (!row) return null;
+
+  return settingsSchema.parse(row);
+}
+
+/**
+ * updates the users settings. Includes both file extensions and scan type (deep/shallow)
+ */
+export async function setUserSettingsById(settings: Settings, userId: string): Promise<void> {
+  await queryOne(`UPDATE users SET user_settings = %1 WHERE id = $2`, [
+    settings, userId,
+  ]);
 }
 
 /**

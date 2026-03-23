@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN IF NOT EXISTS user_settings JSONB DEFAULT '{"settings": [".py", ".js"], "isDeep": false}';
