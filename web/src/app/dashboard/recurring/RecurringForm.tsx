@@ -30,7 +30,7 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
@@ -133,9 +133,12 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
 function RecurringScanRow({ scan }: { scan: RecursiveScan }) {
   const [isPending, startTransition] = useTransition();
   const [isExpanded, setIsExpanded] = useState(false);
+  // null = not yet fetched; empty array = fetched but no results
   const [jobs, setJobs] = useState<ScanJob[] | null>(null);
   const [findings, setFindings] = useState<ScanFinding[] | null>(null);
 
+  // Wrapped in useCallback so the useEffect dependency array stays stable
+  // and doesn't re-create the interval on every render
   const fetchResults = useCallback(async () => {
     const result = await getRecurringScanResultsAction(scan.id);
     if (result.success) {
@@ -144,6 +147,9 @@ function RecurringScanRow({ scan }: { scan: RecursiveScan }) {
     }
   }, [scan.id]);
 
+  // Fetch results immediately when the row expands, then poll every 15 seconds
+  // so the user can see a running scan complete without manually refreshing.
+  // The cleanup function clears the interval when the row collapses.
   useEffect(() => {
     if (!isExpanded) return;
     fetchResults();
@@ -159,6 +165,7 @@ function RecurringScanRow({ scan }: { scan: RecursiveScan }) {
     startTransition(async () => { await toggleRecursiveScanAction(scan.id); });
   }
 
+  // Triggers an immediate scan run without affecting the scheduled next_run_at
   function handleRunNow() {
     startTransition(async () => { await runRecursiveScanNowAction(scan.id); });
   }

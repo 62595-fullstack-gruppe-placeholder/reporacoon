@@ -23,23 +23,28 @@ scan_results = {}
 
 
 # ---- Background scheduler ----
+# Runs a poll loop every 60 seconds. Any active recurring scan whose next_run_at
+# has passed is picked up and executed in a daemon thread.
 
 def run_recursive_scan(scan):
+    # Called in a background thread — by the scheduler loop or the /run-now endpoint
     repo_url = scan["repo_url"]
     is_deep_scan = scan["is_deep_scan"]
     recursive_id = scan["id"]
 
     try:
+        # Create a scan_job linked to this recurring schedule so the frontend can
+        # query all jobs for a given recurring scan
         job_id = insertScanJob(repo_url, recursive_scan_id=recursive_id)
         scanner = GitHubSecretScanner(repo_url, job_id, is_deep_scan)
 
         start = time.time()
-        scanner.run()
+        scanner.run()  # Clones repo, runs secret detection, writes findings to DB
         end = time.time()
 
         insertDurationInScanJobs(math.floor(end - start), job_id)
-        setParsingScanJobsToParsed([str(job_id)])
-        updateRecursiveScanAfterRun(recursive_id)
+        setParsingScanJobsToParsed([str(job_id)])  # PARSING → PARSED
+        updateRecursiveScanAfterRun(recursive_id)  # Update last_run_at and advance next_run_at
 
         print(f"[scheduler] Recursive scan complete for {repo_url} (job {job_id})")
     except Exception as e:
@@ -47,9 +52,11 @@ def run_recursive_scan(scan):
 
 
 def scheduler_loop():
+    # Polls every 60 seconds — minimum effective resolution for any interval is ~60s
+    # EVERY_MINUTE is for testing and may fire up to 60s late
     while True:
         try:
-            due = getDueRecursiveScans()
+            due = getDueRecursiveScans()  # WHERE is_active = true AND next_run_at <= NOW()
             for scan in due:
                 t = threading.Thread(target=run_recursive_scan, args=(scan,), daemon=True)
                 t.start()
@@ -58,6 +65,7 @@ def scheduler_loop():
         time.sleep(60)
 
 
+# Set DISABLE_SCHEDULER=1 to prevent the loop from starting (useful in test environments)
 if os.environ.get("DISABLE_SCHEDULER") != "1":
     _scheduler = threading.Thread(target=scheduler_loop, daemon=True)
     _scheduler.start()
@@ -231,6 +239,10 @@ def start_scan():
 # PATCH  /recursive-scan/<id>/toggle - Pause or resume a schedule
 
 
+# Create a new recurring scan schedule.
+# Validates the URL format and interval value before writing to DB.
+# Also fires off the first scan immediately so the user doesn't have to wait
+# for the scheduler to pick it up on its next 60-second tick.
 @app.route('/recursive-scan', methods=['POST'])
 def create_recursive_scan():
     try:
@@ -251,7 +263,8 @@ def create_recursive_scan():
 
         scan_id, next_run_at = insertRecursiveScan(url, interval, is_deep_scan)
 
-        # Run the first scan immediately in the background
+        # Run the first scan immediately in the background so the user sees results
+        # right away without waiting for the scheduler
         first_scan = {"id": scan_id, "repo_url": url, "is_deep_scan": is_deep_scan}
         threading.Thread(target=run_recursive_scan, args=(first_scan,), daemon=True).start()
 
@@ -268,11 +281,13 @@ def create_recursive_scan():
         return jsonify({'error': str(e)}), 500
 
 
+# Returns all recurring scan schedules (all users, no ownership filter — used internally)
 @app.route('/recursive-scan', methods=['GET'])
 def list_recursive_scans():
     try:
         scans = getAllRecursiveScans()
         for s in scans:
+            # UUID and datetime objects must be serialized to strings for JSON
             s['id'] = str(s['id'])
             if s['last_run_at']:
                 s['last_run_at'] = s['last_run_at'].isoformat()
@@ -284,6 +299,9 @@ def list_recursive_scans():
         return jsonify({'error': str(e)}), 500
 
 
+# Permanently delete a recurring scan schedule.
+# The linked scan_jobs rows are kept — their recursive_scan_id is set to NULL
+# via ON DELETE SET NULL so historical results are preserved.
 @app.route('/recursive-scan/<scan_id>', methods=['DELETE'])
 def remove_recursive_scan(scan_id):
     try:
@@ -295,6 +313,9 @@ def remove_recursive_scan(scan_id):
         return jsonify({'error': str(e)}), 500
 
 
+# Manually trigger a scan run for a schedule without waiting for the scheduler.
+# Does NOT reset or modify next_run_at — the schedule continues on its normal cadence.
+# Returns 202 Accepted immediately; the scan runs in a background thread.
 @app.route('/recursive-scan/<scan_id>/run-now', methods=['POST'])
 def run_recursive_scan_now(scan_id):
     try:
@@ -308,6 +329,8 @@ def run_recursive_scan_now(scan_id):
         return jsonify({'error': str(e)}), 500
 
 
+# Flip is_active on the schedule. Paused scans are skipped by the scheduler loop.
+# Returns the new is_active value so the frontend can update the UI without a re-fetch.
 @app.route('/recursive-scan/<scan_id>/toggle', methods=['PATCH'])
 def toggle_recursive_scan_route(scan_id):
     try:

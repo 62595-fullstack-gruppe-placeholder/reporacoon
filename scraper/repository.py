@@ -130,7 +130,9 @@ def insertScanJob(repo_url, owner_id=None, priority=1, recursive_scan_id=None):
 # ---- Recursive scan repository functions ----
 
 def insertRecursiveScan(repo_url, interval, is_deep_scan=False, owner_id=None):
-    """Create a new recurring scan schedule. Returns (id, next_run_at)."""
+    # next_run_at is calculated in SQL so it stays consistent with the DB clock.
+    # The interval is passed twice because CASE requires the expression to be
+    # evaluated independently from the column value being inserted.
     conn = None
     try:
         conn = get_connection()
@@ -159,7 +161,8 @@ def insertRecursiveScan(repo_url, interval, is_deep_scan=False, owner_id=None):
             conn.close()
 
 def getAllRecursiveScans():
-    """Return all recurring scan schedules."""
+    # Returns all schedules regardless of owner — used by the scraper internally.
+    # The web app enforces ownership at the server-action layer.
     conn = None
     try:
         conn = get_connection()
@@ -176,7 +179,8 @@ def getAllRecursiveScans():
             conn.close()
 
 def getDueRecursiveScans():
-    """Return active recurring scans whose next_run_at is in the past."""
+    # Called by the scheduler loop every 60 seconds.
+    # Only returns active scans — paused scans (is_active = false) are skipped.
     conn = None
     try:
         conn = get_connection()
@@ -193,7 +197,9 @@ def getDueRecursiveScans():
             conn.close()
 
 def updateRecursiveScanAfterRun(id):
-    """Advance next_run_at to the next interval after a successful run."""
+    # Called at the end of every successful scan run.
+    # Advances next_run_at relative to NOW() (not the previous next_run_at) so
+    # a delayed run doesn't cause the next run to fire immediately.
     conn = None
     try:
         conn = get_connection()
@@ -220,7 +226,8 @@ def updateRecursiveScanAfterRun(id):
             conn.close()
 
 def toggleRecursiveScan(id):
-    """Flip is_active for a recurring scan. Returns the new is_active value."""
+    # Flips is_active atomically in a single UPDATE … RETURNING so the caller
+    # gets the new value without needing a separate SELECT.
     conn = None
     try:
         conn = get_connection()
@@ -237,7 +244,8 @@ def toggleRecursiveScan(id):
             conn.close()
 
 def deleteRecursiveScan(id):
-    """Delete a recurring scan schedule."""
+    # Deletes the schedule row. Linked scan_jobs rows are kept — their
+    # recursive_scan_id is set to NULL via ON DELETE SET NULL so history is preserved.
     conn = None
     try:
         conn = get_connection()
