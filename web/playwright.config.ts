@@ -75,5 +75,6 @@ export default defineConfig({
     command: 'npm run build && node .next/standalone/server.js',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
+    timeout: 120_000, // 2 minutes
   },
 });
