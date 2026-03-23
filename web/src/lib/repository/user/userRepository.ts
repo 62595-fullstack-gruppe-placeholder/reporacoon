@@ -51,7 +51,7 @@ export async function getUserSettingsById(id: string): Promise<Settings | null> 
  * updates the users settings. Includes both file extensions and scan type (deep/shallow)
  */
 export async function setUserSettingsById(settings: Settings, userId: string): Promise<void> {
-  await queryOne(`UPDATE users SET user_settings = %1 WHERE id = $2`, [
+  await queryOne(`UPDATE users SET user_settings = $1 WHERE id = $2`, [
     settings, userId,
   ]);
 }
