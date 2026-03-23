@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SCAN_INTERVALS = ["HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"] as const;
+export const SCAN_INTERVALS = ["EVERY_MINUTE", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"] as const;
 
 export type ScanInterval = (typeof SCAN_INTERVALS)[number];
 

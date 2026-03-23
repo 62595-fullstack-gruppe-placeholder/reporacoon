@@ -12,7 +12,7 @@ import requests
 from repository import *
 from logic import GitHubSecretScanner
 
-VALID_INTERVALS = {"HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
+VALID_INTERVALS = {"EVERY_MINUTE", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
 app = Flask(__name__)
 CORS(app)
@@ -291,6 +291,19 @@ def remove_recursive_scan(scan_id):
         if not deleted:
             return jsonify({'error': 'Not found'}), 404
         return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/recursive-scan/<scan_id>/run-now', methods=['POST'])
+def run_recursive_scan_now(scan_id):
+    try:
+        scans = getAllRecursiveScans()
+        scan = next((s for s in scans if str(s['id']) == scan_id), None)
+        if not scan:
+            return jsonify({'error': 'Not found'}), 404
+        threading.Thread(target=run_recursive_scan, args=(scan,), daemon=True).start()
+        return jsonify({'success': True, 'message': f'Scan triggered for {scan["repo_url"]}'}), 202
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -1,7 +1,14 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'scan_interval') THEN
-    CREATE TYPE scan_interval AS ENUM ('HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
+    CREATE TYPE scan_interval AS ENUM ('EVERY_MINUTE', 'HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
+  END IF;
+END$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'EVERY_MINUTE' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'scan_interval')) THEN
+    ALTER TYPE scan_interval ADD VALUE 'EVERY_MINUTE' BEFORE 'HOURLY';
   END IF;
 END$$;
 

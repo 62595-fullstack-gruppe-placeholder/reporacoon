@@ -140,6 +140,7 @@ def insertRecursiveScan(repo_url, interval, is_deep_scan=False, owner_id=None):
                 INSERT INTO recursive_scans (repo_url, owner_id, interval, is_deep_scan, next_run_at)
                 VALUES (%s, %s, %s::scan_interval, %s,
                     CASE %s::scan_interval
+                        WHEN 'EVERY_MINUTE' THEN NOW() + INTERVAL '1 minute'
                         WHEN 'HOURLY'  THEN NOW() + INTERVAL '1 hour'
                         WHEN 'DAILY'   THEN NOW() + INTERVAL '1 day'
                         WHEN 'WEEKLY'  THEN NOW() + INTERVAL '7 days'
@@ -202,6 +203,7 @@ def updateRecursiveScanAfterRun(id):
                 UPDATE recursive_scans
                 SET last_run_at = NOW(),
                     next_run_at = CASE interval
+                        WHEN 'EVERY_MINUTE' THEN NOW() + INTERVAL '1 minute'
                         WHEN 'HOURLY'  THEN NOW() + INTERVAL '1 hour'
                         WHEN 'DAILY'   THEN NOW() + INTERVAL '1 day'
                         WHEN 'WEEKLY'  THEN NOW() + INTERVAL '7 days'

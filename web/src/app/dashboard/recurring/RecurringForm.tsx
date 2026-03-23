@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Search, Trash2, Pause, Play, RefreshCw } from "lucide-react";
+import { useState, useTransition, useEffect, useCallback } from "react";
+import { Search, Trash2, Pause, Play, RefreshCw, ChevronDown } from "lucide-react";
 import { RecursiveScan, SCAN_INTERVALS, ScanInterval } from "@/lib/repository/recursiveScan/recursiveScanSchema";
 import {
   createRecursiveScanAction,
   deleteRecursiveScanAction,
   toggleRecursiveScanAction,
+  runRecursiveScanNowAction,
+  getRecurringScanResultsAction,
 } from "@/app/RecursiveScanServerActions";
+import ScanResults from "@/app/_components/ScanResults";
+import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
+import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 
 const INTERVAL_LABELS: Record<ScanInterval, string> = {
+  EVERY_MINUTE: "Every minute (test)",
   HOURLY: "Every hour",
   DAILY: "Every day",
   WEEKLY: "Every week",
@@ -113,7 +119,7 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
         {initialScans.length === 0 ? (
           <p className="p-6 text-text-main/50 text-sm">No recurring scans yet.</p>
         ) : (
-          <ul className="divide-y divide-secondary/10">
+          <ul>
             {initialScans.map((scan) => (
               <RecurringScanRow key={scan.id} scan={scan} />
             ))}
@@ -126,52 +132,108 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
 
 function RecurringScanRow({ scan }: { scan: RecursiveScan }) {
   const [isPending, startTransition] = useTransition();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [jobs, setJobs] = useState<ScanJob[] | null>(null);
+  const [findings, setFindings] = useState<ScanFinding[] | null>(null);
+
+  const fetchResults = useCallback(async () => {
+    const result = await getRecurringScanResultsAction(scan.id);
+    if (result.success) {
+      setJobs(result.jobs);
+      setFindings(result.findings);
+    }
+  }, [scan.id]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    fetchResults();
+    const interval = setInterval(fetchResults, 15000);
+    return () => clearInterval(interval);
+  }, [isExpanded, fetchResults]);
 
   function handleDelete() {
-    startTransition(() => deleteRecursiveScanAction(scan.id));
+    startTransition(async () => { await deleteRecursiveScanAction(scan.id); });
   }
 
   function handleToggle() {
-    startTransition(() => toggleRecursiveScanAction(scan.id));
+    startTransition(async () => { await toggleRecursiveScanAction(scan.id); });
+  }
+
+  function handleRunNow() {
+    startTransition(async () => { await runRecursiveScanNowAction(scan.id); });
+  }
+
+  function handleExpand() {
+    setIsExpanded((v) => !v);
   }
 
   return (
-    <li className="flex items-center justify-between px-6 py-4 gap-4">
-      <div className="flex-1 min-w-0">
-        <p className="text-text-main font-medium truncate">{scan.repo_url}</p>
-        <div className="flex gap-4 mt-1 text-xs text-text-main/50">
-          <span>{INTERVAL_LABELS[scan.interval]}</span>
-          <span>{scan.is_deep_scan ? "Deep scan" : "Shallow scan"}</span>
-          {scan.last_run_at && (
-            <span>Last run: {new Date(scan.last_run_at).toLocaleDateString()}</span>
-          )}
-          <span>Next run: {new Date(scan.next_run_at).toLocaleDateString()}</span>
+    <li className="border-b border-secondary/10 last:border-b-0">
+      <div className="flex items-center justify-between px-6 py-4 gap-4">
+        <button
+          className="flex-1 min-w-0 text-left"
+          onClick={handleExpand}
+        >
+          <p className="text-text-main font-medium truncate">{scan.repo_url}</p>
+          <div className="flex gap-4 mt-1 text-xs text-text-main/50">
+            <span>{INTERVAL_LABELS[scan.interval]}</span>
+            <span>{scan.is_deep_scan ? "Deep scan" : "Shallow scan"}</span>
+            {scan.last_run_at && (
+              <span>Last run: {new Date(scan.last_run_at).toLocaleString()}</span>
+            )}
+            <span>Next run: {new Date(scan.next_run_at).toLocaleString()}</span>
+          </div>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <span className={`text-xs px-2 py-0.5 rounded-full ${scan.is_active ? "bg-button-main/20 text-button-main" : "bg-secondary/20 text-text-main/50"}`}>
+            {scan.is_active ? "Active" : "Paused"}
+          </span>
+
+          <button
+            onClick={handleRunNow}
+            disabled={isPending}
+            className="p-2 rounded-md hover:bg-secondary/10 disabled:opacity-50"
+            title="Run now"
+          >
+            <RefreshCw size={16} />
+          </button>
+
+          <button
+            onClick={handleToggle}
+            disabled={isPending}
+            className="p-2 rounded-md hover:bg-secondary/10 disabled:opacity-50"
+            title={scan.is_active ? "Pause" : "Resume"}
+          >
+            {scan.is_active ? <Pause size={16} /> : <Play size={16} />}
+          </button>
+
+          <button
+            onClick={handleDelete}
+            disabled={isPending}
+            className="p-2 rounded-md hover:bg-red-500/10 text-red-400 disabled:opacity-50"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
+
+          <button onClick={handleExpand} className="p-2 rounded-md hover:bg-secondary/10">
+            <ChevronDown size={16} className={`text-secondary transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+          </button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className={`text-xs px-2 py-0.5 rounded-full ${scan.is_active ? "bg-button-main/20 text-button-main" : "bg-secondary/20 text-text-main/50"}`}>
-          {scan.is_active ? "Active" : "Paused"}
-        </span>
-
-        <button
-          onClick={handleToggle}
-          disabled={isPending}
-          className="p-2 rounded-md hover:bg-secondary/10 disabled:opacity-50"
-          title={scan.is_active ? "Pause" : "Resume"}
-        >
-          {scan.is_active ? <Pause size={16} /> : <Play size={16} />}
-        </button>
-
-        <button
-          onClick={handleDelete}
-          disabled={isPending}
-          className="p-2 rounded-md hover:bg-red-500/10 text-red-400 disabled:opacity-50"
-          title="Delete"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
+      {isExpanded && (
+        <div className="px-6 pb-6">
+          {isPending && jobs === null ? (
+            <p className="text-sm text-text-main/50">Loading...</p>
+          ) : jobs && jobs.length === 0 ? (
+            <p className="text-sm text-text-main/50">No scans have run yet.</p>
+          ) : (
+            <ScanResults jobs={jobs} findings={findings} />
+          )}
+        </div>
+      )}
     </li>
   );
 }

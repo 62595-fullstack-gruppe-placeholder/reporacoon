@@ -12,6 +12,7 @@ export async function createRecursiveScan(input: CreateRecursiveScanDTO): Promis
     INSERT INTO recursive_scans (repo_url, owner_id, interval, is_deep_scan, next_run_at)
     VALUES ($1, $2, $3::scan_interval, $4,
       CASE $3::scan_interval
+        WHEN 'EVERY_MINUTE' THEN NOW() + INTERVAL '1 minute'
         WHEN 'HOURLY'  THEN NOW() + INTERVAL '1 hour'
         WHEN 'DAILY'   THEN NOW() + INTERVAL '1 day'
         WHEN 'WEEKLY'  THEN NOW() + INTERVAL '7 days'

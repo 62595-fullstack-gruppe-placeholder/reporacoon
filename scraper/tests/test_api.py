@@ -99,4 +99,95 @@ def test_scan_endpoint(client):
         assert response.status_code == 400
         assert 'error' in response.json
 
- 
+
+# =========================================
+#        Recursive scan endpoint tests
+# =========================================
+
+FAKE_SCAN_ID = "11111111-1111-1111-1111-111111111111"
+
+@pytest.fixture
+def fake_scan():
+    from datetime import datetime, timezone
+    return {
+        "id": FAKE_SCAN_ID,
+        "repo_url": "https://github.com/someuser/somerepo",
+        "interval": "HOURLY",
+        "is_deep_scan": False,
+        "is_active": True,
+        "last_run_at": None,
+        "next_run_at": datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+        "created_at": datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    }
+
+
+def test_create_recursive_scan_success(client, fake_scan):
+    with patch('api.insertRecursiveScan', return_value=(FAKE_SCAN_ID, fake_scan["next_run_at"])), \
+         patch('api.threading.Thread') as mock_thread:
+        mock_thread.return_value.start = lambda: None
+        response = client.post('/recursive-scan', json={
+            "url": "https://github.com/someuser/somerepo",
+            "interval": "HOURLY",
+            "isDeepScan": False,
+        })
+    assert response.status_code == 201
+    assert response.json['success'] is True
+    assert response.json['interval'] == 'HOURLY'
+
+
+def test_create_recursive_scan_missing_fields(client):
+    response = client.post('/recursive-scan', json={"url": "https://github.com/someuser/somerepo"})
+    assert response.status_code == 400
+
+    response = client.post('/recursive-scan', json={"interval": "HOURLY"})
+    assert response.status_code == 400
+
+
+def test_create_recursive_scan_invalid_interval(client):
+    response = client.post('/recursive-scan', json={
+        "url": "https://github.com/someuser/somerepo",
+        "interval": "EVERY_MINUTE",
+    })
+    assert response.status_code == 400
+
+
+def test_create_recursive_scan_invalid_url(client):
+    response = client.post('/recursive-scan', json={
+        "url": "not-a-github-url.com",
+        "interval": "DAILY",
+    })
+    assert response.status_code == 400
+
+
+def test_list_recursive_scans(client, fake_scan):
+    with patch('api.getAllRecursiveScans', return_value=[dict(fake_scan)]):
+        response = client.get('/recursive-scan')
+    assert response.status_code == 200
+    assert isinstance(response.json, list)
+    assert response.json[0]['interval'] == 'HOURLY'
+
+
+def test_delete_recursive_scan_found(client):
+    with patch('api.deleteRecursiveScan', return_value=True):
+        response = client.delete(f'/recursive-scan/{FAKE_SCAN_ID}')
+    assert response.status_code == 200
+    assert response.json['success'] is True
+
+
+def test_delete_recursive_scan_not_found(client):
+    with patch('api.deleteRecursiveScan', return_value=False):
+        response = client.delete(f'/recursive-scan/{FAKE_SCAN_ID}')
+    assert response.status_code == 404
+
+
+def test_toggle_recursive_scan_active(client):
+    with patch('api.toggleRecursiveScan', return_value=True):
+        response = client.patch(f'/recursive-scan/{FAKE_SCAN_ID}/toggle')
+    assert response.status_code == 200
+    assert response.json['is_active'] is True
+
+
+def test_toggle_recursive_scan_not_found(client):
+    with patch('api.toggleRecursiveScan', return_value=None):
+        response = client.patch(f'/recursive-scan/{FAKE_SCAN_ID}/toggle')
+    assert response.status_code == 404
