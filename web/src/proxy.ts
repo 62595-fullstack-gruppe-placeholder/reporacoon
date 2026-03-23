@@ -12,20 +12,35 @@ import { generateRefreshToken, refreshAccessToken } from "./lib/auth/accessToken
  */
 export async function proxy(req: NextRequest) {
   try {
-    const forceRefresh = req.nextUrl.searchParams.get("force-token-refresh") === "true"
-
+    const forceRefresh = req.nextUrl.searchParams.get("force-token-refresh") === "true";
     const refreshToken = req.cookies.get("refresh-token")?.value;
 
-    let currentUser = await getUser()
+    let currentUser = await getUser();
+    
+    let response = NextResponse.next();
+
     if (!currentUser || forceRefresh) {
       if (!refreshToken) {
-        await deleteAccessTokenCookie()
-        await deleteRefreshTokenCookie()
+        await deleteAccessTokenCookie();
+        await deleteRefreshTokenCookie();
         return NextResponse.redirect(new URL("/login", req.url));
       }
+
       const { accessToken: newAccessToken, user } = await refreshAccessToken(refreshToken);
-      await setAccessTokenCookie(newAccessToken);
-      await setRefreshTokenCookie(await generateRefreshToken(user));
+      const newRefreshToken = await generateRefreshToken(user);
+
+      const requestHeaders = new Headers(req.headers);
+      
+      requestHeaders.set('cookie', `access-token=${newAccessToken}; refresh-token=${newRefreshToken}`);
+
+      response = NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
+
+      response.cookies.set("access-token", newAccessToken);
+      response.cookies.set("refresh-token", newRefreshToken);
 
       currentUser = user;
     }
@@ -41,17 +56,14 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(cleanUrl);
     }
 
-    return NextResponse.next();
+    return response;
   }
-  catch {
-    // TODO make error page
+  catch (error) {
+    log(`Middleware error: ${error}`, LogLevel.error);
     return NextResponse.redirect(new URL("/error", req.url));
   }
 }
 
-/**
- * Specifies that the proxy runs in front of the /dashboard and /subscription paths.
- */
 export const config = {
-  matcher: ["/dashboard/:path*", "/subscription/:path*"],
+  matcher: ["/dashboard/:path*", "/subscription/:path*"]
 };
