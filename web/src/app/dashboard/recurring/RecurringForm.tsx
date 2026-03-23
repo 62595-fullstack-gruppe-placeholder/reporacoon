@@ -14,6 +14,9 @@ import ScanResults from "@/app/_components/ScanResults";
 import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 
+
+
+// Labels for the scan intervals used in the dropdown and scan list.
 const INTERVAL_LABELS: Record<ScanInterval, string> = {
   EVERY_MINUTE: "Every minute (test)",
   HOURLY: "Every hour",
@@ -23,6 +26,10 @@ const INTERVAL_LABELS: Record<ScanInterval, string> = {
   YEARLY: "Every year",
 };
 
+
+
+// The main component for managing recurring scans. 
+// It includes a form for creating new scans and a list of existing scans with controls to manage them.
 export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] }) {
   const [url, setUrl] = useState("");
   const [interval, setInterval] = useState<ScanInterval>("WEEKLY");
@@ -30,6 +37,8 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+// Handles form submission for creating a new recurring scan. 
+// It calls the server action and manages loading and error states.
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -42,6 +51,13 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
       }
     });
   }
+
+
+
+
+
+
+
 
   return (
     <div className="space-y-6">

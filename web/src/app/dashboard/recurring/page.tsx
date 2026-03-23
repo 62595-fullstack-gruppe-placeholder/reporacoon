@@ -6,9 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RecurringPage() {
   const user = await getUser();
-  if (!user) throw new Error("Authentication required");
-
-  const scans = await getRecursiveScansByOwner(user.id);
+  const scans = await getRecursiveScansByOwner(user!.id);
 
   return (
     <div className="w-full">
