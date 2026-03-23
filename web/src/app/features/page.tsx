@@ -45,7 +45,7 @@ export default function Features() {
         {features.map((f, i) => (
           <div 
             key={i} 
-            className="box border border-secondary/10 overflow-hidden shadow-xl bg-background/40 p-8 flex flex-col gap-4 transition-all hover:border-white/20"
+            className="box border border-secondary/10 overflow-hidden shadow-xl p-8 flex flex-col gap-4 transition-all hover:border-white/20"
           >
             <div className="flex items-center gap-4">
               <div className="p-2 bg-button-main/20 rounded-lg">
@@ -67,12 +67,12 @@ export default function Features() {
 
       <Link 
         href="/" 
-        className="box flex items-center gap-2 px-8 bg-button-main/10 border border-button-main/30 hover:bg-button-main/20 transition-all group"
+        className="box flex items-center justify-center gap-2 px-8 py-4 bg-button-main/10 border border-button-main/30 hover:bg-button-main/20 transition-all group w-max"
       >
-        <span className="h1 text-sm text-button-main">Initialize First Scan</span>
+        <span className="text-sm font-black text-button-main">Initialize First Scan</span>
         <Image 
           src="/logo.png" 
-          alt="" 
+          alt="Logo" 
           width={16} 
           height={16} 
           className="group-hover:animate-bounce" 

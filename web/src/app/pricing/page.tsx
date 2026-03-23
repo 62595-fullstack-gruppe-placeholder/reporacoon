@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Zap, ShieldCheck, Terminal, GitBranch, ShieldAlert } from 'lucide-react';
+import { Check, Terminal, ShieldCheck, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -51,7 +51,7 @@ export default function PricingPage() {
         {tiers.map((tier, i) => (
           <div 
             key={i} 
-            className={`box border overflow-hidden shadow-xl bg-background/40 p-8 flex flex-col transition-all hover:border-white/20 ${
+            className={`box border overflow-hidden shadow-xl p-8 flex flex-col transition-all hover:border-text-main/20 ${
               tier.highlight ? 'border-button-main/50 ring-1 ring-button-main/20' : 'border-secondary/10'
             }`}
           >
@@ -90,7 +90,7 @@ export default function PricingPage() {
             {/* CTA Button */}
             <Link 
               href={tier.price === "Free" ? "/" : "/signup"} 
-              className={`flex items-center justify-center gap-2 px-6 py-4 rounded transition-all group font-bold text-sm ${
+              className={`btn gap-2 transition-all group font-bold text-sm w-full h-12 ${
                 tier.highlight 
                   ? 'bg-button-main text-white hover:opacity-90' 
                   : 'bg-button-main/10 border border-button-main/30 text-button-main hover:bg-button-main/20'
@@ -99,7 +99,7 @@ export default function PricingPage() {
               <span>{tier.buttonText}</span>
               <Image 
                 src="/logo.png" 
-                alt="" 
+                alt="Repo Raccoon Logo" 
                 width={16} 
                 height={16} 
                 className={`group-hover:animate-bounce ${tier.highlight ? 'invert' : ''}`} 
