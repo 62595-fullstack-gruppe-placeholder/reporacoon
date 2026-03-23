@@ -80,9 +80,9 @@ export function AccountDashboard({ user }: { user: User }) {
           {/* Action Buttons */}
           <div className="space-y-3">
             <button
-              className="box w-full flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
+              className={`box w-full flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
                      bg-button-main/20 hover:bg-button-main/30 border-2 border-button-main/30 
-                     hover:border-button-main text-button-main hover:shadow-lg transition-all"
+                     hover:border-button-main text-button-main hover:shadow-lg transition-all`}
               onClick={() => setShowPasswordForm(true)}
               disabled={isPending}
             >
@@ -90,9 +90,9 @@ export function AccountDashboard({ user }: { user: User }) {
               Change password
             </button>
             <button
-              className="box w-full flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
+              className={`box w-full flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
                      bg-destructive/20 hover:bg-destructive/30 border-2 border-destructive/30 
-                     hover:border-destructive text-destructive hover:shadow-lg transition-all"
+                     hover:border-destructive text-destructive hover:shadow-lg transition-all`}
               onClick={() => setShowDeleteModal(true)}
             >
               <Trash2 size={16} />
@@ -114,10 +114,10 @@ export function AccountDashboard({ user }: { user: User }) {
               <input
                 type="password"
                 {...passwordForm.register("currentPassword")}
-                className="field w-full h-12 px-4 font-mono text-sm border border-secondary/20 
-                       bg-white/5 hover:bg-white/10 focus:border-button-main/40 
+                className={`field w-full h-12 px-4 font-mono text-sm border border-secondary/20 
+                       bg-text-main/5 hover:bg-text-main/10 focus:border-button-main/40 
                        focus:ring-2 focus:ring-button-main/30 focus:ring-offset-1 
-                       focus:ring-offset-background/50 rounded-lg transition-all"
+                       focus:ring-offset-background/50 rounded-lg transition-all`}
                 disabled={isPending}
               />
               {passwordForm.formState.errors.currentPassword && (
@@ -134,10 +134,10 @@ export function AccountDashboard({ user }: { user: User }) {
               <input
                 type="password"
                 {...passwordForm.register("newPassword")}
-                className="field w-full h-12 px-4 font-mono text-sm border border-secondary/20 
-                       bg-white/5 hover:bg-white/10 focus:border-button-main/40 
+                className={`field w-full h-12 px-4 font-mono text-sm border border-secondary/20 
+                       bg-text-main/5 hover:bg-text-main/10 focus:border-button-main/40 
                        focus:ring-2 focus:ring-button-main/30 focus:ring-offset-1 
-                       focus:ring-offset-background/50 rounded-lg transition-all"
+                       focus:ring-offset-background/50 rounded-lg transition-all`}
                 disabled={isPending}
               />
               {passwordForm.formState.errors.newPassword && (
@@ -154,10 +154,10 @@ export function AccountDashboard({ user }: { user: User }) {
               <input
                 type="password"
                 {...passwordForm.register("confirmPassword")}
-                className="field w-full h-12 px-4 font-mono text-sm border border-secondary/20 
-                       bg-white/5 hover:bg-white/10 focus:border-button-main/40 
+                className={`field w-full h-12 px-4 font-mono text-sm border border-secondary/20 
+                       bg-text-main/5 hover:bg-text-main/10 focus:border-button-main/40 
                        focus:ring-2 focus:ring-button-main/30 focus:ring-offset-1 
-                       focus:ring-offset-background/50 rounded-lg transition-all"
+                       focus:ring-offset-background/50 rounded-lg transition-all`}
                 disabled={isPending}
               />
               {passwordForm.formState.errors.confirmPassword && (
@@ -170,10 +170,10 @@ export function AccountDashboard({ user }: { user: User }) {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 type="submit"
-                className="box flex-1 flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
+                className={`box flex-1 flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
                        bg-button-main/20 hover:bg-button-main/30 border-2 border-button-main/30 
                        hover:border-button-main text-button-main hover:shadow-lg transition-all
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+                       disabled:opacity-50 disabled:cursor-not-allowed`}
                 disabled={isPending || passwordForm.formState.isSubmitting}
               >
                 <Zap size={16} />
@@ -181,9 +181,9 @@ export function AccountDashboard({ user }: { user: User }) {
               </button>
               <button
                 type="button"
-                className="box flex-1 flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
-                       bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 
-                       text-secondary hover:text-text-main hover:shadow-lg transition-all"
+                className={`box flex-1 flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
+                       bg-text-main/5 hover:bg-text-main/10 border border-text-main/10 hover:border-text-main/20 
+                       text-secondary hover:text-text-main hover:shadow-lg transition-all`}
                 onClick={() => {
                   passwordForm.reset();
                   setShowPasswordForm(false);
@@ -199,7 +199,7 @@ export function AccountDashboard({ user }: { user: User }) {
 
       {/* Delete Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="box max-w-sm w-full p-8 rounded-2xl space-y-6 shadow-2xl border border-destructive/20 bg-background/95">
             <div className="text-center space-y-4">
               <div className="p-6 bg-destructive/10 border-2 border-destructive/20 rounded-2xl mx-auto w-20 h-20 flex items-center justify-center">
@@ -215,18 +215,18 @@ export function AccountDashboard({ user }: { user: User }) {
             </div>
             <div className="flex gap-3 pt-4">
               <button
-                className="box flex-1 flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
+                className={`box flex-1 flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
                        bg-destructive/20 hover:bg-destructive/30 border-2 border-destructive/30 
-                       hover:border-destructive text-destructive hover:shadow-lg transition-all"
+                       hover:border-destructive text-destructive hover:shadow-lg transition-all`}
                 onClick={handleDeleteAccount}
               >
                 <Trash2 size={16} />
                 Yes, delete
               </button>
               <button
-                className="box flex-1 flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
-                       bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 
-                       text-secondary hover:text-text-main hover:shadow-lg transition-all"
+                className={`box flex-1 flex items-center justify-center gap-3 px-6 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
+                       bg-text-main/5 hover:bg-text-main/10 border border-text-main/10 hover:border-text-main/20 
+                       text-secondary hover:text-text-main hover:shadow-lg transition-all`}
                 onClick={() => setShowDeleteModal(false)}
               >
                 Cancel
