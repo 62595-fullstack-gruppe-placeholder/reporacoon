@@ -49,7 +49,7 @@ export function ScanSettingsForm({ initialSettings }: ScanSettingsFormProps) {
         {/* Deep scan toggle */}
         <ScanOptions
           isDisabled={false}
-          isDeep={initialSettings.isDeep}
+          isDeep={isDeepScan}
           onDeepChange={setIsDeepScan}
         />
 

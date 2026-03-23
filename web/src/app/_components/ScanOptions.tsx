@@ -2,7 +2,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
@@ -14,6 +14,11 @@ interface Props {
 export function ScanOptions({ isDisabled, isDeep = false, onDeepChange}: Props) {
     const [checkedShallow, setCheckedShallow] = useState(!isDeep);
     const [checkedDeep, setCheckedDeep] = useState(isDeep);
+
+    useEffect(() => {
+        setCheckedShallow(!isDeep);
+        setCheckedDeep(isDeep);
+    }, [isDeep]);
 
     const onCheckDeep = () => {
         setCheckedDeep(true);
