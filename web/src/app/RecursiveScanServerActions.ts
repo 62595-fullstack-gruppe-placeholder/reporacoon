@@ -74,6 +74,8 @@ export async function getRecurringScanResultsAction(recursiveScanId: string) {
   return { success: true as const, jobs, findings };
 }
 
+// This is used to trigger an immediate scan outside of the regular schedule. 
+// for testing 
 export async function runRecursiveScanNowAction(scraperId: string) {
   const user = await getUser();
   if (!user) return { success: false, error: "Not authenticated" };
