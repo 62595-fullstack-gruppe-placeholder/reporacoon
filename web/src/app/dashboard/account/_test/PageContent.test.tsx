@@ -39,7 +39,7 @@ describe("AccountDashboard", () => {
     const screen = render(<AccountDashboard user={mockUser} />);
 
     expect(screen.getByText("test")).toBeInTheDocument();
-    expect(screen.getByText("Email: test@example.com")).toBeInTheDocument();
+    expect(screen.getByText("test@example.com")).toBeInTheDocument();
   });
 
   it("shows password form when Change password button is clicked", async () => {
