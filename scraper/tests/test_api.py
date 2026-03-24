@@ -151,11 +151,11 @@ def test_create_recursive_scan_missing_fields(client):
 
 
 # Verifies that POST /recursive-scan returns 400 when the interval value is not
-# one of the accepted options (fx "EVERY_MINUTE" is not a valid interval).
+# one of the accepted options (fx "FORTNIGHTLY" is not a valid interval).
 def test_create_recursive_scan_invalid_interval(client):
     response = client.post('/recursive-scan', json={
         "url": "https://github.com/someuser/somerepo",
-        "interval": "EVERY_MINUTE",
+        "interval": "FORTNIGHTLY",
     })
     assert response.status_code == 400
 

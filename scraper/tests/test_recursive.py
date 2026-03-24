@@ -126,6 +126,8 @@ def test_update_recursive_scan_after_run(mock_get_connection, insert_recursive_s
 
     updateRecursiveScanAfterRun(scan_id)
 
+    after = datetime.now(timezone.utc)
+
     with repository.get_connection().cursor() as cur:
         cur.execute(
             "SELECT last_run_at, next_run_at FROM recursive_scans WHERE id = %s",
@@ -133,7 +135,10 @@ def test_update_recursive_scan_after_run(mock_get_connection, insert_recursive_s
         )
         last_run_at, next_run_at = cur.fetchone()
 
-    assert last_run_at >= before
+    # Allow up to 1 second of clock skew between Python and DB
+    from datetime import timedelta
+    assert last_run_at >= before - timedelta(seconds=1)
+    assert last_run_at <= after + timedelta(seconds=1)
     assert next_run_at > last_run_at
 
 
