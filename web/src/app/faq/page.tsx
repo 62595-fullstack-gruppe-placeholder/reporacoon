@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, List, ShieldQuestion } from 'lucide-react';
+import { ChevronDown, ShieldQuestion } from 'lucide-react';
 
 const faqs = [
   { 
@@ -37,11 +37,11 @@ export default function FAQ() {
         {faqs.map((faq, i) => (
           <div 
             key={i} 
-            className="box border border-secondary/10 overflow-hidden shadow-xl bg-background/40 transition-all hover:border-white/20"
+            className="box border border-secondary/10 overflow-hidden shadow-xl transition-all hover:border-text-main/20"
           >
             {/* Question Header */}
             <div 
-              className="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5 transition-colors"
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-text-main/5 transition-colors"
               onClick={() => setOpenIndex(openIndex === i ? null : i)}
             >
               <div className="flex items-center gap-4">
@@ -61,9 +61,8 @@ export default function FAQ() {
               </div>
             </div>
 
-            {/* Answer Section - Background and Prose matched to Legal */}
             {openIndex === i && (
-              <div className="border-t border-secondary/10 bg-background/50 p-8 animate-in fade-in slide-in-from-top-4">
+              <div className="border-t border-secondary/10 bg-text-main/5 p-8 animate-in fade-in slide-in-from-top-4">
                 <div className="prose prose-invert max-w-none">
                   <p className="text-sm text-secondary font-mono leading-relaxed border-l-2 border-secondary/30 pl-6">
                     {faq.a}
