@@ -50,7 +50,7 @@ export default function URLForm({ onScanStarted, isDeepScan, extensions}: URLFor
         const result = await execute(input);
 
     if (result.success) {
-      props.onScanStarted(result.findings, result.jobs);
+      onScanStarted(result.findings, result.jobs);
     }
     // Error: toast shows automatically via useServerAction
   });
