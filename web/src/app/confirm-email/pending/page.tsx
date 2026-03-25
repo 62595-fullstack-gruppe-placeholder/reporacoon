@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Mail, Zap, ShieldCheck } from "lucide-react";
 
 export default function ConfirmEmailPendingPage() {
   const [resent, setResent] = useState(false);
@@ -13,30 +14,6 @@ export default function ConfirmEmailPendingPage() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const channel = new BroadcastChannel("email_confirmation");
-    channel.onmessage = (e) => {
-      if (e.data === "confirmed") {
-        channel.close();
-        window.location.href = "/dashboard";
-      }
-    };
-    return () => channel.close();
-  }, []);
-
-  
-  useEffect(() => {
-    const poll = setInterval(async () => {
-      const res = await fetch("/api/auth/me");
-      if (res.ok) {
-        clearInterval(poll);
-        window.location.href = "/dashboard";
-      }
-    }, 3000);
-    return () => clearInterval(poll);
-  }, []);
-
-  //doesnt work for now, need to create create resend page
   const handleResend = async () => {
     setLoading(true);
     const email = localStorage.getItem("pending_confirmation_email") ?? "";
@@ -51,35 +28,54 @@ export default function ConfirmEmailPendingPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-950">
-      <div className="text-center max-w-md px-6">
-        <div className="relative inline-block mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-200">
-              <rect x="2" y="4" width="20" height="16" rx="2" />
-              <path d="M2 7l10 7 10-7" />
-            </svg>
+    <div className="w-full min-h-screen flex flex-col items-center justify-center p-8 space-y-8">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="box border border-secondary/10 overflow-hidden shadow-xl bg-background/50 backdrop-blur-sm p-8 text-center">
+          <div className="inline-flex p-4 bg-orange-500/10 border-2 border-orange-500/20 rounded-xl mb-6 relative">
+            <Mail className="text-orange-400 mx-auto" size={48} />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500/20 border-2 border-orange-500/30 rounded-full animate-ping" />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500/30 border-2 border-orange-500/40 rounded-full" />
           </div>
-          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400 animate-ping opacity-75" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400" />
+
+          <h1 className="h1 mb-4">Check your inbox</h1>
+
+          <p className="text-secondary font-mono text-sm leading-relaxed mb-2">
+            We sent a confirmation link to your email address. Once you've confirmed your email, you can safely close this page.
+          </p>
+          <p className="text-secondary font-mono text-sm mb-8">
+            Awaiting confirmation{dots}
+          </p>
         </div>
-        <h1 className="text-3xl font-semibold text-gray-100 mb-3 tracking-tight">
-          Check your inbox
-        </h1>
-        <p className="text-gray-400 text-base leading-relaxed mb-2">
-          We sent a confirmation link to your email address.
-        </p>
-        <p className="text-gray-600 text-sm mb-10">
-          This page will redirect automatically once confirmed{dots}
-        </p>
+
+        {/* Resend Button */}
         <button
           onClick={handleResend}
           disabled={loading || resent}
-          className="w-full py-3 px-6 rounded-xl border border-gray-800 bg-gray-900 text-gray-200 text-sm font-medium transition-all hover:border-gray-700 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="box w-full flex items-center justify-center gap-3 px-8 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
+                     bg-orange-500/20 hover:bg-orange-500/30 border-2 border-orange-500/30 
+                     hover:border-orange-500 text-orange-400 hover:text-orange-300 
+                     disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
         >
-          {resent ? "✓ Email sent" : loading ? "Sending…" : "Resend confirmation email"}
+          <Zap size={16} />
+          {resent
+            ? "✓ Email sent"
+            : loading
+              ? "Sending…"
+              : "Resend confirmation email"}
         </button>
+
+        {/* Dashboard Link */}
+        <a
+          href="/dashboard"
+          className="box w-full flex items-center justify-center gap-3 px-8 py-4 font-mono font-bold text-sm uppercase tracking-wider h-12
+                   bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 
+                   text-secondary hover:text-text-main hover:shadow-lg transition-all mt-4"
+        >
+          <ShieldCheck size={16} />
+          Go to Dashboard
+        </a>
       </div>
-    </main>
+    </div>
   );
 }

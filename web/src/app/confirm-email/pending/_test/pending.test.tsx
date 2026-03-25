@@ -1,17 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-const mockClose = vi.fn();
-let mockChannelInstance: { onmessage: any; close: typeof mockClose };
-
-class MockBroadcastChannel {
-  onmessage: any = null;
-  close = mockClose;
-  constructor(_name: string) {
-    mockChannelInstance = this;
-  }
-}
-vi.stubGlobal("BroadcastChannel", MockBroadcastChannel);
 vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
 
 Object.defineProperty(window, "location", {
@@ -65,27 +54,5 @@ describe("ConfirmEmailPendingPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /sending/i })).toBeDisabled();
     });
-  });
-
-  it("redirects to dashboard when polling returns ok", async () => {
-    vi.mocked(fetch).mockResolvedValue({ ok: true } as any);
-    render(<ConfirmEmailPendingPage />);
-    await waitFor(() => {
-      expect(window.location.href).toBe("/dashboard");
-    }, { timeout: 5000 });
-  });
-
-  it("redirects to dashboard on broadcast confirmed message", async () => {
-    render(<ConfirmEmailPendingPage />);
-    await waitFor(() => expect(mockChannelInstance).toBeDefined());
-    mockChannelInstance.onmessage({ data: "confirmed" } as MessageEvent);
-    expect(window.location.href).toBe("/dashboard");
-  });
-
-  it("does not redirect on irrelevant broadcast message", async () => {
-    render(<ConfirmEmailPendingPage />);
-    await waitFor(() => expect(mockChannelInstance).toBeDefined());
-    mockChannelInstance.onmessage({ data: "something-else" } as MessageEvent);
-    expect(window.location.href).toBe("");
   });
 });

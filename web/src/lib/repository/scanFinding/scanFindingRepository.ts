@@ -33,22 +33,22 @@ export async function createScanFinding(input: CreateScanFindingDTO): Promise<Sc
 
 
 /**
- * Fetching scan finding by id, returning the {@link ScanFinding}.
+ * Get all scan findings for a given job.
+ * @param jobId id of the job for which to get findings.
  */
-export async function getScanFindingById(id: String): Promise<ScanFinding[]> {
+export async function getFindingsByJobId(jobId: string): Promise<ScanFinding[]> {
   const rows = await query<ScanFinding[]>(
       `
         SELECT *
         FROM scan_findings
         WHERE job_id = $1
         `,
-      [id],
+      [jobId],
     );
 
   if (!rows) {
-    throw new Error("Failed to get scan finding");
+    throw new Error("Failed to get scan findings");
   }
 
   return rows.map((row) => scanFindingSchema.parse(row));
 }
-

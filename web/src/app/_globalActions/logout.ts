@@ -1,10 +1,14 @@
 "use server";
 
-import { deleteAccessTokenCookie } from "@/lib/auth/cookies";
+import { deleteAccessTokenCookie, deleteRefreshTokenCookie } from "@/lib/auth/cookies";
+import { getUser } from "@/lib/auth/userFromToken";
+import { revokeUserRefreshTokens } from "@/lib/repository/refreshToken/refreshTokenRepository";
 import { redirect } from "next/navigation";
 
 export async function logout() {
+  const user = await getUser();
+  if (user) await revokeUserRefreshTokens(user.id);
   await deleteAccessTokenCookie();
-  // TODO: delete refresh token cookie
+  await deleteRefreshTokenCookie();
   redirect("/");
 }

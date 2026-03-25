@@ -13,7 +13,7 @@ export default function Header({ user }: { user: User | null }) {
     <header data-testid="header">
       <div className="flex flex-row justify-between border-b border-box py-3 px-10 w-full items-center">
         <div id="header-left" className="flex flex-row items-center gap-4">
-          <Link href="/" className="flex flex-row gap-4">
+          <Link href="/" className="flex flex-row gap-4" title="Back to front page">
             <Image src="/logo.png" alt="logo" width="32" height="32" />
           <p className="text-main-text text-2xl font-bold">Repo Racoon</p>
           </Link>
@@ -69,10 +69,6 @@ const dashboardHeaderItems: HeaderLinkItem[] = [
     href: "/dashboard/settings",
     label: "Scan rules",
   },
-  {
-    href: "/dashboard/account",
-    label: "My account",
-  },
 ];
 
 function Links({ pathname }: { pathname: string }) {
@@ -120,19 +116,33 @@ function HeaderLink({
 }
 
 function AuthButtons({ user }: { user: User | null }) {
-  if (user) {
+  const pathname = usePathname();
+  const isOnDashboard = pathname.startsWith("/dashboard");
+
+  if (user && isOnDashboard) {
     return (
-      <div data-user-name="authed" data-testid="authbuttons">
+      <div data-user-name="authed" data-testid="authbuttons" className="inline-flex items-center gap-4">
+        <Link href="/" className="text-xl hover:underline underline-offset-4">
+          ← Front page
+        </Link>
         <AccountDropdown user={user} />
       </div>
     );
   }
+
+  if (user && !isOnDashboard) {
+    return (
+      <div data-user-name="authed" data-testid="authbuttons" className="inline-flex items-center gap-4">
+        <Link href="/dashboard" className="bg-button-main btn">
+          Go to dashboard →
+        </Link>
+        <AccountDropdown user={user} />
+      </div>
+    );
+  }
+
   return (
-    <div
-      data-user-name="guest"
-      data-testid="authbuttons"
-      className="items-center inline-flex h-10 justify-end gap-8"
-    >
+    <div data-user-name="guest" data-testid="authbuttons" className="items-center inline-flex h-10 justify-end gap-8">
       <button className="bg-button-main btn">
         <Link href="/signup">Sign up</Link>
       </button>

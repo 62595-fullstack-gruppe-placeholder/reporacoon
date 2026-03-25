@@ -36,7 +36,7 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies
-        run: npm ci
+        run: npm i -g npm@11.11.1 && npm ci
 
       # Run Vitest Tests 
       - name: Run unit tests

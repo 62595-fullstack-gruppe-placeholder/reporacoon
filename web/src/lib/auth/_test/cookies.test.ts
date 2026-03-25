@@ -55,7 +55,13 @@ describe("Access Token Cookies", () => {
 
       expect(cookies).toHaveBeenCalledOnce();
       expect(mockCookies.set).toHaveBeenCalledOnce();
-      expect(mockCookies.set).toHaveBeenCalledWith("access-token", token);
+      expect(mockCookies.set).toHaveBeenCalledWith("access-token", token,
+        expect.objectContaining({
+          httpOnly: true,
+          path: "/",
+          expires: expect.any(Date)
+        })
+      );
     });
   });
 });
