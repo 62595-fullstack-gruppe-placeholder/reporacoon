@@ -34,5 +34,6 @@ export function claimsToUser(payload: JWTPayload): User | null {
     id: userClaims.sub,
     email: userClaims.ema,
     email_confirmed: userClaims.emc,
+    settings: null,
   };
 }
