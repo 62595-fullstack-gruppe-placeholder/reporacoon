@@ -27,7 +27,10 @@ try:
         defaultExtensions = defaultExtensions['settings']
 except Exception as e:
     # If it fails, fallback to these values
-    defaultExtensions = ['.py', '.js', '.ts', '.json', '.yml', '.yaml', '.env', '.md'] 
+    defaultExtensions =  [".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".rb", ".php",
+    ".html", ".htm", ".xml", ".json", ".yml", ".yaml", ".toml", ".ini",
+    ".cfg", ".conf", ".config", ".env", ".sh", ".bash", ".zsh", ".fish",
+    ".ps1", ".bat", ".cmd", ".txt", ".rst", ".tex", ".csv", ".sql"]
     print(f"JSON Erroasdr: {e}")
 
 class GitHubSecretScanner:
