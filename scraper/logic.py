@@ -19,12 +19,15 @@ from pathlib import Path
 
 config_path = Path('/app/ignoreSettingsConfig.json')
 
+
 # getting file extensions from json file incase none are given
 try:
     with open(config_path, 'r') as f:
         defaultExtensions = json.load(f)
         defaultExtensions = defaultExtensions['settings']
 except Exception as e:
+    # If it fails, fallback to these values
+    defaultExtensions = ['.py', '.js', '.ts', '.json', '.yml', '.yaml', '.env', '.md'] 
     print(f"JSON Erroasdr: {e}")
 
 class GitHubSecretScanner:
