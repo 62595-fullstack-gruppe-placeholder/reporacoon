@@ -21,31 +21,36 @@ export const urlFormSchema = z.object({
  */
 export type URLFormSchema = z.infer<typeof urlFormSchema>;
 
-type URLFormProps = {
-  onScanStarted: (finding: ScanFinding[], jobs: ScanJob[]) => void;
-  isDeepScan: boolean;
-};
 
-export default function URLForm(props: URLFormProps) {
-  const { execute, isPending } = useScanAction();
-  const form = useForm<URLFormSchema>({
-    resolver: zodResolver(urlFormSchema),
-    defaultValues: { url: "" },
-  });
+interface URLFormProps {
+    onScanStarted: (finding: ScanFinding[], jobs: ScanJob[]) => void;
+    isDeepScan: boolean;
+    extensions: Set<string>
+}
 
-  const onSubmit = form.handleSubmit(async (data) => {
-    const input = {
-      url: data.url,
-      repo_url: data.url,
-      owner_id: null,
-      priority: 1,
-      isDeepScan: props.isDeepScan,
-    };
 
-    const result = await execute(input);
+export default function URLForm({ onScanStarted, isDeepScan, extensions}: URLFormProps) {
+    const { execute, isPending } = useScanAction();
+
+    const form = useForm<URLFormSchema>({
+        resolver: zodResolver(urlFormSchema),
+        defaultValues: { url: "" },
+    });
+
+    const onSubmit = form.handleSubmit(async (data) => {
+        const input = {
+            url: data.url,
+            repo_url: data.url,
+            owner_id: null,
+            priority: 1,
+            isDeepScan,
+            extensions,
+        };
+        console.log(extensions)
+        const result = await execute(input);
 
     if (result.success) {
-      props.onScanStarted(result.findings, result.jobs);
+      onScanStarted(result.findings, result.jobs);
     }
     // Error: toast shows automatically via useServerAction
   });

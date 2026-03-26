@@ -47,6 +47,7 @@ services:
       NEXT_PUBLIC_APP_URL: http://localhost #should prolly change on server
     volumes:
       - jwt-keys:/keys:ro # mount RSA keys as read only
+      - ./ignoreSettingsConfig.json:/app/ignoreSettingsConfig.json:ro
     depends_on:
       init_rsa_keys:
         condition: service_completed_successfully
@@ -65,6 +66,8 @@ services:
     pull_policy: always # always pull fresh images for deployment. overridden locally
     environment:
       DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
+    volumes:
+      - ./ignoreSettingsConfig.json:/app/ignoreSettingsConfig.json:ro
     ports:
       - "5001:5001"
     depends_on:

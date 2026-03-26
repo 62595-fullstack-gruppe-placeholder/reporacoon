@@ -7,7 +7,8 @@ import requests
 from datetime import datetime
 from collections import defaultdict
 from repository import *
-
+import json
+from pathlib import Path
 #------------------------------- basic flow -----------------------------------------------
 #  1. The API file gives the scanner a repo URL and a job ID
 #  2. The scanner clones the repo
@@ -16,13 +17,30 @@ from repository import *
 #  4. The cloned repo is deleted again
 #--------------------------------------------------------------------------------------------
 
+config_path = Path('/app/ignoreSettingsConfig.json')
+
+
+# getting file extensions from json file incase none are given
+try:
+    with open(config_path, 'r') as f:
+        defaultExtensions = json.load(f)
+        defaultExtensions = defaultExtensions['settings']
+except Exception as e:
+    # If it fails, fallback to these values
+    defaultExtensions =  [".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".rb", ".php",
+    ".html", ".htm", ".xml", ".json", ".yml", ".yaml", ".toml", ".ini",
+    ".cfg", ".conf", ".config", ".env", ".sh", ".bash", ".zsh", ".fish",
+    ".ps1", ".bat", ".cmd", ".txt", ".rst", ".tex", ".csv", ".sql"]
+    print(f"JSON Erroasdr: {e}")
+
 class GitHubSecretScanner:
-    def __init__(self, repo_url, job_id, isDeepScan=False):
+    def __init__(self, repo_url, job_id, isDeepScan=False, extensions=defaultExtensions):
         self.repo_url = repo_url
         self.job_id = job_id
         self.scanned_files = 0
         self.findings = defaultdict(list)
         self.isDeepScan = isDeepScan
+        self.extensions = extensions
         
         # Create a requests session for HTTP requests
         self.session = requests.Session()
@@ -110,24 +128,8 @@ class GitHubSecretScanner:
     # ---------------- File Handling ---------------- #
 
     def is_text_file(self, filename):
-        text_extensions = (
-            '.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
-            '.html', '.htm', '.xml', '.json', '.yml', '.yaml', '.toml', '.ini',
-            '.cfg', '.conf', '.config', '.env', '.sh', '.bash', '.zsh', '.fish',
-            '.ps1', '.bat', '.cmd', '.txt', '.rst', '.tex', '.csv',
-            '.sql', '.css', '.scss', '.sass', '.less', '.vue', '.svelte',
-            '.swift', '.kt', '.kts', '.rs', '.scala', '.clj', '.elm',
-            '.ex', '.exs', '.erl', '.hrl', '.hs', '.lhs', '.lua', '.pl',
-            '.pm', '.r', '.R', '.dart', '.fs', '.fsx', '.fsi', '.fsscript',
-            '.dockerfile', 'Dockerfile', '.gitignore', '.gitattributes',
-            '.npmrc', '.yarnrc', '.piprc', '.pypirc', '.gemrc', '.bowerrc',
-            '.eslintrc', '.prettierrc', '.babelrc', '.editorconfig',
-            'Makefile', 'CMakeLists.txt', 'build.gradle', 'pom.xml',
-            'package.json', 'package-lock.json', 'yarn.lock', 'Gemfile',
-            'Podfile', 'Cargo.toml', 'go.mod', 'requirements.txt',
-            'Pipfile', 'Pipfile.lock', 'environment.yml', 'setup.py'
-        )
-        return filename.lower().endswith(text_extensions)
+        text_extensions = self.extensions
+        return filename.lower().endswith(tuple(text_extensions))
 
     def find_line_number(self, content, match):
         """Return (line_number, line_text) for the first line containing match.

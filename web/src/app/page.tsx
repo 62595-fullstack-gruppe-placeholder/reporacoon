@@ -1,16 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import URLForm from "./_components/URLForm";
-import ScanResults from "./_components/ScanResults";
-import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
-import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
-import { ScanOptions } from "./_components/ScanOptions";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import URLForm from './_components/URLForm';
+import ScanResults from './_components/ScanResults';
+import { ScanFinding } from '@/lib/repository/scanFinding/scanFindingSchema';
+import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
+import { ScanOptions } from './_components/ScanOptions';
+import { IgnoreSettingsButtons } from './_components/IgnoreSettings';
+import { extensionsUtil } from '@/lib/utils';
+
 
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+
+  const extensions = extensionsUtil;
+  const [selected, setSelected] = useState(extensions);
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Puts the scanjob and scanjob findings in local storage. 
@@ -94,8 +102,13 @@ export default function Home() {
           weaknesses.
         </p>
 
-        <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} />
-        <ScanOptions isDisabled={!isAuthenticated} />
+        <div className="field flex items-center gap-2">
+          <Image src="/searchIcon.svg" alt="" width={20} height={20} />
+
+          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} extensions={selected}/>
+        </div>
+        <ScanOptions isDisabled={true} isDeep={false} />
+        <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={extensions}/>
       </div>
 
       {/* Dashboard appears with fade and slide down animation */}

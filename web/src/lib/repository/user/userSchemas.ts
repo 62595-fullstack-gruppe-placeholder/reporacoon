@@ -1,12 +1,27 @@
 import { z } from "zod";
 
 /**
+ * Settings schema. Has the file extensions to scan and the type of scan 
+ */
+export const settingsSchema = z.object({
+  extensions: z.array(z.string()).default([
+    // Arbitrary list of extensions for the default
+    ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".rb", ".php", ".yml",
+  ]),
+  isDeep: z.boolean().default(false),
+});
+
+export type Settings = z.infer<typeof settingsSchema>
+
+/**
  * Base user schema. Represents a row in the `users` table.
  */
 export const userSchema = z.object({
   id: z.uuidv4(),
   email: z.email(),
   email_confirmed: z.boolean(),
+  // used default from settingsSchema
+  settings: settingsSchema.nullable().default(settingsSchema.parse({})), 
 });
 
 /**
@@ -90,3 +105,4 @@ export const loginFormSchema = credentialsDTOSchema;
  * Inferred type of {@link loginFormSchema}.
  */
 export type LoginFormSchema = z.infer<typeof loginFormSchema>;
+

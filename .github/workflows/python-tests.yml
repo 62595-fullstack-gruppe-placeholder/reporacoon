@@ -64,6 +64,10 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         # Ensure test tools are installed even if not in requirements.txt
         pip install pytest pytest-flask requests-mock 
+    - name: Create ignoreSettingsConfig.json
+      run: |
+        # Copy from repo root to scraper/ working dir (mimics Docker volume)
+        cp ../ignoreSettingsConfig.json ./ignoreSettingsConfig.json || echo "{}" > ./ignoreSettingsConfig.json
 
     - name: Wait for Postgres service
       run: sleep 10

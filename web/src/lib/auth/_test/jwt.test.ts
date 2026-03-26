@@ -13,6 +13,7 @@ describe("userToClaims", () => {
       id: "user-123",
       email: "test@example.com",
       email_confirmed: true,
+      settings: null,
     };
 
     const claims = userToClaims(user);
@@ -39,6 +40,7 @@ describe("claimsToUser", () => {
       id: "user-456",
       email: "user@example.com",
       email_confirmed: false,
+      settings: null,
     });
   });
 

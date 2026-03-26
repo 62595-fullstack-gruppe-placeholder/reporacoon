@@ -4,6 +4,7 @@ import ScanResults from "@/app/_components/ScanResults";
 import URLForm from "@/app/_components/URLForm";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
+import { extensionsUtil } from "@/lib/utils";
 import { Zap } from "lucide-react";
 import { useState } from "react";
 
@@ -42,6 +43,8 @@ export function TryItYourself({
               setFindings(findings);
               postScanCallback();
             }}
+            // Just uses all extensions
+            extensions={extensionsUtil}
             isDeepScan={false}
           />
         </div>

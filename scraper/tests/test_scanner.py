@@ -56,6 +56,7 @@ def test_scan_repository(mock_get_connection, insert_helpers):
     # create a scan job so inserted findings can reference it
     _insert_user, _insert_scan_job = insert_helpers
     job_id = _insert_scan_job(repo_url=url, status="PENDING")
+    
 
     scanner = GitHubSecretScanner(url, job_id)
     repo_path = scanner.clone_repo()
@@ -131,7 +132,7 @@ def test_scan_deep(mock_get_connection, insert_helpers):
 
         scanner.scan_all_branches(repo_path)
 
-        assert found_secret_count == 11, f"expected 4 secrets, got {found_secret_count}"
+        assert found_secret_count == 11, f"expected 11 secrets, got {found_secret_count}"
 
     finally:
         if repo_path and os.path.exists(repo_path):

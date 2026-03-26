@@ -48,7 +48,23 @@ def test_scan_endpoint(client):
     mock_pending_jobs = {
         '123': 'https://github.com/62595-fullstack-gruppe-placeholder/testrepo'
     }
-    
+    # Tuple for the json, should be a set but that doesnt work
+    extensions = ('.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
+        '.html', '.htm', '.xml', '.json', '.yml', '.yaml', '.toml', '.ini',
+        '.cfg', '.conf', '.config', '.env', '.sh', '.bash', '.zsh', '.fish',
+        '.ps1', '.bat', '.cmd', '.txt', '.rst', '.tex', '.csv',
+        '.sql', '.css', '.scss', '.sass', '.less', '.vue', '.svelte',
+        '.swift', '.kt', '.kts', '.rs', '.scala', '.clj', '.elm',
+        '.ex', '.exs', '.erl', '.hrl', '.hs', '.lhs', '.lua', '.pl',
+        '.pm', '.r', '.R', '.dart', '.fs', '.fsx', '.fsi', '.fsscript',
+        '.dockerfile', 'Dockerfile', '.gitignore', '.gitattributes',
+        '.npmrc', '.yarnrc', '.piprc', '.pypirc', '.gemrc', '.bowerrc',
+        '.eslintrc', '.prettierrc', '.babelrc', '.editorconfig',
+        'Makefile', 'CMakeLists.txt', 'build.gradle', 'pom.xml',
+        'package.json', 'package-lock.json', 'yarn.lock', 'Gemfile',
+        'Podfile', 'Cargo.toml', 'go.mod', 'requirements.txt',
+        'Pipfile', 'Pipfile.lock', 'environment.yml', 'setup.py')
+
     # Test 1: Valid pending jobs
 
     # This mocks all database calls and other necessary functions
@@ -69,7 +85,7 @@ def test_scan_endpoint(client):
         mock_scanner_instance.run.return_value = None    
         mock_scanner.return_value = mock_scanner_instance
         
-        response = client.post('/scan', json={"isDeepScan": False})
+        response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         print(f"Status: {response.status_code}")
         print(f"JSON: {response.json}")
         assert response.status_code == 202
@@ -79,7 +95,7 @@ def test_scan_endpoint(client):
 
         mock_get_jobs.return_value = {}
         
-        response = client.post('/scan', json={"isDeepScan": False})
+        response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         assert response.status_code == 200
         assert response.json['success'] is False
     
@@ -87,7 +103,7 @@ def test_scan_endpoint(client):
         mock_get_jobs.return_value = mock_pending_jobs
         mock_validate.return_value = (False, 'Bad URL', None)
         
-        response = client.post('/scan', json={"isDeepScan": False})
+        response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         assert response.status_code == 400
         assert 'error' in response.json
 
