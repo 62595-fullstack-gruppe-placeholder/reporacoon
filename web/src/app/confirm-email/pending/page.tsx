@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { Mail, Zap, ShieldCheck } from "lucide-react";
 
 export default function ConfirmEmailPendingPage() {
+  const [mounted, setMounted] = useState(false);
   const [resent, setResent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dots, setDots] = useState(".");
 
   useEffect(() => {
+    setMounted(true);
     const interval = setInterval(() => {
       setDots((d) => (d.length >= 3 ? "." : d + "."));
     }, 600);
@@ -26,6 +28,8 @@ export default function ConfirmEmailPendingPage() {
     setResent(true);
     setTimeout(() => setResent(false), 4000);
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center justify-center p-8 space-y-8">

@@ -3,16 +3,17 @@ import { loadKeys } from "./keys";
 import { getAccessTokenCookie } from "./cookies";
 import { type User } from "../repository/user/userSchemas";
 import { claimsToUser } from "./jwt";
+import { NextRequest } from "next/server";
 
 /**
  * Get the currently
  * @returns
  */
-export async function getUser(): Promise<User | null> {
+export async function getUser(req?: NextRequest): Promise<User | null> {
   try {
-    const accessTokenCookie = await getAccessTokenCookie();
+    const accessTokenCookie = await getAccessTokenCookie(req);
 
-    if (!accessTokenCookie) {
+    if (!accessTokenCookie?.value) {
       return null;
     }
 
@@ -23,7 +24,7 @@ export async function getUser(): Promise<User | null> {
     });
 
     return claimsToUser(payload);
-  } catch {
+  } catch (error) {
     return null;
   }
 }
