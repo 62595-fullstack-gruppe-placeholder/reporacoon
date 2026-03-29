@@ -1,10 +1,11 @@
 "use client"
 
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { extensionsUtil } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 
 interface Props {
     onSelectedChange: (selected: Set<string>) => void;
@@ -13,27 +14,25 @@ interface Props {
 
 export function IgnoreSettingsButtons({ onSelectedChange, extensions }: Props) {
     const [isSettingsShown, setIsSettingsShown] = useState(false);
-    const [selected, setSelected] = useState(new Set<string>());
     const allExtensions = extensionsUtil;
 
-    // Initialize selected state from extensions prop on mount/update
-    useEffect(() => {
-        setSelected(extensions);
-    }, [extensions]);
-
-    const toggleExt = (ext: string) => {
-        const newSelected = new Set(selected);
+    const toggleExt = useCallback((ext: string) => {
+        const newSelected = new Set(extensions);
         if (newSelected.has(ext)) {
             newSelected.delete(ext);
         } else {
             newSelected.add(ext);
         }
-        setSelected(newSelected);
+        onSelectedChange(newSelected);
+    }, [extensions, onSelectedChange]);
 
-        // Returns extensions to SCAN (not ignore) - unchecked = scan
-        let difference = new Set([...allExtensions].filter(x => newSelected.has(x)));
-        onSelectedChange(difference);
-    };
+    const selectAll = useCallback((): void => {
+        onSelectedChange(new Set(allExtensions));
+    }, [allExtensions, onSelectedChange]);
+
+    const deselectAll = useCallback((): void => {
+        onSelectedChange(new Set<string>());
+    }, [onSelectedChange]);
 
     return (
         <div className="w-full border-t border-secondary/10 bg-background/50 p-4">
@@ -52,7 +51,7 @@ export function IgnoreSettingsButtons({ onSelectedChange, extensions }: Props) {
                     <div className="flex flex-wrap gap-2">
                         {Array.from(allExtensions).map(ext => {
                             const id = `ext-${ext}`;
-                            const isChecked = selected.has(ext); 
+                            const isChecked = extensions.has(ext);
                             return (
                                 <label key={ext} className="inline-flex items-center gap-2 cursor-pointer">
                                     <Checkbox
@@ -65,6 +64,10 @@ export function IgnoreSettingsButtons({ onSelectedChange, extensions }: Props) {
                                 </label>
                             );
                         })}
+                    </div>
+                    <div className="flex items-center gap-4 w-full">
+                        <Button className="bg-button-main" onClick={selectAll}>Select all</Button>
+                        <Button className="bg-secondary" onClick={deselectAll}>Deselect all</Button>
                     </div>
                 </div>
             )}
