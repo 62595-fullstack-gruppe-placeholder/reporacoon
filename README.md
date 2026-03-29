@@ -9,3 +9,6 @@ To reset the database, losing all data and the schema(s), run `docker compose do
 
 # Starting the system
 Run `docker compose up` in the root directory of the project.
+
+# Python tests
+To run the python tests run `docker compose run scraper pytest -v` in the root directory of the project.
