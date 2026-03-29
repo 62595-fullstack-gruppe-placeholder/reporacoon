@@ -1,0 +1,1 @@
+ALTER TABLE recursive_scans ADD COLUMN IF NOT EXISTS extensions TEXT[] NOT NULL DEFAULT '{}';
