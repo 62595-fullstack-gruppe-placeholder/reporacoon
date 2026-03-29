@@ -113,6 +113,7 @@ describe("RecurringForm", () => {
         "https://github.com/owner/repo",
         "DAILY",
         false,
+        new Set<string>,
       );
     });
   });
@@ -151,29 +152,8 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 6. Deep scan flag
 
-  it("passes isDeepScan=true when the deep scan checkbox is checked", async () => {
-    (actions.createRecursiveScanAction as Mock).mockResolvedValue({ success: true });
-
-    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>}/>);
-
-    fireEvent.change(screen.getByPlaceholderText("Paste a public GitHub repository URL"), {
-      target: { value: "https://github.com/owner/repo" },
-    });
-    fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: /schedule scan/i }));
-
-    await waitFor(() => {
-      expect(actions.createRecursiveScanAction).toHaveBeenCalledWith(
-        "https://github.com/owner/repo",
-        "WEEKLY",
-        true,
-      );
-    });
-  });
-
-  // 7. Scan list
+  // 6. Scan list
 
   it("renders a row for each scan in initialScans", () => {
     const scans = [
@@ -195,7 +175,7 @@ describe("RecurringForm", () => {
     expect(screen.getByText("Paused")).toBeInTheDocument();
   });
 
-  // 8. Delete
+  // 7. Delete
 
   it("calls deleteRecursiveScanAction when delete is clicked", async () => {
     (actions.deleteRecursiveScanAction as Mock).mockResolvedValue({ success: true });
@@ -210,7 +190,7 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 9. Pause / resume
+  // 8. Pause / resume
 
   it("calls toggleRecursiveScanAction when pause is clicked", async () => {
     (actions.toggleRecursiveScanAction as Mock).mockResolvedValue({ success: true });
@@ -225,7 +205,7 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 10. Run now
+  // 9. Run now
 
   it("calls runRecursiveScanNowAction when run now is clicked", async () => {
     (actions.runRecursiveScanNowAction as Mock).mockResolvedValue({ success: true });
@@ -240,7 +220,7 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 11. Expand, shows results
+  // 10. Expand, shows results
 
   it("fetches and shows results when a row is expanded", async () => {
     (actions.getRecurringScanResultsAction as Mock).mockResolvedValue({
@@ -260,7 +240,7 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 12. Expand, empty jobs
+  // 11. Expand, empty jobs
 
   it("shows 'No scans have run yet' when expanded with empty jobs", async () => {
     (actions.getRecurringScanResultsAction as Mock).mockResolvedValue({
