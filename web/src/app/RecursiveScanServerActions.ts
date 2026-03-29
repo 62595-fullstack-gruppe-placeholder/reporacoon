@@ -11,7 +11,7 @@ import { getScanJobsByRecursiveScanId } from "@/lib/repository/scanJob/scanJobRe
 import { getFindingsByJobId } from "@/lib/repository/scanFinding/scanFindingRepository";
 import { revalidatePath } from "next/cache";
 
-export async function createRecursiveScanAction(url: string, interval: ScanInterval, isDeepScan: boolean) {
+export async function createRecursiveScanAction(url: string, interval: ScanInterval, isDeepScan: boolean, extensions: Set<string>) {
   const user = await getUser();
   if (!user) return { success: false, error: "Not authenticated" };
 
@@ -20,6 +20,7 @@ export async function createRecursiveScanAction(url: string, interval: ScanInter
     owner_id: user.id,
     interval,
     is_deep_scan: isDeepScan,
+    extensions: Array.from(extensions),
   });
 
   // Validate with scraper before saving
@@ -35,7 +36,7 @@ export async function createRecursiveScanAction(url: string, interval: ScanInter
   await fetch("http://scraper:5001/recursive-scan", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url, interval, isDeepScan }),
+    body: JSON.stringify({ url, interval, isDeepScan, extensions}),
   });
 
   await createRecursiveScan(input);

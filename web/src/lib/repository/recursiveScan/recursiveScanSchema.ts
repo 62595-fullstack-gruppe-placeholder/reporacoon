@@ -10,6 +10,10 @@ export const recursiveScanSchema = z.object({
   owner_id: z.uuidv4().nullable(),
   interval: z.enum(SCAN_INTERVALS),
   is_deep_scan: z.boolean(),
+  extensions: z.array(z.string()).default([
+    // Arbitrary list of extensions for the default
+    ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".rb", ".php", ".yml",
+  ]),
   is_active: z.boolean(),
   last_run_at: z.coerce.date().nullable(),
   next_run_at: z.coerce.date(),
@@ -23,6 +27,10 @@ export const createRecursiveScanDTOSchema = z.object({
   owner_id: z.uuidv4().nullable(),
   interval: z.enum(SCAN_INTERVALS),
   is_deep_scan: z.boolean().default(false),
+  extensions: z.array(z.string()).default([
+    // Arbitrary list of extensions for the default
+    ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".rb", ".php", ".yml",
+  ]),
 });
 
 export type CreateRecursiveScanDTO = z.infer<typeof createRecursiveScanDTOSchema>;

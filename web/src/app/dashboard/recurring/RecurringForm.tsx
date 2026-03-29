@@ -13,6 +13,7 @@ import {
 import ScanResults from "@/app/_components/ScanResults";
 import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
+import { Settings } from "@/lib/repository/user/userSchemas";
 
 
 
@@ -30,10 +31,11 @@ const INTERVAL_LABELS: Record<ScanInterval, string> = {
 
 // The main component for managing recurring scans. 
 // It includes a form for creating new scans and a list of existing scans with controls to manage them.
-export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] }) {
+export function RecurringForm({ initialScans, isDeep, extensions }: { initialScans: RecursiveScan[], isDeep: boolean, extensions: Set<string>}) {
   const [url, setUrl] = useState("");
   const [interval, setInterval] = useState<ScanInterval>("WEEKLY");
-  const [isDeepScan, setIsDeepScan] = useState(false);
+  const [isDeepScan, setIsDeepScan] = useState(isDeep);
+  const [extensionsState, setExtensionsState] = useState(extensions);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -43,7 +45,7 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await createRecursiveScanAction(url, interval, isDeepScan);
+      const result = await createRecursiveScanAction(url, interval, isDeepScan, extensionsState);
       if (!result.success) {
         setError(result.error ?? "Something went wrong");
       } else {
