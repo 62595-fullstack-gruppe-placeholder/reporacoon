@@ -13,6 +13,7 @@ import {
 import ScanResults from "@/app/_components/ScanResults";
 import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
+import { Settings } from "@/lib/repository/user/userSchemas";
 
 
 
@@ -30,20 +31,21 @@ const INTERVAL_LABELS: Record<ScanInterval, string> = {
 
 // The main component for managing recurring scans. 
 // It includes a form for creating new scans and a list of existing scans with controls to manage them.
-export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] }) {
+export function RecurringForm({ initialScans, isDeep, extensions }: { initialScans: RecursiveScan[], isDeep: boolean, extensions: Set<string> }) {
   const [url, setUrl] = useState("");
   const [interval, setInterval] = useState<ScanInterval>("WEEKLY");
-  const [isDeepScan, setIsDeepScan] = useState(false);
+  const [isDeepScan, setIsDeepScan] = useState(isDeep);
+  const [extensionsState, setExtensionsState] = useState(extensions);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-// Handles form submission for creating a new recurring scan. 
-// It calls the server action and manages loading and error states.
+  // Handles form submission for creating a new recurring scan. 
+  // It calls the server action and manages loading and error states.
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await createRecursiveScanAction(url, interval, isDeepScan);
+      const result = await createRecursiveScanAction(url, interval, isDeepScan, extensionsState);
       if (!result.success) {
         setError(result.error ?? "Something went wrong");
       } else {
@@ -99,18 +101,7 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
                   <option key={i} value={i}>{INTERVAL_LABELS[i]}</option>
                 ))}
               </select>
-            </div>
 
-            {/* Deep scan toggle */}
-            <div className="flex items-center gap-2 mt-5">
-              <input
-                id="deep-scan"
-                type="checkbox"
-                checked={isDeepScan}
-                onChange={(e) => setIsDeepScan(e.target.checked)}
-                className="accent-button-main w-4 h-4"
-              />
-              <label htmlFor="deep-scan" className="text-sm text-text-main">Deep scan</label>
             </div>
 
             <button
@@ -121,6 +112,8 @@ export function RecurringForm({ initialScans }: { initialScans: RecursiveScan[] 
               {isPending ? "Scheduling..." : "Schedule scan"}
             </button>
           </div>
+          <p className="p text-left leading-relaxed pt-4 text-secondary">This recurring scan will use the rules from the scan rules tab
+          </p>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
         </form>

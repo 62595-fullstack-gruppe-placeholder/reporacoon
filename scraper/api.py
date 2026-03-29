@@ -31,12 +31,13 @@ def run_recursive_scan(scan):
     repo_url = scan["repo_url"]
     is_deep_scan = scan["is_deep_scan"]
     recursive_id = scan["id"]
+    extensions = scan["extensions"]
 
     try:
         # Create a scan_job linked to this recurring schedule so the frontend can
         # query all jobs for a given recurring scan
         job_id = insertScanJob(repo_url, recursive_scan_id=recursive_id)
-        scanner = GitHubSecretScanner(repo_url, job_id, is_deep_scan)
+        scanner = GitHubSecretScanner(repo_url, job_id, is_deep_scan, extensions)
 
         start = time.time()
         scanner.run()  # Clones repo, runs secret detection, writes findings to DB
@@ -253,6 +254,7 @@ def create_recursive_scan():
         url = data['url']
         interval = data['interval'].upper()
         is_deep_scan = data.get('isDeepScan', False)
+        extensions = data.get('extensions', [])
 
         if interval not in VALID_INTERVALS:
             return jsonify({'error': f'interval must be one of {sorted(VALID_INTERVALS)}'}), 400
@@ -261,7 +263,7 @@ def create_recursive_scan():
         if not is_valid:
             return jsonify({'error': message}), 400
 
-        scan_id, next_run_at = insertRecursiveScan(url, interval, is_deep_scan)
+        scan_id, next_run_at = insertRecursiveScan(url, interval, is_deep_scan, extensions)
 
         # Run the first scan immediately in the background so the user sees results
         # right away without waiting for the scheduler

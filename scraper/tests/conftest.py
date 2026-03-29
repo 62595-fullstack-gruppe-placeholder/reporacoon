@@ -111,6 +111,7 @@ def db_transaction():
                     owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
                     interval scan_interval NOT NULL DEFAULT 'WEEKLY',
                     is_deep_scan BOOLEAN NOT NULL DEFAULT false,
+                    extensions TEXT[] NOT NULL DEFAULT '{}',
                     is_active BOOLEAN NOT NULL DEFAULT true,
                     last_run_at TIMESTAMPTZ,
                     next_run_at TIMESTAMPTZ NOT NULL,

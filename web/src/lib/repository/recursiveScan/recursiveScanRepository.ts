@@ -9,8 +9,8 @@ import {
 export async function createRecursiveScan(input: CreateRecursiveScanDTO): Promise<RecursiveScan> {
   const row = await queryOne<RecursiveScan>(
     `
-    INSERT INTO recursive_scans (repo_url, owner_id, interval, is_deep_scan, next_run_at)
-    VALUES ($1, $2, $3::scan_interval, $4,
+    INSERT INTO recursive_scans (repo_url, owner_id, interval, is_deep_scan, extensions, next_run_at)
+    VALUES ($1, $2, $3::scan_interval, $4, $5,
       CASE $3::scan_interval
         WHEN 'EVERY_MINUTE' THEN NOW() + INTERVAL '1 minute'
         WHEN 'HOURLY'  THEN NOW() + INTERVAL '1 hour'
@@ -21,7 +21,7 @@ export async function createRecursiveScan(input: CreateRecursiveScanDTO): Promis
       END)
     RETURNING *
     `,
-    [input.repo_url, input.owner_id, input.interval, input.is_deep_scan],
+    [input.repo_url, input.owner_id, input.interval, input.is_deep_scan, input.extensions],
   );
 
   if (!row) throw new Error("Failed to create recurring scan");
