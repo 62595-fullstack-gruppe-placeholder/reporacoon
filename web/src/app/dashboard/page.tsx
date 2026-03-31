@@ -3,13 +3,27 @@ import JobsTable from "@/app/_components/JobsTable";
 import { SeeAllJobsButton } from "./SeeAllJobsButton";
 import { getUserScanJobs } from "@/lib/repository/scanJob/scanJobRepository";
 import { getUser } from "@/lib/auth/userFromToken";
+import DashBoard from "./DashBoard";
+import { redirect } from "next/navigation";
+import { getUserSettingsById } from "@/lib/repository/user/userRepository";
+import { getScanSettings } from "../ScanSettingsServerActions";
+
+
+    
 
 // force dynamic rendering for this page
 export const dynamic = "force-dynamic";
-
+    
 export default async function DashboardPage() {
   const user = await getUser();
 
+  if (!user) {
+    return null;
+  }
+  const initialSettings = await getScanSettings()
+  if (!initialSettings) {
+    return null;
+  }
   if (!user) {
     throw new Error("Authentication required");
   }
@@ -37,6 +51,7 @@ export default async function DashboardPage() {
           <JobsTable jobs={recentJobs} />
         </div>
       </div>
+      <DashBoard user={user} settings={initialSettings}/>
     </div>
   );
 }

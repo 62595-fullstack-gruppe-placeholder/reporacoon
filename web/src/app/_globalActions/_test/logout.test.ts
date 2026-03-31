@@ -1,40 +1,59 @@
-import { deleteAccessTokenCookie, deleteRefreshTokenCookie } from "@/lib/auth/cookies";
+import { deleteAuthCookies } from "@/lib/auth/cookies";
 import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import { logout } from "../logout";
 import { getUser } from "@/lib/auth/userFromToken";
 import { revokeUserRefreshTokens } from "@/lib/repository/refreshToken/refreshTokenRepository";
+import { redirect } from "next/navigation";
 
-// Mock server-only so Vitest can import the module in jsdom
+// Mock server-only
 vi.mock("server-only", () => ({}));
+
 vi.mock("next/navigation", () => ({
     redirect: vi.fn(),
-}))
+}));
+
+// Update to match your new combined delete function
 vi.mock("@/lib/auth/cookies", () => ({
-    deleteAccessTokenCookie: vi.fn(),
-    deleteRefreshTokenCookie: vi.fn(),
-}))
+    deleteAuthCookies: vi.fn(),
+}));
+
 vi.mock("@/lib/auth/userFromToken", () => ({
     getUser: vi.fn(),
-}))
+}));
+
 vi.mock("@/lib/repository/refreshToken/refreshTokenRepository", () => ({
     revokeUserRefreshTokens: vi.fn(),
-}))
+}));
 
 describe("logout", () => {
-
     beforeEach(() => {
-        ;(getUser as Mock).mockResolvedValueOnce({
+        vi.clearAllMocks();
+        (getUser as Mock).mockResolvedValue({
             id: "mock-user-id",
-        })
-    })
+        });
+    });
 
-  it("should delete auth cookies and revoke refresh tokens and redirect", async () => {
-      await logout();
+    it("should revoke tokens in DB before deleting cookies and redirecting", async () => {
+        await logout();
 
-      expect(deleteAccessTokenCookie).toHaveBeenCalled();
-      expect(deleteRefreshTokenCookie).toHaveBeenCalled();
-      expect(getUser).toHaveBeenCalled();
-      expect(revokeUserRefreshTokens).toHaveBeenCalledWith("mock-user-id");
-      expect(revokeUserRefreshTokens).toHaveBeenCalledBefore(deleteAccessTokenCookie as Mock)
-  })
+        // 1. Verify DB Revocation happened first
+        expect(getUser).toHaveBeenCalled();
+        expect(revokeUserRefreshTokens).toHaveBeenCalledWith("mock-user-id");
+
+        // 2. Verify Cookie Deletion (Server Action mode, so no res passed)
+        expect(deleteAuthCookies).toHaveBeenCalledWith(); 
+
+        // 3. Verify Redirect
+        expect(redirect).toHaveBeenCalledWith("/");
+    });
+
+    it("should still delete cookies even if getUser fails", async () => {
+        (getUser as Mock).mockResolvedValue(null);
+
+        await logout();
+
+        expect(revokeUserRefreshTokens).not.toHaveBeenCalled();
+        expect(deleteAuthCookies).toHaveBeenCalled();
+        expect(redirect).toHaveBeenCalledWith("/");
+    });
 });

@@ -1,0 +1,68 @@
+"use client";
+
+import { useServerAction } from "@lib/hooks/useServerAction";
+import { updateScanSettings } from "@/app/ScanSettingsServerActions";
+import { IgnoreSettingsButtons } from "@/app/_components/IgnoreSettings";
+import { ScanOptions } from "@/app/_components/ScanOptions";
+import { useState, useEffect, useCallback } from "react";
+import { SubmitButton } from "@/app/_components/SubmitButton";
+import { Settings, settingsSchema } from "@/lib/repository/user/userSchemas";
+import router, { useRouter } from "next/navigation";
+
+
+interface ScanSettingsFormProps {
+  initialSettings: Settings;
+}
+
+export function ScanSettingsForm({ initialSettings }: ScanSettingsFormProps) {
+  const router = useRouter();
+  const { execute, isPending } = useServerAction(updateScanSettings);
+  const [selectedExtensions, setSelectedExtensions] = useState<Set<string>>(
+    new Set(initialSettings.extensions)
+  );
+  const [isDeepScan, setIsDeepScan] = useState(initialSettings.isDeep);
+
+  // Update local state when initialSettings change (from server revalidation)
+  useEffect(() => {
+    setSelectedExtensions(new Set(initialSettings.extensions));
+    setIsDeepScan(initialSettings.isDeep);
+  }, [initialSettings]);
+
+  const handleSave = useCallback(async (formData: FormData) => {
+    // Convert Set back to array for server action
+    const extensionsArray = Array.from(selectedExtensions);
+    formData.set("extensions", extensionsArray.join(","));
+    formData.set("isDeep", isDeepScan.toString());
+    
+    await execute(formData)
+    router.refresh();
+  }, [selectedExtensions, isDeepScan, execute]);
+
+  return (
+    <div className="flex flex-col justify-center items-center gap-8 my-12">
+      <p className="p text-left leading-relaxed pt-4 text-secondary">Please note that these settings will apply per default to all scans. They can be overridden when 
+        doing scans on the dashboard and the front page, but not for recursive scans.
+      </p>
+      <form action={handleSave} className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-125 max-w-125">
+        {/* Extensions selector - unchecked = ignore (scan) */}
+        <IgnoreSettingsButtons
+          extensions={selectedExtensions}
+          onSelectedChange={setSelectedExtensions}
+        />
+
+        {/* Deep scan toggle */}
+        <ScanOptions
+          isDisabled={false}
+          isDeep={isDeepScan}
+          onDeepChange={setIsDeepScan}
+        />
+
+        {/* Save button */}
+        <div className="flex justify-end pt-4 border-t border-secondary/10">
+          <SubmitButton text="Save Settings" loadingText="Saving..." loading={isPending} />
+        </div>
+      </form>
+    </div>
+
+  );
+}

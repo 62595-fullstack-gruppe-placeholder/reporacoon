@@ -1,57 +1,63 @@
-import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
-import { deleteAccessTokenCookie, deleteRefreshTokenCookie, setAccessTokenCookie, setRefreshTokenCookie } from "./lib/auth/cookies";
+import { NextResponse, NextRequest } from "next/server";
+import { setAccessTokenCookie, setRefreshTokenCookie, deleteAuthCookies } from "./lib/auth/cookies";
 import { log, LogLevel } from "@/lib/log";
 import { getUser } from "./lib/auth/userFromToken";
 import { generateRefreshToken, refreshAccessToken } from "./lib/auth/accessToken";
 
-/**
- * Proxy running in front of protected pages. Handles access token verification.
- * @param req incoming request.
- * @returns response.
- */
 export async function proxy(req: NextRequest) {
   try {
-    const forceRefresh = req.nextUrl.searchParams.get("force-token-refresh") === "true"
-
+    const forceRefresh = req.nextUrl.searchParams.get("force-token-refresh") === "true";
     const refreshToken = req.cookies.get("refresh-token")?.value;
 
-    let currentUser = await getUser()
+    let currentUser = await getUser(req);
+
     if (!currentUser || forceRefresh) {
       if (!refreshToken) {
-        await deleteAccessTokenCookie()
-        await deleteRefreshTokenCookie()
-        return NextResponse.redirect(new URL("/login", req.url));
+        const loginRes = NextResponse.redirect(new URL("/login", req.url));
+        await deleteAuthCookies(loginRes);
+        return loginRes;
       }
-      const { accessToken: newAccessToken, user } = await refreshAccessToken(refreshToken);
-      await setAccessTokenCookie(newAccessToken);
-      await setRefreshTokenCookie(await generateRefreshToken(user));
 
+      const { accessToken, user } = await refreshAccessToken(refreshToken);
+      const freshRefreshToken = await generateRefreshToken(user);
+
+      let response: NextResponse;
+      if (forceRefresh) {
+        const cleanUrl = req.nextUrl.clone();
+        cleanUrl.searchParams.delete("force-token-refresh");
+        response = NextResponse.redirect(cleanUrl);
+      } else {
+        const requestHeaders = new Headers(req.headers);
+        requestHeaders.set('cookie', `access-token=${accessToken}; refresh-token=${freshRefreshToken}`);
+        response = NextResponse.next({ request: { headers: requestHeaders } });
+      }
+
+      await setAccessTokenCookie(accessToken, response);
+      await setRefreshTokenCookie(freshRefreshToken, response);
+      
       currentUser = user;
+
+      if (!currentUser.email_confirmed) {
+        const confirmRes = NextResponse.redirect(new URL("/confirm-email/pending", req.url));
+        await setAccessTokenCookie(accessToken, confirmRes);
+        await setRefreshTokenCookie(freshRefreshToken, confirmRes);
+        return confirmRes;
+      }
+
+      return response;
     }
 
     if (!currentUser.email_confirmed) {
-      log("User email not confirmed, redirecting to email confirmation page", LogLevel.debug);
       return NextResponse.redirect(new URL("/confirm-email/pending", req.url));
     }
 
-    if (forceRefresh) {
-      const cleanUrl = req.nextUrl.clone();
-      cleanUrl.searchParams.delete("force-token-refresh");
-      return NextResponse.redirect(cleanUrl);
-    }
-
     return NextResponse.next();
-  }
-  catch {
-    // TODO make error page
+  } catch (error) {
+    log(`Middleware error: ${error}`, LogLevel.error);
     return NextResponse.redirect(new URL("/error", req.url));
   }
 }
 
-/**
- * Specifies that the proxy runs in front of the /dashboard and /subscription paths.
- */
 export const config = {
-  matcher: ["/dashboard/:path*", "/subscription/:path*"],
+  matcher: ["/dashboard/:path*", "/subscription/:path*"]
 };

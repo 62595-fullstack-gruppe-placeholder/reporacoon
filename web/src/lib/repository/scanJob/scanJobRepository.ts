@@ -58,6 +58,26 @@ export async function getScanJobById(id: string): Promise<ScanJob> {
   return scanJobSchema.parse(row);
 }
 
+export async function getScanJobsByRecursiveScanId(
+  recursiveScanId: string,
+): Promise<ScanJobWithFindingsCount[]> {
+  const rows = await query<any>(
+    `
+    SELECT
+      sj.*,
+      COALESCE(COUNT(f.id), 0)::INTEGER as findings_count
+    FROM scan_jobs sj
+    LEFT JOIN scan_findings f ON f.job_id = sj.id
+    WHERE sj.recursive_scan_id = $1
+    GROUP BY sj.id, sj.repo_url, sj.status, sj.owner_id, sj.priority,
+             sj.created_at, sj.duration
+    ORDER BY sj.created_at DESC
+    `,
+    [recursiveScanId],
+  );
+  return rows.map((row) => scanJobWithFindingsCount.parse(row));
+}
+
 export async function getUserScanJobs(
   userId: string,
   limit: number = 100,

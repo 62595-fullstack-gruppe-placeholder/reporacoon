@@ -51,6 +51,7 @@ jobs:
         script: |
           cd /home/${{ secrets.VM_USERNAME }}/reporacoon
           git pull origin main
+          chmod +x cron/*
           docker compose pull
           docker compose up -d --remove-orphans
           docker compose ps

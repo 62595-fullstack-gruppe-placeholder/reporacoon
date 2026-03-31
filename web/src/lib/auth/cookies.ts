@@ -1,41 +1,47 @@
-import { cookies } from "next/headers"
-import "server-only"
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import "server-only";
 
-const ACCESS_TOKEN_COOKIE_NAME = "access-token"
-const REFRESH_TOKEN_COOKIE_NAME = "refresh-token"
+const ACCESS_TOKEN_NAME = "access-token";
+const REFRESH_TOKEN_NAME = "refresh-token";
 
-export async function getAccessTokenCookie() {
-  return (await cookies()).get(ACCESS_TOKEN_COOKIE_NAME);
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+};
+
+// Helper to determine if we use the passed response or the global cookies()
+async function getCookieStore(res?: NextResponse) {
+  return res ? res.cookies : (await cookies());
 }
 
-export async function getRefreshTokenCookie() {
-    return (await cookies()).get(REFRESH_TOKEN_COOKIE_NAME)
+export async function getAccessTokenCookie(req?: NextRequest) {
+  if (req) {
+    return req.cookies.get(ACCESS_TOKEN_NAME);
+  }
+  return (await cookies()).get(ACCESS_TOKEN_NAME);
 }
 
-export async function setAccessTokenCookie(accessToken: string) {
-    (await cookies()).set(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
-        expires: new Date(Date.now() + ((15 * 60) * 1000)),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-    })
+export async function setAccessTokenCookie(token: string, res?: NextResponse) {
+  const store = await getCookieStore(res);
+  store.set(ACCESS_TOKEN_NAME, token, {
+    ...COOKIE_OPTIONS,
+    maxAge: 15 * 60,
+  });
 }
 
-export async function setRefreshTokenCookie(refreshToken: string) {
-    (await cookies()).set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-        expires: new Date(Date.now() + ((60 * 60 * 24 * 30) * 1000)),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-    })
+export async function setRefreshTokenCookie(token: string, res?: NextResponse) {
+  const store = await getCookieStore(res);
+  store.set(REFRESH_TOKEN_NAME, token, {
+    ...COOKIE_OPTIONS,
+    maxAge: 60 * 60 * 24 * 30,
+  });
 }
 
-export async function deleteAccessTokenCookie() {
-    (await cookies()).delete(ACCESS_TOKEN_COOKIE_NAME)
-}
-
-export async function deleteRefreshTokenCookie() {
-    (await cookies()).delete(REFRESH_TOKEN_COOKIE_NAME)
+export async function deleteAuthCookies(res?: NextResponse) {
+  const store = await getCookieStore(res);
+  store.delete(ACCESS_TOKEN_NAME);
+  store.delete(REFRESH_TOKEN_NAME);
 }

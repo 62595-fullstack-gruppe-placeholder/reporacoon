@@ -1,20 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import URLForm from "./_components/URLForm";
-import ScanResults from "./_components/ScanResults";
-import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
-import { ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
-import { ScanOptions } from "./_components/ScanOptions";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import URLForm from './_components/URLForm';
+import ScanResults from './_components/ScanResults';
+import { ScanFinding } from '@/lib/repository/scanFinding/scanFindingSchema';
+import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
+import { ScanOptions } from './_components/ScanOptions';
+import { IgnoreSettingsButtons } from './_components/IgnoreSettings';
+import { extensionsUtil } from '@/lib/utils';
+
 
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
   const [isScanning, setIsScanning] = useState(false);
 
+  const extensions = extensionsUtil;
+  const [selected, setSelected] = useState(extensions);
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   // Puts the scanjob and scanjob findings in local storage. 
   // If the scanjobs are older than a day, they would get deleted
   useEffect(() => {
+    fetch('/api/auth/me') 
+      .then((res) => {
+        if (res.ok) setIsAuthenticated(true);
+      })
+      .catch(() => setIsAuthenticated(false));
+
     const savedResults = localStorage.getItem('raccoon_scanjob_history');
     if (savedResults) {
       try {
@@ -87,8 +102,13 @@ export default function Home() {
           weaknesses.
         </p>
 
-        <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} />
-        <ScanOptions isDisabled={true} />
+        <div className="field flex items-center gap-2">
+          <Image src="/searchIcon.svg" alt="" width={20} height={20} />
+
+          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} extensions={selected}/>
+        </div>
+        <ScanOptions isDisabled={true} isDeep={false} />
+        <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={extensions}/>
       </div>
 
       {/* Dashboard appears with fade and slide down animation */}
@@ -118,26 +138,35 @@ export default function Home() {
           </button>
         )}
       </div>
-      <div className="inline-flex justify-start items-start gap-40">
-        <div className="box w-80 h-72">
-          <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
-            Why?
-          </h1>
-          <p className="p self-stretch px-4 pt-2">
-            Have you ever lost 1000's of dollars because a junior developer
-            pushed an API key? Our goal is to prevent scenarios like this, with
-            security overviews and weekly reviews.
-          </p>
-        </div>
+      <div className='inline-flex justify-start items-start gap-40'>
+        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-20 w-full max-w-4xl px-4">
+          <div className="box !bg-background/40 backdrop-blur-md border border-secondary/10 overflow-hidden shadow-xl p-8 flex-1 min-h-[300px] transition-all hover:border-white/20">
+            <div className="flex items-center gap-4 mb-6">
+              <div>
+                <h2 className="text-3xl font-black text-text-main">Why?</h2>
+              </div>
+            </div>
 
-        <div className="box w-80 h-72">
-          <h1 className="h1 border-b border-secondary flex justify-center items-center gap-2.5 p-2.5">
-            How?
-          </h1>
-          <p className="p self-stretch px-4 pt-2">
-            Using a proprietary indexing technology, Repo Raccoon searches your
-            repository for any vulnerabilites, like API keys or other secrets.
-          </p>
+            <p className="p text-left leading-relaxed border-t border-secondary/10 pt-4 text-secondary">
+              Have you ever lost 1000's of dollars because a junior
+              developer pushed an API key? Our goal is to prevent scenarios like this
+              with automated security overviews and weekly reviews.
+            </p>
+          </div>
+
+          <div className="box !bg-background/40 backdrop-blur-md border border-secondary/10 overflow-hidden shadow-xl p-8 flex-1 min-h-[300px] transition-all hover:border-white/20">
+            <div className="flex items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-3xl font-black text-text-main">How?</h1>
+              </div>
+            </div>
+
+            <p className="p text-left leading-relaxed border-t border-secondary/10 pt-4 text-secondary">
+              Using proprietary indexing technology,
+              Repo Raccoon sniffs through your repository history to identify
+              vulnerabilities like hardcoded API keys, database credentials, or hidden secrets.
+            </p>
+          </div>
         </div>
       </div>
     </div>

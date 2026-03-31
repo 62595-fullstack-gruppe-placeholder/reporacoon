@@ -5,6 +5,8 @@ import {
   CreateUserDTO,
   createUserDTOSchema,
   CredentialsDTO,
+  Settings,
+  settingsSchema,
   User,
   userSchema,
 } from "./userSchemas";
@@ -25,6 +27,31 @@ export async function getUserById(id: string): Promise<User | null> {
   if (!row) return null;
 
   return userSchema.parse(row);
+}
+
+/**
+ * Get user settings by id, returns validated {@link Settings} or null. Since we are using JSONB in the database, its a little funky 
+ */
+export async function getUserSettingsById(id: string): Promise<Settings | null> {
+  const row = await queryOne<{
+    user_settings: unknown; // Raw DB column
+  }>(
+    `SELECT user_settings FROM users WHERE id = $1`,
+    [id],
+  );
+
+  if (!row || row.user_settings == null) return null;
+  
+  return settingsSchema.parse(row.user_settings); 
+}
+
+/**
+ * updates the users settings. Includes both file extensions and scan type (deep/shallow)
+ */
+export async function setUserSettingsById(settings: Settings, userId: string): Promise<void> {
+  await queryOne(`UPDATE users SET user_settings = $1 WHERE id = $2`, [
+    settings, userId,
+  ]);
 }
 
 /**

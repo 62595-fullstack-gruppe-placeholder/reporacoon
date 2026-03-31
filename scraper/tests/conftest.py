@@ -7,6 +7,13 @@ from unittest.mock import patch, MagicMock
 import psycopg2.extras
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from api import app
+
+@pytest.fixture
+def client():
+    app.config["TESTING"] = True
+    with app.test_client() as c:
+        yield c
 
 import repository
 
@@ -91,12 +98,33 @@ def db_transaction():
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                     email VARCHAR(255) NOT NULL UNIQUE, password_hash TEXT NOT NULL
                 );
+                DO $$
+                BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'scan_interval') THEN
+                    CREATE TYPE scan_interval AS ENUM ('EVERY_MINUTE', 'HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
+                END IF;
+                END$$;
+
+                CREATE TABLE IF NOT EXISTS recursive_scans (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    repo_url TEXT NOT NULL,
+                    owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                    interval scan_interval NOT NULL DEFAULT 'WEEKLY',
+                    is_deep_scan BOOLEAN NOT NULL DEFAULT false,
+                    extensions TEXT[] NOT NULL DEFAULT '{}',
+                    is_active BOOLEAN NOT NULL DEFAULT true,
+                    last_run_at TIMESTAMPTZ,
+                    next_run_at TIMESTAMPTZ NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+
                 CREATE TABLE IF NOT EXISTS scan_jobs (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                     repo_url TEXT NOT NULL, status Status NOT NULL DEFAULT 'PENDING',
                     owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
                     priority INTEGER NOT NULL DEFAULT 1 CHECK (priority BETWEEN 1 AND 5),
-                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), duration INTEGER
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), duration INTEGER,
+                    recursive_scan_id UUID REFERENCES recursive_scans(id) ON DELETE SET NULL
                 );
                 CREATE TABLE IF NOT EXISTS scan_findings (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

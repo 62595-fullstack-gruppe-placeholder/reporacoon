@@ -11,7 +11,7 @@ const legalSections = [
   },
   {
     title: "Privacy Policy",
-    icon: <Lock className="text-white" size={24} />,
+    icon: <Lock className="text-text-main" size={24} />, // Updated to use theme variable
     content: "We process repository data in ephemeral environments. We do not store your source code. We only retain metadata (finding types, file paths, and line numbers) required to generate your security reports."
   },
   {
@@ -42,10 +42,10 @@ export default function LegalPage() {
         {legalSections.map((section, i) => (
           <div 
             key={i} 
-            className="box border border-secondary/10 overflow-hidden shadow-xl bg-background/40 transition-all hover:border-white/20"
+            className="box border border-secondary/10 overflow-hidden shadow-xl transition-all hover:border-text-main/20"
           >
             <div 
-              className="flex items-center justify-between p-6 cursor-pointer hover:bg-white/5"
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-text-main/5 transition-colors"
               onClick={() => setOpenIndex(openIndex === i ? null : i)}
             >
               <div className="flex items-center gap-4">

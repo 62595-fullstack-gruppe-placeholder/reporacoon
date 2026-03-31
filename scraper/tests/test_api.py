@@ -5,14 +5,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from unittest.mock import patch, MagicMock
-from api import app
-
-@pytest.fixture
-def client():
-    app.config['TESTING'] = True
-    app.config['DATABASE_URL'] = None
-    with app.test_client() as client:
-        yield client
 
 # =========================================
 #             Endpoint tests
@@ -56,7 +48,23 @@ def test_scan_endpoint(client):
     mock_pending_jobs = {
         '123': 'https://github.com/62595-fullstack-gruppe-placeholder/testrepo'
     }
-    
+    # Tuple for the json, should be a set but that doesnt work
+    extensions = ('.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php',
+        '.html', '.htm', '.xml', '.json', '.yml', '.yaml', '.toml', '.ini',
+        '.cfg', '.conf', '.config', '.env', '.sh', '.bash', '.zsh', '.fish',
+        '.ps1', '.bat', '.cmd', '.txt', '.rst', '.tex', '.csv',
+        '.sql', '.css', '.scss', '.sass', '.less', '.vue', '.svelte',
+        '.swift', '.kt', '.kts', '.rs', '.scala', '.clj', '.elm',
+        '.ex', '.exs', '.erl', '.hrl', '.hs', '.lhs', '.lua', '.pl',
+        '.pm', '.r', '.R', '.dart', '.fs', '.fsx', '.fsi', '.fsscript',
+        '.dockerfile', 'Dockerfile', '.gitignore', '.gitattributes',
+        '.npmrc', '.yarnrc', '.piprc', '.pypirc', '.gemrc', '.bowerrc',
+        '.eslintrc', '.prettierrc', '.babelrc', '.editorconfig',
+        'Makefile', 'CMakeLists.txt', 'build.gradle', 'pom.xml',
+        'package.json', 'package-lock.json', 'yarn.lock', 'Gemfile',
+        'Podfile', 'Cargo.toml', 'go.mod', 'requirements.txt',
+        'Pipfile', 'Pipfile.lock', 'environment.yml', 'setup.py')
+
     # Test 1: Valid pending jobs
 
     # This mocks all database calls and other necessary functions
@@ -77,7 +85,7 @@ def test_scan_endpoint(client):
         mock_scanner_instance.run.return_value = None    
         mock_scanner.return_value = mock_scanner_instance
         
-        response = client.post('/scan', json={"isDeepScan": False})
+        response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         print(f"Status: {response.status_code}")
         print(f"JSON: {response.json}")
         assert response.status_code == 202
@@ -87,7 +95,7 @@ def test_scan_endpoint(client):
 
         mock_get_jobs.return_value = {}
         
-        response = client.post('/scan', json={"isDeepScan": False})
+        response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         assert response.status_code == 200
         assert response.json['success'] is False
     
@@ -95,8 +103,141 @@ def test_scan_endpoint(client):
         mock_get_jobs.return_value = mock_pending_jobs
         mock_validate.return_value = (False, 'Bad URL', None)
         
-        response = client.post('/scan', json={"isDeepScan": False})
+        response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         assert response.status_code == 400
         assert 'error' in response.json
 
- 
+
+# =========================================
+#        Recursive scan endpoint tests
+# =========================================
+
+
+
+
+
+FAKE_SCAN_ID = "11111111-1111-1111-1111-111111111111"
+# Pytest fixture that provides a realistic recurring scan record for use in tests,
+# with a fixed ID, GitHub URL, HOURLY interval, and UTC timestamps.
+@pytest.fixture
+def fake_scan():
+    from datetime import datetime, timezone
+    return {
+        "id": FAKE_SCAN_ID,
+        "repo_url": "https://github.com/someuser/somerepo",
+        "interval": "HOURLY",
+        "is_deep_scan": False,
+        "is_active": True,
+        "last_run_at": None,
+        "next_run_at": datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+        "created_at": datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    }
+
+
+# Verifies that POST /recursive-scan with valid url, interval, and isDeepScan
+# returns 201 and a response body confirming success and the correct interval.
+# The background thread is mocked so no actual scan runs.
+
+def test_create_recursive_scan_success(client, fake_scan):
+    with patch('api.insertRecursiveScan', return_value=(FAKE_SCAN_ID, fake_scan["next_run_at"])), \
+         patch('api.threading.Thread') as mock_thread:
+        mock_thread.return_value.start = lambda: None
+        response = client.post('/recursive-scan', json={
+            "url": "https://github.com/someuser/somerepo",
+            "interval": "HOURLY",
+            "isDeepScan": False,
+        })
+    assert response.status_code == 201
+    assert response.json['success'] is True
+    assert response.json['interval'] == 'HOURLY'
+
+
+
+# Verifies that POST /recursive-scan returns 400 when required fields are missing:
+#    Missing interval (only url provided)
+#    Missing url (only interval provided)
+
+def test_create_recursive_scan_missing_fields(client):
+    response = client.post('/recursive-scan', json={"url": "https://github.com/someuser/somerepo"})
+    assert response.status_code == 400
+
+    response = client.post('/recursive-scan', json={"interval": "HOURLY"})
+    assert response.status_code == 400
+
+
+
+# Verifies that POST /recursive-scan returns 400 when the interval value is not
+# one of the accepted options (fx "FORTNIGHTLY" is not a valid interval).
+def test_create_recursive_scan_invalid_interval(client):
+    response = client.post('/recursive-scan', json={
+        "url": "https://github.com/someuser/somerepo",
+        "interval": "FORTNIGHTLY",
+    })
+    assert response.status_code == 400
+
+
+
+# Verifies that POST /recursive-scan returns 400 when the provided URL
+# is not a valid GitHub repository URL.
+def test_create_recursive_scan_invalid_url(client):
+    response = client.post('/recursive-scan', json={
+        "url": "not-a-github-url.com",
+        "interval": "DAILY",
+    })
+    assert response.status_code == 400
+
+
+
+
+
+# Verifies that GET /recursive-scan returns a 200 with a JSON array of scans,
+# and that each entry contains the expected fields (fx interval).
+def test_list_recursive_scans(client, fake_scan):
+    with patch('api.getAllRecursiveScans', return_value=[dict(fake_scan)]):
+        response = client.get('/recursive-scan')
+    assert response.status_code == 200
+    assert isinstance(response.json, list)
+    assert response.json[0]['interval'] == 'HOURLY'
+
+
+
+
+# Verifies that DELETE /recursive-scan/<id> returns 200 with success=True
+# when the scan exists and is successfully deleted.
+def test_delete_recursive_scan_found(client):
+    with patch('api.deleteRecursiveScan', return_value=True):
+        response = client.delete(f'/recursive-scan/{FAKE_SCAN_ID}')
+    assert response.status_code == 200
+    assert response.json['success'] is True
+
+
+
+
+# Verifies that DELETE /recursive-scan/<id> returns 404 when no scan
+# with the given ID exists.
+def test_delete_recursive_scan_not_found(client):
+    with patch('api.deleteRecursiveScan', return_value=False):
+        response = client.delete(f'/recursive-scan/{FAKE_SCAN_ID}')
+    assert response.status_code == 404
+
+
+
+
+# Verifies that PATCH /recursive-scan/<id>/toggle returns 200 with is_active=True
+# when the scan exists and is successfully toggled.
+def test_toggle_recursive_scan_active(client):
+    with patch('api.toggleRecursiveScan', return_value=True):
+        response = client.patch(f'/recursive-scan/{FAKE_SCAN_ID}/toggle')
+    assert response.status_code == 200
+    assert response.json['is_active'] is True
+
+
+
+
+
+# Verifies that PATCH /recursive-scan/<id>/toggle returns 404 when the scan
+# does not exist (toggle returns None).
+def test_toggle_recursive_scan_not_found(client):
+    with patch('api.toggleRecursiveScan', return_value=None):
+        response = client.patch(f'/recursive-scan/{FAKE_SCAN_ID}/toggle')
+    assert response.status_code == 404

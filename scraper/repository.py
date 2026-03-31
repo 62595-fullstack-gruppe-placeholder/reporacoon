@@ -109,3 +109,151 @@ def insertDurationInScanJobs(duration, id):
     finally:
         if conn:
             conn.close()
+
+def insertScanJob(repo_url, owner_id=None, priority=1, recursive_scan_id=None):
+    """Create a new scan job and return its id."""
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO scan_jobs (repo_url, owner_id, priority, recursive_scan_id) VALUES (%s, %s, %s, %s) RETURNING id",
+                (repo_url, owner_id, priority, recursive_scan_id),
+            )
+            job_id = cur.fetchone()[0]
+            conn.commit()
+            return job_id
+    finally:
+        if conn:
+            conn.close()
+
+# ---- Recursive scan repository functions ----
+
+def insertRecursiveScan(repo_url, interval, is_deep_scan=False, extensions=[], owner_id=None):
+    # next_run_at is calculated in SQL so it stays consistent with the DB clock.
+    # The interval is passed twice because CASE requires the expression to be
+    # evaluated independently from the column value being inserted.
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO recursive_scans (repo_url, owner_id, interval, is_deep_scan, extensions, next_run_at)
+                VALUES (%s, %s, %s::scan_interval, %s, %s,
+                    CASE %s::scan_interval
+                        WHEN 'EVERY_MINUTE' THEN NOW() + INTERVAL '1 minute'
+                        WHEN 'HOURLY'  THEN NOW() + INTERVAL '1 hour'
+                        WHEN 'DAILY'   THEN NOW() + INTERVAL '1 day'
+                        WHEN 'WEEKLY'  THEN NOW() + INTERVAL '7 days'
+                        WHEN 'MONTHLY' THEN NOW() + INTERVAL '1 month'
+                        WHEN 'YEARLY'  THEN NOW() + INTERVAL '1 year'
+                    END)
+                RETURNING id, next_run_at
+                """,
+                (repo_url, owner_id, interval, is_deep_scan, extensions, interval),
+            )
+            row = cur.fetchone()
+            conn.commit()
+            return row[0], row[1]
+    finally:
+        if conn:
+            conn.close()
+
+def getAllRecursiveScans():
+    # Returns all schedules regardless of owner — used by the scraper internally.
+    # The web app enforces ownership at the server-action layer.
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, repo_url, interval, is_deep_scan, extensions, is_active, last_run_at, next_run_at, created_at "
+                "FROM recursive_scans ORDER BY created_at DESC"
+            )
+            rows = cur.fetchall()
+            keys = ["id", "repo_url", "interval", "is_deep_scan", "extensions", "is_active", "last_run_at", "next_run_at", "created_at"]
+            return [dict(zip(keys, r)) for r in rows]
+    finally:
+        if conn:
+            conn.close()
+
+def getDueRecursiveScans():
+    # Called by the scheduler loop every 60 seconds.
+    # Only returns active scans — paused scans (is_active = false) are skipped.
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, repo_url, interval, is_deep_scan, extensions "
+                "FROM recursive_scans WHERE is_active = true AND next_run_at <= NOW()"
+            )
+            rows = cur.fetchall()
+            keys = ["id", "repo_url", "interval", "is_deep_scan", "extensions"]
+            return [dict(zip(keys, r)) for r in rows]
+    finally:
+        if conn:
+            conn.close()
+
+def updateRecursiveScanAfterRun(id):
+    # Called at the end of every successful scan run.
+    # Advances next_run_at relative to NOW() (not the previous next_run_at) so
+    # a delayed run doesn't cause the next run to fire immediately.
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE recursive_scans
+                SET last_run_at = NOW(),
+                    next_run_at = CASE interval
+                        WHEN 'EVERY_MINUTE' THEN NOW() + INTERVAL '1 minute'
+                        WHEN 'HOURLY'  THEN NOW() + INTERVAL '1 hour'
+                        WHEN 'DAILY'   THEN NOW() + INTERVAL '1 day'
+                        WHEN 'WEEKLY'  THEN NOW() + INTERVAL '7 days'
+                        WHEN 'MONTHLY' THEN NOW() + INTERVAL '1 month'
+                        WHEN 'YEARLY'  THEN NOW() + INTERVAL '1 year'
+                    END
+                WHERE id = %s
+                """,
+                (id,),
+            )
+            conn.commit()
+    finally:
+        if conn:
+            conn.close()
+
+def toggleRecursiveScan(id):
+    # Flips is_active atomically in a single UPDATE … RETURNING so the caller
+    # gets the new value without needing a separate SELECT.
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE recursive_scans SET is_active = NOT is_active WHERE id = %s RETURNING is_active",
+                (id,),
+            )
+            row = cur.fetchone()
+            conn.commit()
+            return row[0] if row else None
+    finally:
+        if conn:
+            conn.close()
+
+def deleteRecursiveScan(id):
+    # Deletes the schedule row. Linked scan_jobs rows are kept — their
+    # recursive_scan_id is set to NULL via ON DELETE SET NULL so history is preserved.
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM recursive_scans WHERE id = %s", (id,))
+            deleted = cur.rowcount
+            conn.commit()
+            return deleted
+    finally:
+        if conn:
+            conn.close()
