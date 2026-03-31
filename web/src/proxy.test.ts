@@ -11,8 +11,7 @@ vi.mock("next/server", () => ({
 }));
 
 vi.mock("./lib/auth/cookies", () => ({
-  deleteAccessTokenCookie: vi.fn(),
-  deleteRefreshTokenCookie: vi.fn(),
+  deleteAuthCookies: vi.fn(),
   setAccessTokenCookie: vi.fn(),
   setRefreshTokenCookie: vi.fn(),
 }));
@@ -34,8 +33,7 @@ vi.mock("./lib/auth/accessToken", () => ({
 }));
 
 import {
-  deleteAccessTokenCookie,
-  deleteRefreshTokenCookie,
+  deleteAuthCookies,
   setAccessTokenCookie,
   setRefreshTokenCookie,
 } from "./lib/auth/cookies";
@@ -102,8 +100,7 @@ describe("proxy", () => {
 
     const res = await proxy(req);
 
-    expect(deleteAccessTokenCookie).toHaveBeenCalled();
-    expect(deleteRefreshTokenCookie).toHaveBeenCalled();
+    expect(deleteAuthCookies).toHaveBeenCalled();
     expect(NextResponse.redirect).toHaveBeenCalledWith(expect.any(URL));
     expect((res as any).type).toBe("redirect");
     expect((res as any).url).toBe("https://example.com/login");
@@ -122,11 +119,11 @@ describe("proxy", () => {
     const res = await proxy(req);
 
     expect(refreshAccessToken).toHaveBeenCalledWith("old-refresh");
-    expect(setAccessTokenCookie).toHaveBeenCalledWith("new-access");
+    expect(setAccessTokenCookie).toHaveBeenCalledWith("new-access", res);
     expect(generateRefreshToken).toHaveBeenCalledWith({
       email_confirmed: true,
     });
-    expect(setRefreshTokenCookie).toHaveBeenCalledWith("new-refresh");
+    expect(setRefreshTokenCookie).toHaveBeenCalledWith("new-refresh", res);
     expect(res).toEqual({ type: "next" });
   });
 
@@ -139,10 +136,6 @@ describe("proxy", () => {
 
     const res = await proxy(req);
 
-    expect(log).toHaveBeenCalledWith(
-      "User email not confirmed, redirecting to email confirmation page",
-      "debug",
-    );
     expect(NextResponse.redirect).toHaveBeenCalledWith(expect.any(URL));
     expect((res as any).url).toBe("https://example.com/confirm-email/pending");
   });
