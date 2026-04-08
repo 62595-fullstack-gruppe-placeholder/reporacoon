@@ -9,13 +9,20 @@ import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
 import { ScanOptions } from './_components/ScanOptions';
 import { IgnoreSettingsButtons } from './_components/IgnoreSettings';
 import { extensionsUtil } from '@/lib/utils';
+import { Settings } from '@/lib/repository/user/userSchemas';
+import { getScanSettings } from './ScanSettingsServerActions';
+
+
+
+
 
 
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-
+  const [isDeepScan, setIsDeepScan] = useState(false);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const extensions = extensionsUtil;
   const [selected, setSelected] = useState(extensions);
 
@@ -29,6 +36,17 @@ export default function Home() {
         if (res.ok) setIsAuthenticated(true);
       })
       .catch(() => setIsAuthenticated(false));
+
+    async function loadSettings() {
+      try {
+        const data = await getScanSettings();
+        setSettings(data);
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+      }
+    }
+    loadSettings();
+    setIsDeepScan(settings?.isDeep ?? false)
 
     const savedResults = localStorage.getItem('raccoon_scanjob_history');
     if (savedResults) {
@@ -102,8 +120,8 @@ export default function Home() {
           weaknesses.
         </p>
 
-        <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} extensions={selected} isRepoKey={false}/>
-        <ScanOptions isDisabled={true} isDeep={false} />
+        <URLForm onScanStarted={handleScanSuccess} hasUser={isAuthenticated} isDeepScan={false} extensions={selected}/>'
+        <ScanOptions isDisabled={settings?.isDeep ?? true} isDeep={isDeepScan} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />'
         <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={extensions}/>
       </div>
 

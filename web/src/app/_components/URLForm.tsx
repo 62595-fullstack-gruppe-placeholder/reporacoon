@@ -20,12 +20,12 @@ export type URLFormSchema = z.infer<typeof urlFormSchema>;
 
 interface URLFormProps {
   onScanStarted: (finding: ScanFinding[], jobs: ScanJob[]) => void;
+  hasUser: boolean;
   isDeepScan: boolean;
   extensions: Set<string>;
-  isRepoKey: boolean;
 }
 
-export default function URLForm({ onScanStarted, isDeepScan, extensions, isRepoKey }: URLFormProps) {
+export default function URLForm({ onScanStarted, hasUser, isDeepScan, extensions }: URLFormProps) {
   const { execute, isPending } = useScanAction();
 
   const form = useForm<URLFormSchema>({
@@ -40,16 +40,16 @@ export default function URLForm({ onScanStarted, isDeepScan, extensions, isRepoK
   const repoType = form.watch("repoType");
 
   useEffect(() => {
-    if (!isRepoKey && repoType === "private") {
+    if (!hasUser && repoType === "private") {
       form.setValue("repoType", "public");
     }
-  }, [isRepoKey, repoType, form]);
+  }, [hasUser, repoType, form]);
 
   const onSubmit = form.handleSubmit(async (data) => {
     const input = {
       url: data.url,
       repo_url: data.url,
-      token: (isRepoKey && data.repoType === "private") ? data.repoKey : null,
+      token: (hasUser && data.repoType === "private") ? data.repoKey : null,
       owner_id: null,
       priority: 1,
       isDeepScan,
@@ -77,10 +77,10 @@ export default function URLForm({ onScanStarted, isDeepScan, extensions, isRepoK
                 key={type}
                 type="button"
                 onClick={() => {
-                  if (type === "private" && !isRepoKey) return;
+                  if (type === "private" && !hasUser) return;
                   form.setValue("repoType", type);
                 }}
-                disabled={type === "private" && !isRepoKey}
+                disabled={type === "private" && !hasUser}
                 className={`
                   px-4 py-1.5 text-xs font-mono capitalize transition-all outline-none border-r border-border last:border-r-0
                   ${repoType === type
@@ -133,7 +133,7 @@ export default function URLForm({ onScanStarted, isDeepScan, extensions, isRepoK
         )}
 
         {/* Private repo key input */}
-        {isRepoKey && repoType === "private" && (
+        {hasUser && repoType === "private" && (
           <div className="relative w-full mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none pb-[26px]">
               <Lock width={15} height={15} className="text-secondary" strokeWidth={2} />

@@ -32,8 +32,8 @@ export default function Dashboard({ user, settings }: { user: any, settings: Set
                 This is a secret page that requires authentication.
                 <p>{JSON.stringify(user)}</p>
 
-                <URLForm onScanStarted={handleScanSuccess} isDeepScan={isDeepScan} extensions={selected} isRepoKey={true} />
-                <ScanOptions isDisabled={false} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
+                <URLForm onScanStarted={handleScanSuccess} hasUser={user} isDeepScan={isDeepScan} extensions={selected} />
+                <ScanOptions isDisabled={user} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
                 <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={selected}/>
                     
 
