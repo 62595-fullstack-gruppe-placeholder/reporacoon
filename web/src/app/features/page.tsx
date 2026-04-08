@@ -7,7 +7,7 @@ import Link from 'next/link';
 const features = [
   {
     title: "Secret Detection",
-    description: "Our raccoon sniffs out hardcoded API keys, database credentials, and SSH keys before hackers do.",
+    description: "Our racoon sniffs out hardcoded API keys, database credentials, and SSH keys before hackers do.",
     icon: <ShieldCheck className="text-button-main" size={24} />,
     mono: "Protection"
   },

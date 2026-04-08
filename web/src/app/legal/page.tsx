@@ -7,7 +7,7 @@ const legalSections = [
   {
     title: "Terms of Service",
     icon: <Scale className="text-button-main" size={24} />,
-    content: "By using Repo Raccoon, you agree to allow our 'raccoon' to index and analyze the repositories you provide. You are responsible for the code you scan and ensure you have the rights to perform security analysis on said repositories."
+    content: "By using Repo Racoon, you agree to allow our 'racoon' to index and analyze the repositories you provide. You are responsible for the code you scan and ensure you have the rights to perform security analysis on said repositories."
   },
   {
     title: "Privacy Policy",
@@ -17,7 +17,7 @@ const legalSections = [
   {
     title: "Responsible Disclosure",
     icon: <ShieldAlert className="text-orange-400" size={24} />,
-    content: "Repo Raccoon is a defensive tool. Using this tool to identify vulnerabilities in third-party systems without explicit permission is strictly prohibited. Play nice, protect the ecosystem."
+    content: "Repo Racoon is a defensive tool. Using this tool to identify vulnerabilities in third-party systems without explicit permission is strictly prohibited. Play nice, protect the ecosystem."
   },
   {
     title: "Cookie Policy",
@@ -77,7 +77,7 @@ export default function LegalPage() {
 
       <p className="p text-xs mt-8">
         Last updated: March 16, 2026. For specific legal inquiries, contact 
-        <span className="text-button-main ml-1 font-bold">legal@reporaccoon.com</span>
+        <span className="text-button-main ml-1 font-bold">legal@reporacoon.com</span>
       </p>
     </div>
   );
