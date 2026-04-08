@@ -29,12 +29,8 @@ export default function Dashboard({ user, settings }: { user: any, settings: Set
     return (
         <div className="flex flex-col justify-center items-center gap-8">
             <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
-                This is a secret page that requires authentication.
-                <p>{JSON.stringify(user)}</p>
-
-                <div className="field flex items-center gap-2">
-                    <Image src="/searchIcon.svg" alt="" width={20} height={20} />
-
+                <p>Scan repositories, manage recurring jobs and view old jobs</p>
+                <div className="field flex items-center gap-2 w-full">
                     <URLForm onScanStarted={handleScanSuccess} isDeepScan={isDeepScan} extensions={selected} />
                 </div>
                 <ScanOptions isDisabled={false} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
