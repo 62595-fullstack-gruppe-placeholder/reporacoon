@@ -102,9 +102,7 @@ export default function Home() {
           weaknesses.
         </p>
 
-        <div className="field flex items-center gap-2">
-          <Image src="/searchIcon.svg" alt="" width={20} height={20} />
-
+        <div className="field flex items-center gap-2 w-full">
           <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} extensions={selected}/>
         </div>
         <ScanOptions isDisabled={true} isDeep={false} />
