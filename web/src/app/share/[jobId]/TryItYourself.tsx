@@ -46,6 +46,7 @@ export function TryItYourself({
             // Just uses all extensions
             extensions={extensionsUtil}
             isDeepScan={false}
+            isRepoKey={false}
           />
         </div>
 

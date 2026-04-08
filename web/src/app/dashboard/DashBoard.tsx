@@ -32,11 +32,7 @@ export default function Dashboard({ user, settings }: { user: any, settings: Set
                 This is a secret page that requires authentication.
                 <p>{JSON.stringify(user)}</p>
 
-                <div className="field flex items-center gap-2">
-                    <Image src="/searchIcon.svg" alt="" width={20} height={20} />
-
-                    <URLForm onScanStarted={handleScanSuccess} isDeepScan={isDeepScan} extensions={selected} />
-                </div>
+                <URLForm onScanStarted={handleScanSuccess} isDeepScan={isDeepScan} extensions={selected} isRepoKey={true} />
                 <ScanOptions isDisabled={false} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
                 <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={selected}/>
                     
