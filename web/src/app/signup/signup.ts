@@ -8,6 +8,7 @@ import {
   SignupFormSchema,
 } from "@/lib/repository/user/userSchemas";
 import { sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
+import { toast } from "sonner";
 
 /**
  * Input to signup server action.
@@ -22,26 +23,32 @@ export type SignupInput = Omit<SignupFormSchema, "confirmPassword">;
  */
 export async function signup(input: SignupInput) {
   try {
-      const user = await createUser(
+    const user = await createUser(
       createUserDTOSchema.parse({
         email: input.email,
-        password: input.password,}),
-      );
+        password: input.password,
+      }),
+    );
 
-      // debug logs for email sending
-      console.log("Sending confirmation email to:", user.email);
-      await sendConfirmationEmail(user.id, user.email);
-      console.log("Email sent successfully");
+    // debug logs for email sending
+    console.log("Sending confirmation email to:", user.email);
+    const confirmURL = await sendConfirmationEmail(user.id, user.email);
+    console.log("Email sent successfully");
 
-      await setAccessTokenCookie(await generateAccessToken(user));
-      await setRefreshTokenCookie(await generateRefreshToken(user));
-      return { success: true as const, error: undefined};
-  }
+    await setAccessTokenCookie(await generateAccessToken(user));
+    await setRefreshTokenCookie(await generateRefreshToken(user));
+    return {
+      success: true as const,
+      msg: `Account created! Confirm your email: `,
+      link: confirmURL,
+    error: undefined,
+      };
+}
   catch (error: any) {
-    // Add any other relevant error cases here
-    if (error.message?.includes("already exists")) {
-      return { success: false as const, error: "That email is already taken." };
-    }
-    return { success: false as const,  error: "An unexpected error occurred." };
+  // Add any other relevant error cases here
+  if (error.message?.includes("already exists")) {
+    return { success: false as const, error: "That email is already taken." };
   }
+  return { success: false as const, error: "An unexpected error occurred." };
+}
 }

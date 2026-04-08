@@ -8,6 +8,7 @@ import {
 } from "@/lib/repository/emailConfirmations/emailConfirmationRepository";
 import { getUserById, markUserEmailConfirmed } from "@/lib/repository/user/userRepository";
 import { User } from "@/lib/repository/user/userSchemas";
+import { toast } from "sonner";
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -17,7 +18,7 @@ function hashToken(token: string): string {
 export async function sendConfirmationEmail(
   userId: string,
   userEmail: string
-): Promise<void> {
+): Promise<String> {
   const rawToken = crypto.randomBytes(32).toString("hex");
   const tokenHash = hashToken(rawToken);
   //set for 24 hours for now
@@ -37,6 +38,7 @@ export async function sendConfirmationEmail(
       <p>This link expires in 24 hours.</p>
     `,
   });
+  return confirmUrl;
 }
 
 
