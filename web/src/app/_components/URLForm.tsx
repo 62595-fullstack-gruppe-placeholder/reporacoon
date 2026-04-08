@@ -14,6 +14,7 @@ import { Search } from "lucide-react";
  */
 export const urlFormSchema = z.object({
   url: z.url("Invalid url"),
+  repoKey: z.string().optional(),
 });
 
 /**
@@ -33,14 +34,18 @@ export default function URLForm({ onScanStarted, isDeepScan, extensions}: URLFor
     const { execute, isPending } = useScanAction();
 
     const form = useForm<URLFormSchema>({
-        resolver: zodResolver(urlFormSchema),
-        defaultValues: { url: "" },
+      resolver: zodResolver(urlFormSchema),
+      defaultValues: { 
+        url: "",
+        repoKey: ""
+      },
     });
 
     const onSubmit = form.handleSubmit(async (data) => {
         const input = {
             url: data.url,
             repo_url: data.url,
+            token: data.repoKey,
             owner_id: null,
             priority: 1,
             isDeepScan,
@@ -80,6 +85,13 @@ export default function URLForm({ onScanStarted, isDeepScan, extensions}: URLFor
           text="Start scan"
           loadingText="Scanning..."
           loading={isPending}
+        />
+        <input 
+          id="repoKey"
+          type="text"
+          {...form.register("repoKey")}
+          className="fieldText flex-1 min-w-0 w-full bg-transparent outline-none truncate"
+          placeholder="Paste the corroponding token to the repo"
         />
       </form>
     </div>
