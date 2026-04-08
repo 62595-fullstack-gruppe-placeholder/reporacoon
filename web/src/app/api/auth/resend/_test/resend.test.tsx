@@ -68,6 +68,6 @@ describe("POST /api/auth/resend", () => {
   it("returns ok after sending email", async () => {
     mockGetUserByEmail.mockResolvedValue(unconfirmedUser);
     const res = await POST(makeRequest({ email: "test@test.com" }));
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ ok: true, ConfirmURL: {} });
   });
 });

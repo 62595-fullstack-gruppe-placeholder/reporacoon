@@ -40,6 +40,11 @@ describe("ConfirmEmailPendingPage", () => {
   });
 
   it("shows sent feedback after resend", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ confirmURL: "https://example.com/verify" }),
+    } as any);
+
     render(<ConfirmEmailPendingPage />);
     fireEvent.click(screen.getByRole("button", { name: /resend confirmation email/i }));
     await waitFor(() => {
