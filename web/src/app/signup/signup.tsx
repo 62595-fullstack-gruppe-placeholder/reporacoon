@@ -39,8 +39,18 @@ export async function signup(input: SignupInput) {
     await setRefreshTokenCookie(await generateRefreshToken(user));
     return {
       success: true as const,
-      msg: `Account created! Confirm your email: `,
-      link: confirmURL,
+      msg: <>
+          Confirmation email sent! 
+          <a
+            href={confirmURL.toString()}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline text-primary"
+          >
+            Open verification link
+          </a>
+        </>,
+      
     error: undefined,
       };
 }

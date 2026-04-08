@@ -11,6 +11,6 @@ export async function POST(req: NextRequest) {
 
   if (user.email_confirmed) return NextResponse.json({ error: "Already confirmed" }, { status: 400 });
 
-  await sendConfirmationEmail(user.id, user.email);
-  return NextResponse.json({ ok: true });
+  const confirmURL = await sendConfirmationEmail(user.id, user.email);
+  return NextResponse.json({ ok: true, confirmURL });
 }

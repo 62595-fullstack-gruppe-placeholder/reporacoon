@@ -1,11 +1,10 @@
 "use client";
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
 import { toast } from "sonner";
 
 interface serverActionSuccess {
     success: true;
-    msg: string;
-    link: ReactNode;
+    msg: ReactNode;
     error: undefined;
 }
 
@@ -21,7 +20,7 @@ export function showServerActionResponseToast(result: serverActionResponse) {
   if (!result) return;
   if (result.success) {
     if (result.msg) {
-      toast.info(result.msg + result.link);
+      toast.info(result.msg);
     } else {
       toast.success("Success!");
     }
