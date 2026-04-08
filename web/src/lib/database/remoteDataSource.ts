@@ -33,7 +33,9 @@ export async function query<T = unknown>(
     console.error("Full error:", error);
     
     const fullMessage = errorDetails ? `${errorMessage} (${errorDetails})` : errorMessage;
-    throw new Error(`Database query failed: ${fullMessage}`);
+    const rethrown = new Error(`Database query failed: ${fullMessage}`);
+    (rethrown as any)._isUniqueConstraintViolation = true;
+    throw rethrown;
   }
 }
 
@@ -45,9 +47,24 @@ export async function queryOne<T = unknown>(
   params?: any[],
   client?: pg.PoolClient | pg.Pool, 
 ): Promise<T | null> {
-  const executor = client || pool; 
-  const result = await executor.query(text, params);
-  return (result.rows[0] as T) ?? null;
+  try {
+    const executor = client || pool; 
+    const result = await executor.query(text, params);
+    return (result.rows[0] as T) ?? null;
+  } catch (error: any) {
+    const errorMessage = error?.message || error?.toString?.() || JSON.stringify(error) || 'Unknown error';
+    const errorDetails = error?.detail || error?.code || '';
+    console.error("Database query error:", errorMessage);
+    console.error("Error details:", errorDetails);
+    console.error("Error code:", error?.code);
+    console.error("Full error:", error);
+    
+    const fullMessage = errorDetails ? `${errorMessage} (${errorDetails})` : errorMessage;
+    const rethrown = new Error(`Database query failed: ${fullMessage}`);
+    (rethrown as any)._isUniqueConstraintViolation = true;
+    throw rethrown;
+  }
+  
 }
 
 /**
