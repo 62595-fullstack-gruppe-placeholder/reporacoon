@@ -32,6 +32,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="w-full">
+      <DashBoard user={user} settings={initialSettings}/>
       <div className="space-y-8 w-3/4 mx-auto">
         <div className="box border border-secondary/10 shadow-xl mt-8">
           <div className="p-6 border-b border-secondary/10">
@@ -51,7 +52,6 @@ export default async function DashboardPage() {
           <JobsTable jobs={recentJobs} />
         </div>
       </div>
-      <DashBoard user={user} settings={initialSettings}/>
     </div>
   );
 }

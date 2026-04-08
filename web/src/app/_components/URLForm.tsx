@@ -56,7 +56,7 @@ export default function URLForm({ onScanStarted, isDeepScan, extensions}: URLFor
   });
 
   return (
-    <div className="field flex items-center gap-2">
+    <div className="field flex items-center gap-2 w-full">
       <Search width={20} height={20} color="#a1b5a6" strokeWidth={2} />
 
       <form

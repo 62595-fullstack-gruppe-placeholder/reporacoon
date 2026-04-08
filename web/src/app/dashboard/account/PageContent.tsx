@@ -56,8 +56,8 @@ export function AccountDashboard({ user }: { user: User }) {
   };
 
   return (
-    <div className="w-full flex flex-col justify-center items-center py-12 px-4 space-y-6 bg-gradient-to-br from-background to-box/30">
-      <div className="box max-w-md w-full p-8 space-y-8 shadow-xl border border-secondary/10 bg-background/50 backdrop-blur-sm">
+    <div className="w-full flex flex-col justify-center items-center py-12 px-4 space-y-6  to-box/30">
+      <div className="box max-w-md w-full p-8 space-y-8 shadow-xl border border-secondary/10 bg-gradient-to-br from-background backdrop-blur-sm">
         {/* Welcome Header */}
         <div className="text-center space-y-4 pt-4 border-b border-secondary/10 pb-4">
           <div className="p-4 bg-button-main/20 rounded-xl inline-block">
