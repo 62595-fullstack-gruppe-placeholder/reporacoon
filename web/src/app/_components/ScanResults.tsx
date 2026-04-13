@@ -81,6 +81,7 @@ export default function ScanResults({ findings, jobs, startOpen }: Props) {
             key={job.id || job.repo_url}
             job={job}
             findings={mergedFindings}
+            totalIssues={jobFindings.length}
             startOpen
           />
         );
@@ -92,10 +93,12 @@ export default function ScanResults({ findings, jobs, startOpen }: Props) {
 function JobAccordion({
   job,
   findings,
+  totalIssues,
   startOpen,
 }: {
   job: ScanJob;
   findings: MergedFinding[];
+  totalIssues: number;
   startOpen?: boolean;
 }) {
   const [isMainOpen, setIsMainOpen] = useState(startOpen ?? false);
@@ -147,7 +150,7 @@ function JobAccordion({
               </span>
               <div className="flex items-center gap-1.5 text-sm font-mono text-red-500 font-bold">
                 <AlertTriangle size={12} />
-                <span>{findings.length}</span>
+                <span>{totalIssues}</span>
               </div>
             </div>
           </div>

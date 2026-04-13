@@ -65,7 +65,6 @@ export default function URLForm({ onScanStarted, hasUser, isDeepScan, extensions
   return (
     <div className="w-full max-w-2xl bg-box border border-border rounded-[14px] p-6">
       <form onSubmit={onSubmit} className="flex flex-col gap-5 w-full">
-
         {/* ROW 1: Repo type toggle */}
         <div className="flex items-center gap-4">
           <span className="text-secondary text-[10px] tracking-[0.14em] uppercase font-mono mt-0.5">

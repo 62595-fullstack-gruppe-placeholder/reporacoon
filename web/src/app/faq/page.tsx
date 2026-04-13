@@ -5,7 +5,7 @@ import { ChevronDown, ShieldQuestion } from 'lucide-react';
 
 const faqs = [
   { 
-    q: "How exactly does the raccoon find secrets?", 
+    q: "How exactly does the racoon find secrets?", 
     a: "We utilize high-entropy string detection and regex signatures to find API keys, tokens, and private keys across your entire commit history. Our 'sniffing' logic is updated weekly to catch new provider formats.",
     mono: "Algorithm"
   },
@@ -29,7 +29,7 @@ export default function FAQ() {
       {/* Header Section */}
       <div className="text-center max-w-2xl space-y-4">
         <h1 className="h1 text-4xl mb-4">Frequently Asked Questions</h1>
-        <p className="p">Everything you need to know about Repo Raccoon security protocols.</p>
+        <p className="p">Everything you need to know about Repo Racoon security protocols.</p>
       </div>
 
       {/* FAQ Accordion List */}

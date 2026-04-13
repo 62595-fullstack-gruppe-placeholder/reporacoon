@@ -10,7 +10,7 @@ const tiers = [
     mono: "Tier 01",
     price: "Free",
     description: "Perfect for individual developers and public projects.",
-    features: ["Public Repo Scans", "Critical & High Findings", "15 Minute Cooldown", "Community Support"],
+    features: ["Public Repo Scans", "Critical & High Findings", "Community Support"],
     icon: <Terminal className="text-secondary" size={24} />,
     buttonText: "Start Scanning",
     highlight: false
@@ -30,7 +30,7 @@ const tiers = [
     mono: "Tier 03",
     price: "$49",
     description: "Full-scale security infrastructure for growing startups.",
-    features: ["Unlimited Private Repos", "Automated Weekly Reviews", "Custom Regex Rules", "Dedicated Raccoon instance", "24/7 Priority Support"],
+    features: ["Unlimited Private Repos", "Automated Weekly Reviews", "Custom Regex Rules", "Dedicated Racoon instance", "24/7 Priority Support"],
     icon: <ShieldAlert className="text-orange-400" size={24} />,
     buttonText: "Go Apex",
     highlight: false
@@ -107,6 +107,7 @@ export default function PricingPage() {
             </Link>
           </div>
         ))}
+        <p className="p text-secondary">*Not actually a paid service</p>
       </div>
     </div>
   );

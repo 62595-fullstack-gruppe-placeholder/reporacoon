@@ -115,7 +115,7 @@ export default function Home() {
         <h1 className="h1">Sniff out vulnerabilities in seconds</h1>
 
         <p className="p">
-          Repo Raccoon scrapes public repositories to provide comprehensive
+          Repo Racoon scrapes public repositories to provide comprehensive
           security overviews, helping you identify and address potential
           weaknesses.
         </p>
@@ -177,7 +177,7 @@ export default function Home() {
 
             <p className="p text-left leading-relaxed border-t border-secondary/10 pt-4 text-secondary">
               Using proprietary indexing technology,
-              Repo Raccoon sniffs through your repository history to identify
+              Repo Racoon sniffs through your repository history to identify
               vulnerabilities like hardcoded API keys, database credentials, or hidden secrets.
             </p>
           </div>
