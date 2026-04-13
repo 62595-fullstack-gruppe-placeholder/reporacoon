@@ -40,7 +40,7 @@ def test_run_scan_job_pro_success():
 
         run_scan_job_pro.delay(FAKE_JOB_ID, REPO_URL, False, [])
 
-        mock_scanner_cls.assert_called_once_with(REPO_URL, FAKE_JOB_ID, False, [])
+        mock_scanner_cls.assert_called_once_with(REPO_URL, FAKE_JOB_ID, False, [], None)
         mock_scanner_cls.return_value.run.assert_called_once()
         mock_duration.assert_called_once()
         mock_parsed.assert_called_once_with([str(FAKE_JOB_ID)])
@@ -145,7 +145,7 @@ def test_run_scan_job_pro_retries_on_exception():
     with patch('tasks.GitHubSecretScanner') as mock_scanner_cls:
         mock_scanner_cls.return_value.run.side_effect = Exception("clone failed")
         with pytest.raises(Exception, match="clone failed"):
-            run_scan_job_pro.delay(FAKE_JOB_ID, REPO_URL, False, [])
+            run_scan_job_pro.delay(FAKE_JOB_ID, REPO_URL, False, [], None)
 
 
 def test_run_scan_job_free_retries_on_exception():

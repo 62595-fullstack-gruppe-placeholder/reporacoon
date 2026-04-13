@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
 const key = process.env.TOKEN_ENCRYPTION_KEY;
-if (!key) throw new Error("TOKEN_ENCRYPTION_KEY is not set in environment variables");
+if (!key) throw new Error("TOKEN_ENCRYPTION_KEY is not set");
 const SECRET_KEY = Buffer.from(key, "hex");
 
 export function encryptToken(token: string): string {
