@@ -5,6 +5,7 @@ import tempfile
 import shutil
 import requests
 import math
+import string
 from datetime import datetime
 from collections import defaultdict
 from repository import *
@@ -33,6 +34,21 @@ except Exception as e:
     ".cfg", ".conf", ".config", ".env", ".sh", ".bash", ".zsh", ".fish",
     ".ps1", ".bat", ".cmd", ".txt", ".rst", ".tex", ".csv", ".sql"]
     print(f"JSON Erroasdr: {e}")
+    #Entropy prefix
+
+    BASE64_CHARSET  = set(string.ascii_letters + string.digits + "+/=")
+    URLSAFE_CHARSET = set(string.ascii_letters + string.digits + "-_=")
+    HEX_CHARSET     = set(string.hexdigits)
+    
+    FALSE_POSITIVE_PATTERNS = [
+            re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.I),  # UUID
+            re.compile(r'^[0-9a-f]{40}$'),          # git SHA1
+            re.compile(r'^[0-9a-f]{64}$'),          # git SHA256
+            re.compile(r'^(.)\1{6,}'),              # repeating chars "aaaaaaaaaa"
+            re.compile(r'^[a-z]{20,}$'),            # all lowercase = probably a word/slug
+            re.compile(r'^[A-Z][a-z]+([A-Z][a-z]+){3,}$'),  # CamelCase = probably a class name
+        ]
+
 
 class GitHubSecretScanner:
     def __init__(self, repo_url, job_id, isDeepScan=False, extensions=defaultExtensions):
@@ -145,64 +161,61 @@ class GitHubSecretScanner:
         return 0, ""
 
     # ---------------- Entropy ---------------- #
-    def shannon_entropy(self, s):
-        if not s:
+ 
+    def _relative_entropy(self, token: str, charset: set) -> float:
+        """Returns 0.0 to 1.0 — how close to maximum randomness for this charset."""
+        filtered = [c for c in token if c in charset]
+        if len(filtered) < 8:
             return 0.0
-
         freq = {}
-        for ch in s:
-            freq[ch] = freq.get(ch, 0) + 1
+        for c in filtered:
+            freq[c] = freq.get(c, 0) + 1
+        length = len(filtered)
+        raw = -sum((n / length) * math.log2(n / length) for n in freq.values())
+        max_e = math.log2(len(charset))
+        return raw / max_e if max_e > 0 else 0.0
 
-        entropy = 0.0
-        length = len(s)
-
-        for count in freq.values():
-            p = count / length
-            entropy -= p * math.log2(p)
-
-        return entropy
-
-    def looks_like_secret_candidate(self, token):
+    def _looks_like_secret_candidate(self, token: str) -> bool:
         if len(token) < 20:
             return False
-
         if token.isdigit():
             return False
-
-        if len(set(token)) < 6:
+        if len(set(token)) < 10:
             return False
-
-        lowered = token.lower()
         obvious_fake = {
-                "changeme",
-                "your_token_here",
-                "example",
-                "testtesttest",
-                "xxxxxxxxxxxxxxxxxxxx"
+            "changeme", "your_token_here", "example", "testtesttest",
+            "xxxxxxxxxxxxxxxxxxxx", "placeholder", "insert_here"
         }
-        if lowered in obvious_fake:
+        if token.lower() in obvious_fake:
             return False
-
+        if any(fp.match(token) for fp in FALSE_POSITIVE_PATTERNS):
+            return False
         return True
-    
-    def entropy_severity(self, entropy, length):
-        if length >= 32 and entropy >= 4.5:
-            return "HIGH"
-        if length >= 24 and entropy >= 4.0:
-            return "MEDIUM"
-        if length >= 20 and entropy >= 3.8:
-            return "LOW"
+
+    def _entropy_severity(self, token: str) -> str | None:
+        checks = [
+            (HEX_CHARSET,     0.87, len(token) >= 32),
+            (BASE64_CHARSET,  0.75, len(token) >= 24),
+            (URLSAFE_CHARSET, 0.75, len(token) >= 24),
+        ]
+        for charset, threshold, length_ok in checks:
+            if not length_ok:
+                continue
+            charset_ratio = sum(1 for c in token if c in charset) / len(token)
+            if charset_ratio < 0.80:
+                continue
+            if self._relative_entropy(token, charset) >= threshold:
+                return "HIGH"
         return None
-    
-    def scan_entropy_on_unmatched_lines(self, lines, regex_matched_lines, file_path, branch):
+
+    def _scan_entropy(self, lines, regex_matched_lines, file_path, branch):
         seen_tokens = set()
 
         for line_number, line in enumerate(lines, start=1):
             if line_number in regex_matched_lines:
                 continue
 
-            stripped = line.strip()
-            if not stripped:
+            if not line.strip():
                 continue
 
             for m in self.entropy_candidate_pattern.finditer(line):
@@ -212,27 +225,23 @@ class GitHubSecretScanner:
                     continue
                 seen_tokens.add(token)
 
-                if not self.looks_like_secret_candidate(token):
-                   continue
+                if not self._looks_like_secret_candidate(token):
+                    continue
 
-                entropy = self.shannon_entropy(token)
-                severity = self.entropy_severity(entropy, len(token))
-
+                severity = self._entropy_severity(token)
                 if not severity:
                     continue
 
-                snippet = stripped[:1000]
-
                 self.write_log(
-                    f"Found possible secret via entropy! "
-                    f"line={line_number}, entropy={entropy:.2f}, len={len(token)}"
+                    f"[ENTROPY] Possible secret in {file_path}:{line_number} "
+                    f"(preview={token[:6]}...)"
+                )
+                insertScanFindings(
+                    self.job_id, file_path, line_number,
+                    line.strip()[:1000], severity,
+                    "High Entropy String", branch
                 )
 
-                insertScanFindings(
-                    self.job_id, file_path, line_number, snippet, severity,
-                f"High Entropy String ({entropy:.2f})",
-                branch
-                )
     # ---------------- Scanning ---------------- #
 
     def scan_content(self, content, file_path, branch):
