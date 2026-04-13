@@ -6,6 +6,8 @@ describe("userClaimsSchema", () => {
     sub: "user-123",
     ema: "valid@example.com",
     emc: true,
+    tier: "free" as const,
+    adm: false,
   };
 
   it("validates correct claims data", () => {

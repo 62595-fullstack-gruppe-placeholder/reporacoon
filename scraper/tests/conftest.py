@@ -96,7 +96,10 @@ def db_transaction():
                 END$$;
                 CREATE TABLE IF NOT EXISTS users (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    email VARCHAR(255) NOT NULL UNIQUE, password_hash TEXT NOT NULL
+                    email VARCHAR(255) NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    tier VARCHAR(10) NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'pro')),
+                    is_admin BOOLEAN NOT NULL DEFAULT false
                 );
                 DO $$
                 BEGIN

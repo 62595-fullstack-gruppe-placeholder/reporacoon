@@ -20,6 +20,8 @@ export async function generateAccessToken(user: User): Promise<string> {
     sub: user.id,
     ema: user.email,
     emc: user.email_confirmed,
+    tier: user.tier,
+    adm: user.is_admin,
     iat: getNow(),
     exp: getFuture(60 * 15),
     iss: "reporacoon",

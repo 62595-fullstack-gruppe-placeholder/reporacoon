@@ -7,6 +7,8 @@ export const userClaimsSchema = z.object({
   sub: z.string(),
   ema: z.email(),
   emc: z.boolean(),
+  tier: z.enum(["free", "pro"]).default("free"),
+  adm: z.boolean().default(false),
 });
 
 /**
