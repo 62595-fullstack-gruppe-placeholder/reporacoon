@@ -4,9 +4,8 @@ CREATE TABLE IF NOT EXISTS listening_repositories (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     is_active BOOLEAN NOT NULL DEFAULT true,
-    repo_url TEXT NOT NULL,
-    secret_hash TEXT,
-    UNIQUE (repo_url, owner_id)
+    repo_url TEXT UNIQUE NOT NULL,
+    secret_hash TEXT
 );
 
 -- add scan_jobs -> listening_repositories foreign key
