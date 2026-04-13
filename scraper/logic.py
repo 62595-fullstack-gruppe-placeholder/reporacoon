@@ -4,6 +4,8 @@ import subprocess
 import tempfile
 import shutil
 import requests
+import math
+import string
 from datetime import datetime
 from collections import defaultdict
 from repository import *
@@ -32,6 +34,21 @@ except Exception as e:
     ".cfg", ".conf", ".config", ".env", ".sh", ".bash", ".zsh", ".fish",
     ".ps1", ".bat", ".cmd", ".txt", ".rst", ".tex", ".csv", ".sql"]
     print(f"JSON Erroasdr: {e}")
+    #Entropy prefix
+
+    BASE64_CHARSET  = set(string.ascii_letters + string.digits + "+/=")
+    URLSAFE_CHARSET = set(string.ascii_letters + string.digits + "-_=")
+    HEX_CHARSET     = set(string.hexdigits)
+    
+    FALSE_POSITIVE_PATTERNS = [
+            re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.I),  # UUID
+            re.compile(r'^[0-9a-f]{40}$'),          # git SHA1
+            re.compile(r'^[0-9a-f]{64}$'),          # git SHA256
+            re.compile(r'^(.)\1{6,}'),              # repeating chars "aaaaaaaaaa"
+            re.compile(r'^[a-z]{20,}$'),            # all lowercase = probably a word/slug
+            re.compile(r'^[A-Z][a-z]+([A-Z][a-z]+){3,}$'),  # CamelCase = probably a class name
+        ]
+
 
 class GitHubSecretScanner:
     def __init__(self, repo_url, job_id, isDeepScan=False, extensions=defaultExtensions):
@@ -41,6 +58,8 @@ class GitHubSecretScanner:
         self.findings = defaultdict(list)
         self.isDeepScan = isDeepScan
         self.extensions = extensions
+        self.entropy_candidate_pattern = re.compile(
+            r'(?<![A-Za-z0-9])([A-Za-z0-9+/=_-]{20,}|[A-Fa-f0-9]{32,})(?![A-Za-z0-9])')
         
         # Create a requests session for HTTP requests
         self.session = requests.Session()
@@ -141,13 +160,102 @@ class GitHubSecretScanner:
                 return i, line
         return 0, ""
 
+    # ---------------- Entropy ---------------- #
+ 
+    def _relative_entropy(self, token: str, charset: set) -> float:
+        """Returns 0.0 to 1.0 — how close to maximum randomness for this charset."""
+        filtered = [c for c in token if c in charset]
+        if len(filtered) < 8:
+            return 0.0
+        freq = {}
+        for c in filtered:
+            freq[c] = freq.get(c, 0) + 1
+        length = len(filtered)
+        raw = -sum((n / length) * math.log2(n / length) for n in freq.values())
+        max_e = math.log2(len(charset))
+        return raw / max_e if max_e > 0 else 0.0
+
+    def _looks_like_secret_candidate(self, token: str) -> bool:
+        if len(token) < 20:
+            return False
+        if token.isdigit():
+            return False
+        if len(set(token)) < 10:
+            return False
+        obvious_fake = {
+            "changeme", "your_token_here", "example", "testtesttest",
+            "xxxxxxxxxxxxxxxxxxxx", "placeholder", "insert_here"
+        }
+        if token.lower() in obvious_fake:
+            return False
+        if any(fp.match(token) for fp in FALSE_POSITIVE_PATTERNS):
+            return False
+        return True
+
+    def _entropy_severity(self, token: str) -> str | None:
+        checks = [
+            (HEX_CHARSET,     0.87, len(token) >= 32),
+            (BASE64_CHARSET,  0.75, len(token) >= 24),
+            (URLSAFE_CHARSET, 0.75, len(token) >= 24),
+        ]
+        for charset, threshold, length_ok in checks:
+            if not length_ok:
+                continue
+            charset_ratio = sum(1 for c in token if c in charset) / len(token)
+            if charset_ratio < 0.80:
+                continue
+            if self._relative_entropy(token, charset) >= threshold:
+                return "HIGH"
+        return None
+
+    def _scan_entropy(self, lines, regex_matched_lines, file_path, branch):
+        seen_tokens = set()
+
+        for line_number, line in enumerate(lines, start=1):
+            if line_number in regex_matched_lines:
+                continue
+
+            if not line.strip():
+                continue
+
+            for m in self.entropy_candidate_pattern.finditer(line):
+                token = m.group(1)
+
+                if token in seen_tokens:
+                    continue
+                seen_tokens.add(token)
+
+                if not self._looks_like_secret_candidate(token):
+                    continue
+
+                severity = self._entropy_severity(token)
+                if not severity:
+                    continue
+
+                self.write_log(
+                    f"[ENTROPY] Possible secret in {file_path}:{line_number} "
+                    f"(preview={token[:6]}...)"
+                )
+                insertScanFindings(
+                    self.job_id, file_path, line_number,
+                    line.strip()[:1000], severity,
+                    "High Entropy String", branch
+                )
+
     # ---------------- Scanning ---------------- #
 
     def scan_content(self, content, file_path, branch):
+        lines = content.splitlines()
+        regex_matched_lines = set()
+
         for secret_type, (pattern, severity) in self.patterns.items():
             for m in re.finditer(pattern, content, flags=re.MULTILINE):
                 match_text = m.group(0)
                 line_number, line_text = self.find_line_number(content, match_text)
+                
+                if line_number:
+                    regex_matched_lines.add(line_number)
+                
                 if line_text:
                     snippet = line_text.strip()
                 else:
@@ -158,6 +266,15 @@ class GitHubSecretScanner:
 
                 self.write_log("Found secret!")
                 insertScanFindings(self.job_id, file_path, line_number, snippet, severity, secret_type, branch)
+
+        
+        # second pass: entropy scan on lines regex did not already flag
+        self.scan_entropy_on_unmatched_lines(
+            lines,
+            regex_matched_lines,
+            file_path,
+            branch
+        )
 
     def scan_repository(self, repo_path, branch):
         # TODO: add an upper limit of files to scan
