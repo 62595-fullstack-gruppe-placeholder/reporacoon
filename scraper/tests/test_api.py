@@ -109,6 +109,103 @@ def test_scan_endpoint(client):
 
 
 # =========================================
+#         Scan tier routing tests
+# =========================================
+
+# Verifies that a free-tier user's scan job is routed to the slow (free) queue
+def test_scan_routes_free_user_to_slow_queue(client):
+    mock_pending_jobs = {'job-1': 'https://github.com/someuser/somerepo'}
+    with patch('api.getAllPendingScanJobs', return_value=mock_pending_jobs), \
+         patch('api.validate_github_url', return_value=(True, 'OK', {'owner': 'u', 'repo': 'r'})), \
+         patch('api.getUserTier', return_value='free'), \
+         patch('api.run_scan_job_free') as mock_free, \
+         patch('api.run_scan_job_pro') as mock_pro:
+        mock_free.delay = MagicMock()
+        mock_pro.delay = MagicMock()
+        response = client.post('/scan', json={"userId": FAKE_USER_ID, "isDeepScan": False, "extensions": []})
+    assert response.status_code == 202
+    mock_free.delay.assert_called_once()
+    mock_pro.delay.assert_not_called()
+
+
+# Verifies that a pro-tier user's scan job is routed to the fast (pro) queue
+def test_scan_routes_pro_user_to_fast_queue(client):
+    mock_pending_jobs = {'job-2': 'https://github.com/someuser/somerepo'}
+    with patch('api.getAllPendingScanJobs', return_value=mock_pending_jobs), \
+         patch('api.validate_github_url', return_value=(True, 'OK', {'owner': 'u', 'repo': 'r'})), \
+         patch('api.getUserTier', return_value='pro'), \
+         patch('api.run_scan_job_free') as mock_free, \
+         patch('api.run_scan_job_pro') as mock_pro:
+        mock_free.delay = MagicMock()
+        mock_pro.delay = MagicMock()
+        response = client.post('/scan', json={"userId": FAKE_USER_ID, "isDeepScan": False, "extensions": []})
+    assert response.status_code == 202
+    mock_pro.delay.assert_called_once()
+    mock_free.delay.assert_not_called()
+
+
+# Verifies that a scan without userId defaults to free queue
+def test_scan_defaults_to_free_queue_when_no_user(client):
+    mock_pending_jobs = {'job-3': 'https://github.com/someuser/somerepo'}
+    with patch('api.getAllPendingScanJobs', return_value=mock_pending_jobs), \
+         patch('api.validate_github_url', return_value=(True, 'OK', {'owner': 'u', 'repo': 'r'})), \
+         patch('api.run_scan_job_free') as mock_free, \
+         patch('api.run_scan_job_pro') as mock_pro:
+        mock_free.delay = MagicMock()
+        mock_pro.delay = MagicMock()
+        response = client.post('/scan', json={"isDeepScan": False, "extensions": []})
+    assert response.status_code == 202
+    mock_free.delay.assert_called_once()
+    mock_pro.delay.assert_not_called()
+
+
+# =========================================
+#         Admin tier endpoint tests
+# =========================================
+
+FAKE_USER_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+
+# Verifies that POST /admin/upgrade sets a user to pro tier
+def test_upgrade_user_success(client):
+    with patch('api.setUserTier', return_value=True) as mock_set:
+        response = client.post('/admin/upgrade', json={"userId": FAKE_USER_ID})
+    assert response.status_code == 200
+    assert response.json['success'] is True
+    assert response.json['tier'] == 'pro'
+    mock_set.assert_called_once_with(FAKE_USER_ID, 'pro')
+
+
+# Verifies that POST /admin/upgrade returns 404 when user does not exist
+def test_upgrade_user_not_found(client):
+    with patch('api.setUserTier', return_value=False):
+        response = client.post('/admin/upgrade', json={"userId": FAKE_USER_ID})
+    assert response.status_code == 404
+
+
+# Verifies that POST /admin/upgrade returns 400 when userId is missing
+def test_upgrade_user_missing_id(client):
+    response = client.post('/admin/upgrade', json={})
+    assert response.status_code == 400
+
+
+# Verifies that POST /admin/downgrade sets a user back to free tier
+def test_downgrade_user_success(client):
+    with patch('api.setUserTier', return_value=True) as mock_set:
+        response = client.post('/admin/downgrade', json={"userId": FAKE_USER_ID})
+    assert response.status_code == 200
+    assert response.json['success'] is True
+    assert response.json['tier'] == 'free'
+    mock_set.assert_called_once_with(FAKE_USER_ID, 'free')
+
+
+# Verifies that POST /admin/downgrade returns 404 when user does not exist
+def test_downgrade_user_not_found(client):
+    with patch('api.setUserTier', return_value=False):
+        response = client.post('/admin/downgrade', json={"userId": FAKE_USER_ID})
+    assert response.status_code == 404
+
+
+# =========================================
 #        Recursive scan endpoint tests
 # =========================================
 
