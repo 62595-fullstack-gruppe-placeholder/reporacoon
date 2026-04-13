@@ -124,6 +124,10 @@ def validate():
     """Validate a GitHub URL without scanning"""
     try:
         data = request.get_json()
+
+        if not data or not isinstance(data, dict) or 'url' not in data:
+            return jsonify({'valid': False, 'message': 'No URL provided'}), 400
+
         url = data['url']
         repoKey = data.get('repoKey')  # optional
 

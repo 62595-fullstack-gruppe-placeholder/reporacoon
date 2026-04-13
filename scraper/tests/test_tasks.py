@@ -38,7 +38,7 @@ def test_run_scan_job_pro_success():
 
         mock_scanner_cls.return_value.run = MagicMock()
 
-        run_scan_job_pro.delay(FAKE_JOB_ID, REPO_URL, False, [])
+        run_scan_job_pro.delay(FAKE_JOB_ID, REPO_URL, False, [], None)
 
         mock_scanner_cls.assert_called_once_with(REPO_URL, FAKE_JOB_ID, False, [], None)
         mock_scanner_cls.return_value.run.assert_called_once()
