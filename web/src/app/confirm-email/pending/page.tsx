@@ -41,12 +41,13 @@ export default function ConfirmEmailPendingPage() {
       return;
     }
 
-    if (data?.confirmURL) {
+    if (data?.etherealURL) {
       toast.info(
         <>
-          Confirmation email resent to {email}. {" "}
+          ***DEBUG ONLY*** <br/>
+          Confirmation email resent! {" "}
           <a
-            href={data.confirmURL}
+            href={data.etherealURL}
             target="_blank"
             rel="noreferrer noopener"
             className="underline text-primary"

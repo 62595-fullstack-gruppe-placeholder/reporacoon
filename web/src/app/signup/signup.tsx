@@ -7,7 +7,7 @@ import {
   createUserDTOSchema,
   SignupFormSchema,
 } from "@/lib/repository/user/userSchemas";
-import { sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
+import { getLastEtherealURL, sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
 import { toast } from "sonner";
 
 /**
@@ -32,7 +32,8 @@ export async function signup(input: SignupInput) {
 
     // debug logs for email sending
     console.log("Sending confirmation email to:", user.email);
-    const confirmURL = await sendConfirmationEmail(user.id, user.email);
+    await sendConfirmationEmail(user.id, user.email);
+    const etherealURL = getLastEtherealURL();
     console.log("Email sent successfully");
 
     await setAccessTokenCookie(await generateAccessToken(user));
@@ -40,9 +41,10 @@ export async function signup(input: SignupInput) {
     return {
       success: true as const,
       msg: <>
-          Confirmation email sent! 
+          ***DEBUG ONLY*** <br/>
+          Confirmation email sent! {" "}
           <a
-            href={confirmURL.toString()}
+            href={etherealURL.toString()}
             target="_blank"
             rel="noreferrer noopener"
             className="underline text-primary"

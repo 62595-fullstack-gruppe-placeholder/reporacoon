@@ -14,6 +14,11 @@ function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+let lastEtherealURL: string | false = false;
+
+export function getLastEtherealURL() {
+  return lastEtherealURL;
+}
 
 export async function sendConfirmationEmail(
   userId: string,
@@ -28,7 +33,7 @@ export async function sendConfirmationEmail(
 
  const confirmUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/confirm?token=${rawToken}`;
 
-  await sendEmail({ 
+  const etherealURL = await sendEmail({ 
     to: userEmail,
     subject: "Confirm your email",
     html: `
@@ -38,6 +43,7 @@ export async function sendConfirmationEmail(
       <p>This link expires in 24 hours.</p>
     `,
   });
+  lastEtherealURL = etherealURL;
   return confirmUrl;
 }
 
