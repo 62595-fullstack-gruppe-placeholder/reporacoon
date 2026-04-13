@@ -22,10 +22,10 @@ celery_app.conf.update(
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=30, queue='fast')
-def run_scan_job_pro(self, job_id, repo_url, is_deep_scan, extensions):
+def run_scan_job_pro(self, job_id, repo_url, is_deep_scan, extensions, repoKey):
     """Pro tier: runs on fast queue (concurrency=4)."""
     try:
-        scanner = GitHubSecretScanner(repo_url, job_id, is_deep_scan, extensions)
+        scanner = GitHubSecretScanner(repo_url, job_id, is_deep_scan, extensions, repoKey)
         start = time.time()
         scanner.run()
         end = time.time()
