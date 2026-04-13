@@ -58,6 +58,12 @@ services:
     networks:
       - app-network
 
+  redis:
+    image: redis:7-alpine
+    networks:
+      - app-network
+    restart: unless-stopped
+
   scraper:
     image: ghcr.io/62595-fullstack-gruppe-placeholder/reporacoon/scraper:latest
     build:
@@ -66,6 +72,7 @@ services:
     pull_policy: always # always pull fresh images for deployment. overridden locally
     environment:
       DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
+      CELERY_BROKER_URL: redis://redis:6379/0
     volumes:
       - ./ignoreSettingsConfig.json:/app/ignoreSettingsConfig.json:ro
     ports:
@@ -75,8 +82,33 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - app-network
+
+  celery-worker:
+    image: ghcr.io/62595-fullstack-gruppe-placeholder/reporacoon/scraper:latest
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    pull_policy: always # always pull fresh images for deployment. overridden locally
+    command: celery -A tasks worker --loglevel=info --concurrency=4
+    environment:
+      DATABASE_URL: postgresql://root:fisk@postgres:5432/reporacoondb?sslmode=disable
+      CELERY_BROKER_URL: redis://redis:6379/0
+    volumes:
+      - ./ignoreSettingsConfig.json:/app/ignoreSettingsConfig.json:ro
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
 
   migrator:
     image: postgres:16-alpine

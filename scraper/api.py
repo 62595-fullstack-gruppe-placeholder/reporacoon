@@ -1,16 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import threading
-import json
 import os
 from datetime import datetime
 import re
 import time
-import math
 from urllib.parse import urlparse
 import requests
 from repository import *
-from logic import GitHubSecretScanner
+from tasks import run_scan_job, run_recursive_scan_job
 
 VALID_INTERVALS = {"EVERY_MINUTE", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
@@ -27,29 +25,13 @@ scan_results = {}
 # has passed is picked up and executed in a daemon thread.
 
 def run_recursive_scan(scan):
-    # Called in a background thread — by the scheduler loop or the /run-now endpoint
-    repo_url = scan["repo_url"]
-    is_deep_scan = scan["is_deep_scan"]
-    recursive_id = scan["id"]
-    extensions = scan["extensions"]
-
-    try:
-        # Create a scan_job linked to this recurring schedule so the frontend can
-        # query all jobs for a given recurring scan
-        job_id = insertScanJob(repo_url, recursive_scan_id=recursive_id)
-        scanner = GitHubSecretScanner(repo_url, job_id, is_deep_scan, extensions)
-
-        start = time.time()
-        scanner.run()  # Clones repo, runs secret detection, writes findings to DB
-        end = time.time()
-
-        insertDurationInScanJobs(math.floor(end - start), job_id)
-        setParsingScanJobsToParsed([str(job_id)])  # PARSING → PARSED
-        updateRecursiveScanAfterRun(recursive_id)  # Update last_run_at and advance next_run_at
-
-        print(f"[scheduler] Recursive scan complete for {repo_url} (job {job_id})")
-    except Exception as e:
-        print(f"[scheduler] Error scanning {repo_url}: {e}")
+    # Enqueue via Celery instead of running directly in a thread
+    run_recursive_scan_job.delay(
+        scan["id"],
+        scan["repo_url"],
+        scan["is_deep_scan"],
+        scan.get("extensions", []),
+    )
 
 
 def scheduler_loop():
@@ -189,39 +171,20 @@ def start_scan():
         if not data:
             return jsonify({'success': False, 'message': 'No pending scan jobs'}), 200
 
+        scan_id = None
+        repo_info = None
         for id, url in data.items():
             is_valid, message, repo_info = validate_github_url(url)
 
             if not is_valid:
                 return jsonify({'error': message}), 400
-            
+
             scan_id = id
-            # TODO: Add multithreading here (Main work of scanning & cloning)
-            scanner = GitHubSecretScanner(url, id, isDeepScan, extensions)
+            run_scan_job.delay(id, url, isDeepScan, extensions)
 
-            start = time.time()
-
-            scanner.run() 
-
-            end = time.time()
-
-            # Adds the time taken to complete a scan job to the database
-            insertDurationInScanJobs(math.floor(end-start), scan_id)
-
-        # Updates the status of all of the parsed jobs (data.keys are the ids)
-        setParsingScanJobsToParsed(list(data.keys()))
-
-        
-        finding = getScanFindingById(id)
-        try:
-            print(json.dumps(finding, indent=2, default=str, ensure_ascii=False))
-        except Exception:
-            from pprint import pprint
-            pprint(finding)
-        
         return jsonify({
             'success': True,
-            'message': 'Scan started successfully',
+            'message': 'Scan queued successfully',
             'scan_id': scan_id,
             'repo_info': repo_info,
             'status_url': f'/scan/status/{scan_id}',
