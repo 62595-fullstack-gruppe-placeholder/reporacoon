@@ -101,3 +101,7 @@ export async function getUserScanJobs(
 
   return rows.map((row) => scanJobWithFindingsCount.parse(row));
 }
+
+export async function clearScanJobToken(id: string): Promise<void> {
+  await query(`UPDATE scan_jobs SET "repoKey" = NULL WHERE id = $1`, [id]);
+}

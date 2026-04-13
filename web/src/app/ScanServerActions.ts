@@ -4,7 +4,7 @@ import { getUser } from "@/lib/auth/userFromToken";
 import { encryptToken } from "@/lib/crypto";
 import { getFindingsByJobId } from "@/lib/repository/scanFinding/scanFindingRepository";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
-import { createScanJob, getScanJobById } from "@/lib/repository/scanJob/scanJobRepository";
+import { clearScanJobToken, createScanJob, getScanJobById } from "@/lib/repository/scanJob/scanJobRepository";
 import { CreateScanJobDTO, createScanJobDTOSchema, ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 
 /**
@@ -101,6 +101,8 @@ export async function scan(input: CreateScanJobDTO & { url: string; repoKey: str
 
     const scanData = await scanResponse.json();
     const scanId = scanData.scan_id;
+
+    await clearScanJobToken(scanId);
 
     const findings = await getFindingsByJobIdServerAction(scanId);
     const fetchedJob = await getScanJobByIdServerAction(scanId);
