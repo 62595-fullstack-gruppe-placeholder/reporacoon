@@ -28,12 +28,12 @@ export default function Dashboard({ user, settings }: { user: any, settings: Set
     };
     return (
         <div className="flex flex-col justify-center items-center gap-8">
-            <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
+            <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-130">
                 This is a secret page that requires authentication.
                 <p>{JSON.stringify(user)}</p>
 
                 <URLForm onScanStarted={handleScanSuccess} hasUser={user} isDeepScan={isDeepScan} extensions={selected} />
-                <ScanOptions isDisabled={user} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
+                <ScanOptions isDisabled={!user} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
                 <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={selected}/>
                     
 

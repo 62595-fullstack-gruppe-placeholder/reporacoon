@@ -111,7 +111,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col justify-center items-center gap-8">
-      <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
+      <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-130">
         <h1 className="h1">Sniff out vulnerabilities in seconds</h1>
 
         <p className="p">
@@ -120,9 +120,9 @@ export default function Home() {
           weaknesses.
         </p>
 
-        <URLForm onScanStarted={handleScanSuccess} hasUser={isAuthenticated} isDeepScan={false} extensions={selected}/>'
-        <ScanOptions isDisabled={settings?.isDeep ?? true} isDeep={isDeepScan} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />'
-        <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={extensions}/>
+        <URLForm onScanStarted={handleScanSuccess} hasUser={isAuthenticated} isDeepScan={false} extensions={selected}/>
+        <ScanOptions isDisabled={!isAuthenticated} isDeep={settings?.isDeep ?? false} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
+        <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={selected}/>
       </div>
 
       {/* Dashboard appears with fade and slide down animation */}

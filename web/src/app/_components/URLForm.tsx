@@ -111,7 +111,7 @@ export default function URLForm({ onScanStarted, hasUser, isDeepScan, extensions
               type="text"
               {...form.register("url")}
               onChange={() => form.clearErrors("url")}
-              placeholder="Paste a Git repository URL..."
+              placeholder="Paste a Git repository URL"
               className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-3 outline-none text-text-main placeholder:text-secondary/70 font-mono text-sm focus:border-button-main transition-colors"
             />
           </div>
@@ -142,7 +142,7 @@ export default function URLForm({ onScanStarted, hasUser, isDeepScan, extensions
               id="repoKey"
               type="password"
               {...form.register("repoKey")}
-              placeholder="Enter your personal access token..."
+              placeholder="Enter your personal access token"
               className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-3 outline-none text-text-main placeholder:text-secondary/70 font-mono text-sm focus:border-button-main transition-colors"
             />
             <p className="text-[11px] text-secondary font-mono mt-2 ml-1">
