@@ -7,8 +7,6 @@ vi.mock("@/lib/repository/user/userRepository", () => ({
 }));
 vi.mock("@/lib/auth/email/emailConfirmationService", () => ({
   sendConfirmationEmail: vi.fn().mockResolvedValue({}),
-}));
-vi.mock("@/lib/auth/email/emailConfirmationService", () => ({
   getLastEtherealURL: vi.fn().mockResolvedValue({}),
 }));
 
