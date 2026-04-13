@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "Failed" }) }));
 
 Object.defineProperty(window, "location", {
   value: { href: "" },
@@ -14,7 +14,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   window.location.href = "";
   localStorage.setItem("pending_confirmation_email", "test@test.com");
-  vi.mocked(fetch).mockResolvedValue({ ok: false } as any);
+  vi.mocked(fetch).mockResolvedValue({ ok: false, json: async () => ({ error: "Failed" }) } as any);
 });
 
 describe("ConfirmEmailPendingPage", () => {
@@ -40,6 +40,11 @@ describe("ConfirmEmailPendingPage", () => {
   });
 
   it("shows sent feedback after resend", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ confirmURL: "https://example.com/verify" }),
+    } as any);
+
     render(<ConfirmEmailPendingPage />);
     fireEvent.click(screen.getByRole("button", { name: /resend confirmation email/i }));
     await waitFor(() => {

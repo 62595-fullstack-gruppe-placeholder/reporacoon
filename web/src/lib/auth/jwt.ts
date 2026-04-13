@@ -13,6 +13,8 @@ export function userToClaims(user: User): UserClaims {
     sub: user.id,
     ema: user.email,
     emc: user.email_confirmed,
+    tier: user.tier,
+    adm: user.is_admin,
   };
 }
 
@@ -34,6 +36,8 @@ export function claimsToUser(payload: JWTPayload): User | null {
     id: userClaims.sub,
     email: userClaims.ema,
     email_confirmed: userClaims.emc,
+    tier: userClaims.tier,
+    is_admin: userClaims.adm,
     settings: null,
   };
 }

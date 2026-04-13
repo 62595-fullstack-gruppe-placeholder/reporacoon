@@ -11,6 +11,7 @@ import {
 } from "@/lib/repository/user/userSchemas";
 import { SubmitButton } from "../_components/SubmitButton";
 import { useServerAction } from "@/lib/hooks/useServerAction";
+import { redirect } from "next/navigation";
 
 export function SignupForm() {
   const form = useForm<SignupFormSchema>({
@@ -36,7 +37,7 @@ export function SignupForm() {
     if (result && result.success) {
       form.reset();
       localStorage.setItem("pending_confirmation_email", data.email);
-      window.location.href = "/dashboard";
+      redirect("/dashboard");
     }
   });
 

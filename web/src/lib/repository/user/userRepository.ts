@@ -17,7 +17,7 @@ import {
 export async function getUserById(id: string): Promise<User | null> {
   const row = await queryOne<User>(
     `
-      SELECT id, email, email_confirmed
+      SELECT id, email, email_confirmed, tier, is_admin
       FROM users
       WHERE id = $1
       `,
@@ -68,7 +68,9 @@ export async function createUser(input: CreateUserDTO): Promise<User> {
       RETURNING
         id,
         email,
-        email_confirmed
+        email_confirmed,
+        tier,
+        is_admin
       `,
       [data.email, data.password],
     );
@@ -95,7 +97,7 @@ export async function createUser(input: CreateUserDTO): Promise<User> {
 export async function getAllUsers(): Promise<User[]> {
   const rows = await query<User>(
     `
-      SELECT id, email, email_confirmed
+      SELECT id, email, email_confirmed, tier, is_admin
       FROM users
       ORDER BY id ASC
       `,
@@ -113,8 +115,8 @@ export async function verifyUserCredentials(
   loginDTO: CredentialsDTO,
 ): Promise<User | null> {
   const row = await queryOne<User>(
-    `SELECT id, email, email_confirmed FROM users 
-     WHERE email = $1 
+    `SELECT id, email, email_confirmed, tier, is_admin FROM users
+     WHERE email = $1
      AND password_hash = crypt($2, password_hash)`,
     [loginDTO.email, loginDTO.password],
   );
@@ -158,4 +160,20 @@ export async function changeUserPassword(
  */
 export async function deleteUser(userId: string) {
   await queryOne(`DELETE FROM users WHERE id = $1`, [userId]);
+}
+
+export async function setUserTier(userId: string, tier: "free" | "pro"): Promise<boolean> {
+  const row = await queryOne(
+    `UPDATE users SET tier = $1 WHERE id = $2 RETURNING id`,
+    [tier, userId],
+  );
+  return row !== null;
+}
+
+export async function setUserAdmin(userId: string, isAdmin: boolean): Promise<boolean> {
+  const row = await queryOne(
+    `UPDATE users SET is_admin = $1 WHERE id = $2 RETURNING id`,
+    [isAdmin, userId],
+  );
+  return row !== null;
 }

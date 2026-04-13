@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByEmail } from "@/lib/repository/user/userRepository";
-import { sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
+import { getLastEtherealURL, sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
 
 export async function POST(req: NextRequest) {
   const { email } = await req.json();
@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
 
   if (user.email_confirmed) return NextResponse.json({ error: "Already confirmed" }, { status: 400 });
 
-  await sendConfirmationEmail(user.id, user.email);
-  return NextResponse.json({ ok: true });
+  const confirmURL = await sendConfirmationEmail(user.id, user.email);
+  const etherealURL = getLastEtherealURL()
+  return NextResponse.json({ ok: true, confirmURL, etherealURL });
 }

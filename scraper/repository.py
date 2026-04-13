@@ -257,3 +257,33 @@ def deleteRecursiveScan(id):
     finally:
         if conn:
             conn.close()
+
+
+def getUserTier(user_id):
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT tier FROM users WHERE id = %s", (user_id,))
+            row = cur.fetchone()
+            return row[0] if row else None
+    finally:
+        if conn:
+            conn.close()
+
+
+def setUserTier(user_id, tier):
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET tier = %s WHERE id = %s RETURNING id",
+                (tier, user_id),
+            )
+            updated = cur.rowcount
+            conn.commit()
+            return updated > 0
+    finally:
+        if conn:
+            conn.close()

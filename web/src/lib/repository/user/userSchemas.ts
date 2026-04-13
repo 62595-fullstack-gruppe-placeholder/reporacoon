@@ -20,8 +20,10 @@ export const userSchema = z.object({
   id: z.uuidv4(),
   email: z.email(),
   email_confirmed: z.boolean(),
+  tier: z.enum(["free", "pro"]).default("free"),
+  is_admin: z.boolean().default(false),
   // used default from settingsSchema
-  settings: settingsSchema.nullable().default(settingsSchema.parse({})), 
+  settings: settingsSchema.nullable().default(settingsSchema.parse({})),
 });
 
 /**

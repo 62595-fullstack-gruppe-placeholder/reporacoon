@@ -16,6 +16,8 @@ from repository import (
     getAllScanFindings,
     insertScanFindings,
     insertDurationInScanJobs,
+    getUserTier,
+    setUserTier,
 )
 import pytest
 import psycopg2
@@ -144,3 +146,52 @@ def test_insert_duration_in_scanjobs(mock_get_connection, insert_helpers):
         d2 = cur.fetchone()[0]
     assert d1 == 123
     assert d2 is None
+
+
+# =========================================
+#           Tier repository tests
+# =========================================
+
+# Verifies that getUserTier returns 'free' for a newly created user
+def test_get_user_tier_defaults_to_free(mock_get_connection, insert_helpers):
+    insert_user, _ = insert_helpers
+    user_id = insert_user("tier_free@example.com")
+
+    tier = getUserTier(user_id)
+    assert tier == "free"
+
+
+# Verifies that setUserTier upgrades a user to pro and getUserTier reflects the change
+def test_set_user_tier_to_pro(mock_get_connection, insert_helpers):
+    insert_user, _ = insert_helpers
+    user_id = insert_user("tier_pro@example.com")
+
+    result = setUserTier(user_id, "pro")
+    assert result is True
+
+    tier = getUserTier(user_id)
+    assert tier == "pro"
+
+
+# Verifies that setUserTier can downgrade a pro user back to free
+def test_set_user_tier_back_to_free(mock_get_connection, insert_helpers):
+    insert_user, _ = insert_helpers
+    user_id = insert_user("tier_downgrade@example.com")
+
+    setUserTier(user_id, "pro")
+    setUserTier(user_id, "free")
+
+    tier = getUserTier(user_id)
+    assert tier == "free"
+
+
+# Verifies that getUserTier returns None for a non-existent user id
+def test_get_user_tier_unknown_user(mock_get_connection):
+    tier = getUserTier(str(uuid.uuid4()))
+    assert tier is None
+
+
+# Verifies that setUserTier returns False for a non-existent user id
+def test_set_user_tier_unknown_user(mock_get_connection):
+    result = setUserTier(str(uuid.uuid4()), "pro")
+    assert result is False

@@ -7,14 +7,16 @@ vi.mock("@/lib/repository/user/userRepository", () => ({
 }));
 vi.mock("@/lib/auth/email/emailConfirmationService", () => ({
   sendConfirmationEmail: vi.fn().mockResolvedValue({}),
+  getLastEtherealURL: vi.fn().mockResolvedValue({}),
 }));
 
 import { POST } from "../route";
 import { getUserByEmail } from "@/lib/repository/user/userRepository";
-import { sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
+import { getLastEtherealURL, sendConfirmationEmail } from "@/lib/auth/email/emailConfirmationService";
 
 const mockGetUserByEmail = vi.mocked(getUserByEmail);
 const mockSendConfirmationEmail = vi.mocked(sendConfirmationEmail);
+const mockGetLastEtherealURL = vi.mocked(getLastEtherealURL);
 
 const makeRequest = (body: object) =>
   new NextRequest("http://localhost/api/auth/resend", {
@@ -68,6 +70,6 @@ describe("POST /api/auth/resend", () => {
   it("returns ok after sending email", async () => {
     mockGetUserByEmail.mockResolvedValue(unconfirmedUser);
     const res = await POST(makeRequest({ email: "test@test.com" }));
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ ok: true, confirmURL: {}, etherealURL: {} });
   });
 });

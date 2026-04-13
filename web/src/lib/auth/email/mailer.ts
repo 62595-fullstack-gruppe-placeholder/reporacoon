@@ -42,5 +42,5 @@ export async function sendEmail({
   //logs the Ethereal preview URL
   console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
 
-  return info;
+  return nodemailer.getTestMessageUrl(info);
 }

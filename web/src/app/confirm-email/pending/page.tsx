@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Mail, Zap, ShieldCheck } from "lucide-react";
 
 export default function ConfirmEmailPendingPage() {
@@ -19,11 +20,46 @@ export default function ConfirmEmailPendingPage() {
   const handleResend = async () => {
     setLoading(true);
     const email = localStorage.getItem("pending_confirmation_email") ?? "";
-    await fetch("/api/auth/resend", {
+
+    if (!email) {
+      toast.error("No pending confirmation email found.");
+      setLoading(false);
+      return;
+    }
+
+    const response = await fetch("/api/auth/resend", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok || (data && data.error)) {
+      toast.error(data?.error ?? "Failed to resend confirmation email.");
+      setLoading(false);
+      return;
+    }
+
+    if (data?.etherealURL) {
+      toast.info(
+        <>
+          ***DEBUG ONLY*** <br/>
+          Confirmation email resent! {" "}
+          <a
+            href={data.etherealURL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline text-primary"
+          >
+            Open verification link
+          </a>
+        </>
+      );
+    } else {
+      toast.success(`Confirmation email resent to ${email}`);
+    }
+
     setLoading(false);
     setResent(true);
     setTimeout(() => setResent(false), 4000);
