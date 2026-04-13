@@ -57,6 +57,8 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    env_file:
+      - ./web/.env.local
 
   scraper:
     image: ghcr.io/62595-fullstack-gruppe-placeholder/reporacoon/scraper:latest

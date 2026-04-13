@@ -71,7 +71,7 @@ export async function getScanJobsByRecursiveScanId(
     LEFT JOIN scan_findings f ON f.job_id = sj.id
     WHERE sj.recursive_scan_id = $1
     GROUP BY sj.id, sj.repo_url, sj.status, sj.owner_id, sj.priority,
-             sj.created_at, sj.duration
+             sj.created_at, sj.duration, sj.repoKey  -- ADD repoKey
     ORDER BY sj.created_at DESC
     `,
     [recursiveScanId],
@@ -92,10 +92,10 @@ export async function getUserScanJobs(
     LEFT JOIN scan_findings f ON f.job_id = sj.id
     WHERE sj.owner_id = $1
     GROUP BY sj.id, sj.repo_url, sj.status, sj.owner_id, sj.priority, 
-             sj.created_at, sj.duration
+             sj.created_at, sj.duration, sj.repoKey  -- ADD repoKey
     ORDER BY sj.created_at DESC
     LIMIT $2
-  `,
+    `,
     [userId, limit],
   );
 

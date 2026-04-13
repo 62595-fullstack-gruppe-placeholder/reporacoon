@@ -1,6 +1,7 @@
 "use server";
 
 import { getUser } from "@/lib/auth/userFromToken";
+import { encryptToken } from "@/lib/crypto";
 import { getFindingsByJobId } from "@/lib/repository/scanFinding/scanFindingRepository";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { createScanJob, getScanJobById } from "@/lib/repository/scanJob/scanJobRepository";
@@ -57,51 +58,61 @@ export async function scan(input: CreateScanJobDTO & { url: string; repoKey: str
     const validateResponse = await fetch("http://scraper:5001/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: input.url }),
+      body: JSON.stringify({ 
+        url: input.url,
+        repoKey: input.repoKey,
+      }),
     });
 
-    const validateData = await validateResponse.json();
+    const validateText = await validateResponse.text();
+    let validateData;
 
-    if (!validateData.valid) {
-      return { 
-        success: false, 
-        error: "Invalid GitHub/GitLab URL. Please check and try again." 
-      };
+    try {
+      validateData = JSON.parse(validateText);
+    } catch {
+      console.error("Non-JSON response from /validate:", validateText);
+      return { success: false, error: "Validation service returned an invalid response." };
     }
 
-    // 2. Create scan job
-    await createScanJobServerAction({
+    if (!validateResponse.ok || !validateData.valid) {
+      console.log("Validation failed:", validateData);
+      return { success: false, error: validateData.message ?? "Invalid GitHub/GitLab URL. Please check and try again." };
+    }
+
+    
+
+    const repokeyEncrypted = input.repoKey != null ? encryptToken(input.repoKey) : null;
+    const job = await createScanJobServerAction({
       repo_url: input.url,
       owner_id: (await getUser())?.id ?? null,
-      repoKey: input.repoKey,
+      repoKey: repokeyEncrypted,
       priority: 1,
     });
 
-    // 3. Start scanner
     const scanResponse = await fetch("http://scraper:5001/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isDeepScan: input.isDeepScan, extensions: Array.from(input.extensions) }),
+      body: JSON.stringify({ 
+        isDeepScan: input.isDeepScan, 
+        extensions: Array.from(input.extensions),
+        repoKey: input.repoKey, 
+      }),
     });
 
     const scanData = await scanResponse.json();
     const scanId = scanData.scan_id;
 
-    // 4. Fetch results
     const findings = await getFindingsByJobIdServerAction(scanId);
-    const job = await getScanJobByIdServerAction(scanId);
+    const fetchedJob = await getScanJobByIdServerAction(scanId);
 
     return {
       success: true,
       findings,
-      jobs: [job]
+      jobs: [fetchedJob]
     };
 
   } catch (error: any) {
     console.error("Scan error:", error);
-    return { 
-      success: false, 
-      error: "Scan failed. Please try again." 
-    };
+    return { success: false, error: "Scan failed. Please try again." };
   }
 }

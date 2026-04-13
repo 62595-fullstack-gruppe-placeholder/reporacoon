@@ -67,3 +67,6 @@ docker-compose.override.yml
 docker-compose.dev.yml
 
 cron/*.log
+
+# token encryption key
+.env.local

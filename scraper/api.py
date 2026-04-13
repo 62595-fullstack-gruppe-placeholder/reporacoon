@@ -83,19 +83,15 @@ if os.environ.get("DISABLE_SCHEDULER") != "1":
 
 #todo check if its github or gitlab or bitbucket etc, for now just github
 def validate_github_url(url):
-    github_pattern = r'^https?://(www\.)?github\.com/([^/]+)/([^/]+)/?$'
-    
+    github_pattern = r'^https?://(www\.)?github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$'
     match = re.match(github_pattern, url)
-    
+
     if not match:
         return False, "Invalid GitHub repository URL format", None
-    
+
     owner = match.group(2)
     repo = match.group(3)
-    
-    if repo.endswith('.git'):
-        repo = repo[:-4]
-    
+
     return True, "Valid GitHub URL", {'owner': owner, 'repo': repo}
 
 
@@ -109,6 +105,8 @@ def check_repo_exists(owner, repo, repoKey=None):
     
     try:
         response = requests.get(url, headers=headers)
+        print("STATUS:", response.status_code)
+        print("BODY:", response.text)
         
         if response.status_code == 200:
             return True, "Repository exists", {"url": f"https://github.com/{owner}/{repo}"}

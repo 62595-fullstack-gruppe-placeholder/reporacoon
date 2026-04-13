@@ -1,8 +1,5 @@
 "use client";
 
-import { getUser } from "@/lib/auth/userFromToken";
-import Image from 'next/image';
-
 import URLForm from "../_components/URLForm";
 import { ScanOptions } from "../_components/ScanOptions";
 import { useState } from "react";
