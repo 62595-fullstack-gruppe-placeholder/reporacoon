@@ -8,7 +8,7 @@ import time
 from urllib.parse import urlparse
 import requests
 from repository import *
-from tasks import run_scan_job, run_recursive_scan_job
+from tasks import run_scan_job_pro, run_scan_job_free, run_recursive_scan_job_pro, run_recursive_scan_job_free
 
 VALID_INTERVALS = {"EVERY_MINUTE", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
@@ -25,8 +25,11 @@ scan_results = {}
 # has passed is picked up and executed in a daemon thread.
 
 def run_recursive_scan(scan):
-    # Enqueue via Celery instead of running directly in a thread
-    run_recursive_scan_job.delay(
+    # Enqueue via Celery — route to fast or slow queue based on owner tier
+    owner_id = scan.get("owner_id")
+    tier = getUserTier(owner_id) if owner_id else "free"
+    task = run_recursive_scan_job_pro if tier == "pro" else run_recursive_scan_job_free
+    task.delay(
         scan["id"],
         scan["repo_url"],
         scan["is_deep_scan"],
@@ -171,6 +174,10 @@ def start_scan():
         if not data:
             return jsonify({'success': False, 'message': 'No pending scan jobs'}), 200
 
+        user_id = request.json.get("userId")
+        tier = getUserTier(user_id) if user_id else "free"
+        task = run_scan_job_pro if tier == "pro" else run_scan_job_free
+
         scan_id = None
         repo_info = None
         for id, url in data.items():
@@ -180,7 +187,7 @@ def start_scan():
                 return jsonify({'error': message}), 400
 
             scan_id = id
-            run_scan_job.delay(id, url, isDeepScan, extensions)
+            task.delay(id, url, isDeepScan, extensions)
 
         return jsonify({
             'success': True,
@@ -303,6 +310,38 @@ def toggle_recursive_scan_route(scan_id):
         if is_active is None:
             return jsonify({'error': 'Not found'}), 404
         return jsonify({'success': True, 'is_active': is_active}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ---- Mock tier endpoints ----
+# POST /admin/upgrade  - Set a user to pro tier (mock payment)
+# POST /admin/downgrade - Set a user back to free tier
+
+@app.route('/admin/upgrade', methods=['POST'])
+def upgrade_user():
+    try:
+        data = request.get_json()
+        if not data or 'userId' not in data:
+            return jsonify({'error': 'userId is required'}), 400
+        updated = setUserTier(data['userId'], 'pro')
+        if not updated:
+            return jsonify({'error': 'User not found'}), 404
+        return jsonify({'success': True, 'userId': data['userId'], 'tier': 'pro'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/admin/downgrade', methods=['POST'])
+def downgrade_user():
+    try:
+        data = request.get_json()
+        if not data or 'userId' not in data:
+            return jsonify({'error': 'userId is required'}), 400
+        updated = setUserTier(data['userId'], 'free')
+        if not updated:
+            return jsonify({'error': 'User not found'}), 404
+        return jsonify({'success': True, 'userId': data['userId'], 'tier': 'free'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
