@@ -18,6 +18,7 @@ import { getLastEtherealURL, sendConfirmationEmail } from "@/lib/auth/email/emai
 
 const mockGetUserByEmail = vi.mocked(getUserByEmail);
 const mockSendConfirmationEmail = vi.mocked(sendConfirmationEmail);
+const mockGetLastEtherealURL = vi.mocked(getLastEtherealURL);
 
 const makeRequest = (body: object) =>
   new NextRequest("http://localhost/api/auth/resend", {
