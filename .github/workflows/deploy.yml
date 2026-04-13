@@ -37,6 +37,8 @@ jobs:
         tags: ghcr.io/${{ github.repository }}/scraper:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          TOKEN_ENCRYPTION_KEY=${{ secrets.TOKEN_ENCRYPTION_KEY }}
 
   deploy:
     needs: build-and-push
