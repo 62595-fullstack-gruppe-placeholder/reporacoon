@@ -13,6 +13,8 @@ describe("userToClaims", () => {
       id: "user-123",
       email: "test@example.com",
       email_confirmed: true,
+      tier: "free",
+      is_admin: false,
       settings: null,
     };
 
@@ -22,6 +24,8 @@ describe("userToClaims", () => {
       sub: "user-123",
       ema: "test@example.com",
       emc: true,
+      tier: "free",
+      adm: false,
     });
   });
 });
@@ -32,6 +36,8 @@ describe("claimsToUser", () => {
       sub: "user-456",
       ema: "user@example.com",
       emc: false,
+      tier: "pro",
+      adm: true,
     } as unknown as JWTPayload;
 
     const user = claimsToUser(payload);
@@ -40,6 +46,8 @@ describe("claimsToUser", () => {
       id: "user-456",
       email: "user@example.com",
       email_confirmed: false,
+      tier: "pro",
+      is_admin: true,
       settings: null,
     });
   });

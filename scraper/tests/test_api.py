@@ -67,42 +67,32 @@ def test_scan_endpoint(client):
 
     # Test 1: Valid pending jobs
 
-    # This mocks all database calls and other necessary functions
+    # This mocks all database calls and Celery tasks
     with patch('api.getAllPendingScanJobs') as mock_get_jobs, \
-         patch('api.insertDurationInScanJobs'), \
-         patch('api.setParsingScanJobsToParsed'), \
-         patch('api.getAllScanFindings', return_value=[]), \
-         patch('psycopg2.connect') as mock_pg_connect, \
          patch('api.validate_github_url', return_value=(True, 'OK', {'owner': 'user', 'repo': 'repo'})) as mock_validate, \
-         patch('logic.GitHubSecretScanner') as mock_scanner, \
-         patch('subprocess.run'), \
-         patch('shutil.rmtree'):  # For temp dir cleanup
-        
-        # Configures the return values of the mocks
+         patch('api.getUserTier', return_value='free'), \
+         patch('api.run_scan_job_free') as mock_free, \
+         patch('api.run_scan_job_pro') as mock_pro:
+
+        mock_free.delay = MagicMock()
+        mock_pro.delay = MagicMock()
         mock_get_jobs.return_value = mock_pending_jobs
-        mock_pg_connect.return_value = MagicMock()
-        mock_scanner_instance = MagicMock()
-        mock_scanner_instance.run.return_value = None    
-        mock_scanner.return_value = mock_scanner_instance
-        
+
         response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         print(f"Status: {response.status_code}")
         print(f"JSON: {response.json}")
         assert response.status_code == 202
         assert response.json['success'] is True
-    
-    # Test 2: No pending jobs
 
-        mock_get_jobs.return_value = {}
-        
+    # Test 2: No pending jobs
+    with patch('api.getAllPendingScanJobs', return_value={}):
         response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         assert response.status_code == 200
         assert response.json['success'] is False
-    
+
     # Test 3: Validation fails
-        mock_get_jobs.return_value = mock_pending_jobs
-        mock_validate.return_value = (False, 'Bad URL', None)
-        
+    with patch('api.getAllPendingScanJobs', return_value=mock_pending_jobs), \
+         patch('api.validate_github_url', return_value=(False, 'Bad URL', None)):
         response = client.post('/scan', json={"isDeepScan": False, "extensions": extensions})
         assert response.status_code == 400
         assert 'error' in response.json
