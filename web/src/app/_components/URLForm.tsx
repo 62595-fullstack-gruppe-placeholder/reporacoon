@@ -49,7 +49,7 @@ export default function URLForm({ onScanStarted, hasUser, isDeepScan, extensions
     const input = {
       url: data.url,
       repo_url: data.url,
-      token: (hasUser && data.repoType === "private") ? data.repoKey : null,
+      repoKey: (hasUser && data.repoType === "private") ? (data.repoKey || null)  : null,
       owner_id: null,
       priority: 1,
       isDeepScan,

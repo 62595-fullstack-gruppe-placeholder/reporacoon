@@ -100,16 +100,22 @@ def validate_github_url(url):
 
 
 # Check if the repository actually exists on GitHub
-def check_repo_exists(owner, repo):
-    url = f"https://github.com/{owner}/{repo}"
+def check_repo_exists(owner, repo, repoKey=None):
+    url = f"https://api.github.com/repos/{owner}/{repo}"
+    
+    headers = {"Accept": "application/vnd.github+json"}
+    if repoKey:
+        headers["Authorization"] = f"Bearer {repoKey}"
     
     try:
-        response = requests.head(url, allow_redirects=False)
+        response = requests.get(url, headers=headers)
         
         if response.status_code == 200:
-            return True, "Repository exists", {"url": url}
+            return True, "Repository exists", {"url": f"https://github.com/{owner}/{repo}"}
         elif response.status_code == 404:
-            return False, "Repository not found on GitHub", None
+            return False, "Repository not found or no access", None
+        elif response.status_code == 401:
+            return False, "Invalid or expired access token", None
         else:
             return False, f"Unexpected status code: {response.status_code}", None
             
@@ -135,26 +141,17 @@ def validate():
     """Validate a GitHub URL without scanning"""
     try:
         data = request.get_json()
-        
-        if not data or 'url' not in data:
-            return jsonify({
-                'valid': False,
-                'message': 'No URL provided'
-            }), 400
-        
         url = data['url']
-        
+        repoKey = data.get('repoKey')  # optional
+
         is_valid_format, format_message, repo_info = validate_github_url(url)
-        
         if not is_valid_format:
-            return jsonify({
-                'valid': False,
-                'message': format_message
-            }), 400
-        
+            return jsonify({'valid': False, 'message': format_message}), 400
+
         exists, exists_message, repo_details = check_repo_exists(
-            repo_info['owner'], 
-            repo_info['repo']
+            repo_info['owner'],
+            repo_info['repo'],
+            repoKey=repoKey
         )
         
         if not exists:
@@ -183,6 +180,7 @@ def validate():
 def start_scan():
     """Start a new scan"""
     try:
+        repoKey = request.json.get("repoKey") 
         data = getAllPendingScanJobs()
         isDeepScan = request.json.get("isDeepScan", False)
         extensions = request.json.get("extensions", [])
@@ -197,7 +195,7 @@ def start_scan():
             
             scan_id = id
             # TODO: Add multithreading here (Main work of scanning & cloning)
-            scanner = GitHubSecretScanner(url, id, isDeepScan, extensions)
+            scanner = GitHubSecretScanner(url, id, isDeepScan, extensions, repoKey=repoKey)
 
             start = time.time()
 

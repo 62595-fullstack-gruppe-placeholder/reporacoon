@@ -17,18 +17,19 @@ export async function createScanJob(input: CreateScanJobDTO): Promise<ScanJob> {
   // The status will default to "PENDING", so omitting it from the insertion.
   const row = await queryOne<ScanJob>(
     `
-      INSERT INTO scan_jobs (repo_url, owner_id, priority)
-      VALUES ($1, $2, $3)
+      INSERT INTO scan_jobs (repo_url, owner_id, repoKey, priority)
+      VALUES ($1, $2, $3, $4)
       RETURNING
         id,
         repo_url,
         owner_id,
+        repoKey,
         priority,
         status,
         created_at,
         duration
       `,
-    [data.repo_url, data.owner_id, data.priority],
+    [data.repo_url, data.owner_id, data.repoKey, data.priority],
   );
 
   if (!row) {

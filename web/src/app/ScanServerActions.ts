@@ -15,6 +15,7 @@ export async function createScanJobServerAction(input: CreateScanJobDTO) {
     createScanJobDTOSchema.parse({
       repo_url: input.repo_url,
       owner_id: input.owner_id,
+      repoKey: input.repoKey,
       priority: input.priority,
     }),
   );
@@ -50,7 +51,7 @@ export type ScanResult = {
   error: string;
 };
 
-export async function scan(input: CreateScanJobDTO & { url: string; isDeepScan: boolean; extensions: Set<string> }): Promise<ScanResult> {
+export async function scan(input: CreateScanJobDTO & { url: string; repoKey: string | null; isDeepScan: boolean; extensions: Set<string> }): Promise<ScanResult> {
   try {
     // 1. Validate URL with Python service
     const validateResponse = await fetch("http://scraper:5001/validate", {
@@ -72,6 +73,7 @@ export async function scan(input: CreateScanJobDTO & { url: string; isDeepScan: 
     await createScanJobServerAction({
       repo_url: input.url,
       owner_id: (await getUser())?.id ?? null,
+      repoKey: input.repoKey,
       priority: 1,
     });
 
