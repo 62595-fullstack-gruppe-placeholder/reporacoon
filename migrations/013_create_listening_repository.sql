@@ -2,7 +2,7 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'branchconfig') THEN
-    CREATE TYPE BranchConfig AS ENUM ('DEFAULT', 'CUSTOM');
+    CREATE TYPE BranchConfig AS ENUM ('DEFAULT', 'CUSTOM', 'ALL');
   END IF;
 END$$;
 

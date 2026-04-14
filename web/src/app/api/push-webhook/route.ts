@@ -71,13 +71,21 @@ function shouldRunScan(
   if (!payload.ref.startsWith("refs/heads/")) {
     return false;
   }
+
+  if (listening_repo.branch_config === "ALL") {
+    return true;
+  }
+
   const branch = branchNameFromRef(payload.ref);
+
   if (listening_repo.branch_config === "DEFAULT") {
     return branch === payload.repository.default_branch;
   }
+
   if (listening_repo.branch_config === "CUSTOM") {
     return branch in listening_repo.branches;
   }
+
   return false;
 }
 

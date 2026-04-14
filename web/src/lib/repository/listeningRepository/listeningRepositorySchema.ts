@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const branchConfigSchema = z.enum(["DEFAULT", "CUSTOM"]);
+export const branchConfigSchema = z.enum(["DEFAULT", "CUSTOM", "ALL"]);
 
 export type ListeningRepositoryBranchConfig = z.infer<typeof branchConfigSchema>
 
@@ -34,6 +34,8 @@ export const createListeningRepositoryFormSchema = z.object({
     .url("Enter a valid repository URL")
     .min(1, "Repository URL is required"),
   webhookSecret: z.string().nullable().optional(),
+  branch_config: branchConfigSchema.nullable().optional(),
+  branches: z.array(z.string()).optional(),
 });
 
 export type CreateListeningRepositoryForm = z.infer<

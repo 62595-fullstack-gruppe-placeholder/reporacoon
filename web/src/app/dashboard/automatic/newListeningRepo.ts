@@ -24,6 +24,8 @@ export async function newListeningRepo(form: CreateListeningRepositoryForm) {
       owner_id: user.id,
       repo_url: formData.repoUrl,
       secret_hash: hash,
+      branch_config: formData.branch_config,
+      branches: formData.branches,
     });
     return {
       id: created.id,
