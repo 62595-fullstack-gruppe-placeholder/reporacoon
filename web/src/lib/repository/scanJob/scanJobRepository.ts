@@ -17,8 +17,8 @@ export async function createScanJob(input: CreateScanJobDTO): Promise<ScanJob> {
   // The status will default to "PENDING", so omitting it from the insertion.
   const row = await queryOne<ScanJob>(
     `
-      INSERT INTO scan_jobs (repo_url, owner_id, priority)
-      VALUES ($1, $2, $3)
+      INSERT INTO scan_jobs (repo_url, owner_id, priority, listening_repository_id)
+      VALUES ($1, $2, $3, $4)
       RETURNING
         id,
         repo_url,
@@ -26,9 +26,10 @@ export async function createScanJob(input: CreateScanJobDTO): Promise<ScanJob> {
         priority,
         status,
         created_at,
-        duration
+        duration,
+        listening_repository_id
       `,
-    [data.repo_url, data.owner_id, data.priority],
+    [data.repo_url, data.owner_id, data.priority, data.listening_repository_id],
   );
 
   if (!row) {
@@ -61,7 +62,7 @@ export async function getScanJobById(id: string): Promise<ScanJob> {
 export async function getScanJobsByRecursiveScanId(
   recursiveScanId: string,
 ): Promise<ScanJobWithFindingsCount[]> {
-  const rows = await query<any>(
+  const rows = await query<ScanJobWithFindingsCount>(
     `
     SELECT
       sj.*,
@@ -82,7 +83,7 @@ export async function getUserScanJobs(
   userId: string,
   limit: number = 100,
 ): Promise<ScanJobWithFindingsCount[]> {
-  const rows = await query<any>(
+  const rows = await query<ScanJobWithFindingsCount>(
     `
     SELECT 
       sj.*, 

@@ -13,17 +13,19 @@ export async function createListeningRepository(
   const data = createListeningRepositorySchema.parse(input);
   const row = await queryOne<ListeningRepository>(
     `
-        INSERT INTO listening_repositories (owner_id, repo_url, secret_hash)
-        VALUES ($1, $2, $3)
+        INSERT INTO listening_repositories (owner_id, repo_url, secret_hash, branches, branch_config)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING
             owner_id,
             repo_url,
             secret_hash,
             is_active,
             created_at,
-            id
+            id,
+            branches,
+            branch_config
         `,
-    [data.owner_id, data.repo_url, data.secret_hash],
+    [data.owner_id, data.repo_url, data.secret_hash, data.branches ?? [], data.branch_config ?? "DEFAULT"],
   );
 
   if (!row) {
@@ -36,11 +38,34 @@ export async function createListeningRepository(
 export async function getUserListeningRepositories(userId: string) {
   const rows = await query<ListeningRepository>(
     `
-        SELECT owner_id, repo_url, secret_hash, is_active, created_at, id
+        SELECT owner_id, repo_url, secret_hash, is_active, created_at, id, branches, branch_config
         FROM listening_repositories
         WHERE owner_id = $1
         `,
     [userId],
   );
   return rows.map((row) => listeningRepositorySchema.parse(row));
+}
+
+export async function getListeningRepositoryByUrl(repoUrl: string) {
+  const row = await queryOne<ListeningRepository>(
+    `
+        SELECT
+            owner_id,
+            repo_url,
+            secret_hash,
+            is_active,
+            created_at,
+            id,
+            branches,
+            branch_config
+        FROM listening_repositories
+        WHERE repo_url = $1
+        `,
+    [repoUrl],
+  );
+
+  if (!row) return null;
+
+  return listeningRepositorySchema.parse(row);
 }
