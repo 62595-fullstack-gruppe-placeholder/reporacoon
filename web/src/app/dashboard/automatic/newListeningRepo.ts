@@ -1,5 +1,6 @@
 "use server";
 
+import { encrypt } from "@/lib/auth/encryption";
 import { getUser } from "@/lib/auth/userFromToken";
 import { createListeningRepository } from "@/lib/repository/listeningRepository/listeningRepositoryRepository";
 import {
@@ -15,15 +16,11 @@ export async function newListeningRepo(form: CreateListeningRepositoryForm) {
     throw new Error("Authentication required");
   }
 
-  const hash = formData.webhookSecret
-    ? createHash("sha256").update(formData.webhookSecret).digest("hex")
-    : null;
-
   try {
     const created = await createListeningRepository({
       owner_id: user.id,
       repo_url: formData.repoUrl,
-      secret_hash: hash,
+      encrypted_secret: formData.webhookSecret ? encrypt(formData.webhookSecret) : null,
       branch_config: formData.branch_config,
       branches: formData.branches,
     });

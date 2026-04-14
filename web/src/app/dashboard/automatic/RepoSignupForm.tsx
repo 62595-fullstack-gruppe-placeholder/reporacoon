@@ -337,7 +337,7 @@ export default function RepoSignupForm({
           disabled={isPending}
         />
         <p className="uppercase text-[10px] font-mono text-secondary tracking-widest block">
-          We'll only store a hash of the secrets
+          We'll store the secret securely using modern encryption
         </p>
       </div>
 

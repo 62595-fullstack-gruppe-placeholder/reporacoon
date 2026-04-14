@@ -10,7 +10,7 @@ export const listeningRepositorySchema = z.object({
   owner_id: z.uuidv4(),
   is_active: z.boolean(),
   repo_url: z.url(),
-  secret_hash: z.string().nullable().optional(),
+  encrypted_secret: z.string().nullable().optional(),
   branches: z.array(z.string()),
   branch_config: branchConfigSchema,
 });
@@ -20,7 +20,7 @@ export type ListeningRepository = z.infer<typeof listeningRepositorySchema>;
 export const createListeningRepositorySchema = z.object({
   owner_id: z.uuidv4(),
   repo_url: z.url(),
-  secret_hash: z.string().nullable().optional(),
+  encrypted_secret: z.string().nullable().optional(),
   branches: z.array(z.string()).optional(),
   branch_config: branchConfigSchema.nullable().optional(),
 });

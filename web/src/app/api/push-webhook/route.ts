@@ -1,37 +1,47 @@
+import { decrypt } from "@/lib/auth/encryption";
 import { getListeningRepositoryByUrl } from "@/lib/repository/listeningRepository/listeningRepositoryRepository";
 import { ListeningRepository } from "@/lib/repository/listeningRepository/listeningRepositorySchema";
 import { createScanJob } from "@/lib/repository/scanJob/scanJobRepository";
 import { getUserSettingsById } from "@/lib/repository/user/userRepository";
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
+import { createHmac, timingSafeEqual } from "crypto";
+import { log, LogLevel } from "@/lib/log";
 
-type Payload = {
-  ref: string;
-  repository: {
-    html_url: string;
-    default_branch: string;
-  };
-};
+const payloadSchema = z.object({
+  ref: z.string(),
+  repository: z.object({
+    html_url: z.string(),
+    default_branch: z.string(),
+  }),
+});
+
+type Payload = z.infer<typeof payloadSchema>;
 
 export async function POST(request: NextRequest) {
   try {
-    const json = await request.json();
-    const payload: Payload = z
-      .object({
-        ref: z.string(),
-        repository: z.object({
-          html_url: z.string(),
-          default_branch: z.string(),
-        }),
-      })
-      .parse(json);
+    const rawBody = await request.text();
+    const json = JSON.parse(rawBody);
+    const payload = payloadSchema.parse(json);
     const listeningRepository = await getListeningRepositoryByUrl(
       payload.repository.html_url,
     );
+
     if (!listeningRepository) {
       return NextResponse.json("No listening repo set up for that repository", {
         status: 404,
       });
+    }
+
+    if (listeningRepository.encrypted_secret) {
+      const authenticated = await authenticateRequest(
+        rawBody,
+        listeningRepository,
+      );
+      if (!authenticated) {
+        return NextResponse.json("Unauthorized", { status: 401 });
+      }
     }
 
     if (!shouldRunScan(payload, listeningRepository)) {
@@ -62,6 +72,49 @@ export async function POST(request: NextRequest) {
     console.log(error);
     return NextResponse.json("Internal Server Error", { status: 500 });
   }
+}
+
+async function authenticateRequest(
+  rawBody: string,
+  listeningRepository: ListeningRepository,
+): Promise<boolean> {
+  const hmacHeader = (await headers()).get("X-Hub-Signature-256");
+  if (!hmacHeader) {
+    log(
+      "Failed to authenticate webhook request, no authentication header",
+      LogLevel.error,
+    );
+    return false;
+  }
+  const secret = listeningRepository
+    ? decrypt(listeningRepository.encrypted_secret!)
+    : null;
+  if (!secret) {
+    log(
+      "Failed to authenticate webhook request, couldn't decrypt secret",
+      LogLevel.error,
+    );
+    return false;
+  }
+
+  const expected = `sha256=${createHmac("sha256", secret)
+    .update(rawBody, "utf8")
+    .digest("hex")}`;
+
+  // Use timingSafeEqual to prevent timing attacks.
+  // Both buffers must be the same length — if they differ, the signature is
+  // structurally invalid anyway, so we can return false immediately.
+  const a = Buffer.from(expected, "utf8");
+  const b = Buffer.from(hmacHeader, "utf8");
+
+  if (a.length !== b.length) {
+    log(
+      "Failed to authenticate webhook request, hmac lengths differed",
+      LogLevel.error,
+    );
+  }
+
+  return timingSafeEqual(a, b);
 }
 
 function shouldRunScan(

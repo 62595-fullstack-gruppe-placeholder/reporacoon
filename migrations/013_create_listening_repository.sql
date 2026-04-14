@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS listening_repositories (
     owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     is_active BOOLEAN NOT NULL DEFAULT true,
     repo_url TEXT UNIQUE NOT NULL,
-    secret_hash TEXT,
+    encrypted_secret TEXT,
     branches TEXT[] DEFAULT '{}' NOT NULL,
     branch_config BranchConfig NOT NULL DEFAULT 'DEFAULT'
 );
