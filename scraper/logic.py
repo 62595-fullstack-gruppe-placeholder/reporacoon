@@ -34,13 +34,13 @@ except Exception as e:
     ".cfg", ".conf", ".config", ".env", ".sh", ".bash", ".zsh", ".fish",
     ".ps1", ".bat", ".cmd", ".txt", ".rst", ".tex", ".csv", ".sql"]
     print(f"JSON Erroasdr: {e}")
-    #Entropy prefix
+ #Entropy prefix
 
-    BASE64_CHARSET  = set(string.ascii_letters + string.digits + "+/=")
-    URLSAFE_CHARSET = set(string.ascii_letters + string.digits + "-_=")
-    HEX_CHARSET     = set(string.hexdigits)
+BASE64_CHARSET  = set(string.ascii_letters + string.digits + "+/=")
+URLSAFE_CHARSET = set(string.ascii_letters + string.digits + "-_=")
+HEX_CHARSET     = set(string.hexdigits)
     
-    FALSE_POSITIVE_PATTERNS = [
+FALSE_POSITIVE_PATTERNS = [
             re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.I),  # UUID
             re.compile(r'^[0-9a-f]{40}$'),          # git SHA1
             re.compile(r'^[0-9a-f]{64}$'),          # git SHA256
@@ -212,9 +212,7 @@ class GitHubSecretScanner:
         seen_tokens = set()
 
         for line_number, line in enumerate(lines, start=1):
-            if line_number in regex_matched_lines:
-                continue
-
+           
             if not line.strip():
                 continue
 
@@ -269,12 +267,7 @@ class GitHubSecretScanner:
 
         
         # second pass: entropy scan on lines regex did not already flag
-        self.scan_entropy_on_unmatched_lines(
-            lines,
-            regex_matched_lines,
-            file_path,
-            branch
-        )
+        self._scan_entropy(lines, file_path, branch)
 
     def scan_repository(self, repo_path, branch):
         # TODO: add an upper limit of files to scan
