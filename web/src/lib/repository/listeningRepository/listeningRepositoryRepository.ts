@@ -3,8 +3,11 @@ import { query, queryOne } from "@lib/database/remoteDataSource";
 import {
   CreateListeningRepository,
   createListeningRepositorySchema,
+  DeactivateRepoDTO,
+  DeleteRepoDTO,
   ListeningRepository,
   listeningRepositorySchema,
+  UpdateBranchConfigDTO,
 } from "./listeningRepositorySchema";
 
 export async function createListeningRepository(
@@ -25,7 +28,13 @@ export async function createListeningRepository(
             branches,
             branch_config
         `,
-    [data.owner_id, data.repo_url, data.encrypted_secret, data.branches ?? [], data.branch_config ?? "DEFAULT"],
+    [
+      data.owner_id,
+      data.repo_url,
+      data.encrypted_secret,
+      data.branches ?? [],
+      data.branch_config ?? "DEFAULT",
+    ],
   );
 
   if (!row) {
@@ -68,4 +77,47 @@ export async function getListeningRepositoryByUrl(repoUrl: string) {
   if (!row) return null;
 
   return listeningRepositorySchema.parse(row);
+}
+
+export async function updateBranchConfig(dto: UpdateBranchConfigDTO) {
+  await queryOne<UpdateBranchConfigDTO>(
+    `
+      UPDATE listening_repositories SET
+        branches = $1, branch_config = $2
+      WHERE id = $3
+    `,
+    [dto.branches, dto.branch_config, dto.id],
+  );
+}
+
+export async function deactivateRepo(dto: DeactivateRepoDTO) {
+  await queryOne<DeactivateRepoDTO>(
+    `
+    UPDATE listening_repositories SET
+      is_active = false
+    WHERE id = $1 AND is_active = true
+    `,
+    [dto.id],
+  );
+}
+
+export async function reactivateRepo(dto: DeactivateRepoDTO) {
+  await queryOne<DeactivateRepoDTO>(
+    `
+    UPDATE listening_repositories SET
+      is_active = true
+    WHERE id = $1 AND is_active = false
+    `,
+    [dto.id],
+  );
+}
+
+export async function deleteRepo(dto: DeleteRepoDTO) {
+  await queryOne<DeleteRepoDTO>(
+    `
+    DELETE FROM listening_repositories WHERE
+      id = $1 AND is_active = false
+    `,
+    [dto.id],
+  );
 }

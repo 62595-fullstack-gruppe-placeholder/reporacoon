@@ -2,7 +2,9 @@ import { z } from "zod";
 
 export const branchConfigSchema = z.enum(["DEFAULT", "CUSTOM", "ALL"]);
 
-export type ListeningRepositoryBranchConfig = z.infer<typeof branchConfigSchema>
+export type ListeningRepositoryBranchConfig = z.infer<
+  typeof branchConfigSchema
+>;
 
 export const listeningRepositorySchema = z.object({
   id: z.uuidv4(),
@@ -41,3 +43,23 @@ export const createListeningRepositoryFormSchema = z.object({
 export type CreateListeningRepositoryForm = z.infer<
   typeof createListeningRepositoryFormSchema
 >;
+
+export const updateBranchConfigDTOSchema = z.object({
+  id: z.string(),
+  branch_config: branchConfigSchema,
+  branches: z.array(z.string()).nullable(),
+});
+
+export type UpdateBranchConfigDTO = z.infer<typeof updateBranchConfigDTOSchema>;
+
+export const deactivateRepoDTOSchema = z.object({
+  id: z.string(),
+});
+
+export type DeactivateRepoDTO = z.infer<typeof deactivateRepoDTOSchema>;
+
+export const deleteRepoDTOSchema = z.object({
+  id: z.string(),
+});
+
+export type DeleteRepoDTO = z.infer<typeof deleteRepoDTOSchema>;
