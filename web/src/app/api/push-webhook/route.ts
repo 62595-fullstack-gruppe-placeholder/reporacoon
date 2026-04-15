@@ -122,6 +122,7 @@ function shouldRunScan(
   listening_repo: ListeningRepository,
 ): boolean {
   if (!payload.ref.startsWith("refs/heads/")) {
+    log("Skipping scan, ref was not a branch", LogLevel.debug);
     return false;
   }
 
@@ -136,7 +137,15 @@ function shouldRunScan(
   }
 
   if (listening_repo.branch_config === "CUSTOM") {
-    return branch in listening_repo.branches;
+    const skip = !listening_repo.branches.includes(branch);
+    if (skip) {
+      log(
+        `Skipping scan, branch ${branch} not in ${listening_repo.branches}`,
+        LogLevel.debug,
+      );
+      return false;
+    }
+    return true;
   }
 
   return false;
