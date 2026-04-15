@@ -9,7 +9,7 @@ function getSecretKey(): Buffer {
 }
 
 export function encryptToken(token: string): string {
-  const SECRET_KEY = getSecretKey(); // only runs when called, not at import
+  const SECRET_KEY = getSecretKey();
   const iv = randomBytes(12);
   const cipher = createCipheriv(ALGORITHM, SECRET_KEY, iv);
   const encrypted = Buffer.concat([cipher.update(token, "utf8"), cipher.final()]);
@@ -18,7 +18,7 @@ export function encryptToken(token: string): string {
 }
 
 export function decryptToken(stored: string): string {
-  const SECRET_KEY = getSecretKey(); // only runs when called, not at import
+  const SECRET_KEY = getSecretKey();
   const [iv, authTag, encrypted] = stored.split(":").map(s => Buffer.from(s, "base64"));
   const decipher = createDecipheriv(ALGORITHM, SECRET_KEY, iv);
   decipher.setAuthTag(authTag);

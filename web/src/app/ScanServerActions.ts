@@ -107,13 +107,13 @@ export async function scan(input: CreateScanJobDTO & { url: string; repoKey: str
     const POLL_INTERVAL_MS = 2000;
     const TIMEOUT_MS = 5 * 60 * 1000;
     const deadline = Date.now() + TIMEOUT_MS;
-    let job = await getScanJobByIdServerAction(scanId);
+    let fetchedJob = await getScanJobByIdServerAction(scanId);
     while (job.status !== "PARSED" && job.status !== "FAILED") {
       if (Date.now() >= deadline) {
         return { success: false, error: "Scan timed out. Please try again." };
       }
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-      job = await getScanJobByIdServerAction(scanId);
+      fetchedJob = await getScanJobByIdServerAction(scanId);
     }
 
     if (job.status === "FAILED") {
