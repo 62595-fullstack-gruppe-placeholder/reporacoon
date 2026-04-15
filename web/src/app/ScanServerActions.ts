@@ -102,10 +102,27 @@ export async function scan(input: CreateScanJobDTO & { url: string; repoKey: str
     const scanData = await scanResponse.json();
     const scanId = scanData.scan_id;
 
-    await clearScanJobToken(scanId);
 
+    // 4. Poll until the Celery worker finishes (status transitions PENDING → PARSING → PARSED)
+    const POLL_INTERVAL_MS = 2000;
+    const TIMEOUT_MS = 5 * 60 * 1000;
+    const deadline = Date.now() + TIMEOUT_MS;
+    let job = await getScanJobByIdServerAction(scanId);
+    while (job.status !== "PARSED" && job.status !== "FAILED") {
+      if (Date.now() >= deadline) {
+        return { success: false, error: "Scan timed out. Please try again." };
+      }
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      job = await getScanJobByIdServerAction(scanId);
+    }
+
+    if (job.status === "FAILED") {
+      return { success: false, error: "Scan failed. Please try again." };
+    }
+
+    // 5. Fetch results now that the scan is complete
     const findings = await getFindingsByJobIdServerAction(scanId);
-    const fetchedJob = await getScanJobByIdServerAction(scanId);
+    await clearScanJobToken(scanId);
 
     return {
       success: true,
