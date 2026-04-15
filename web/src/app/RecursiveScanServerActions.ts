@@ -11,13 +11,14 @@ import { getScanJobsByRecursiveScanId } from "@/lib/repository/scanJob/scanJobRe
 import { getFindingsByJobId } from "@/lib/repository/scanFinding/scanFindingRepository";
 import { revalidatePath } from "next/cache";
 
-export async function createRecursiveScanAction(url: string, interval: ScanInterval, isDeepScan: boolean, extensions: Set<string>) {
+export async function createRecursiveScanAction(url: string, repoKey: String | null, interval: ScanInterval, isDeepScan: boolean, extensions: Set<string>) {
   const user = await getUser();
   if (!user) return { success: false, error: "Not authenticated" };
 
   const input = createRecursiveScanDTOSchema.parse({
     repo_url: url,
     owner_id: user.id,
+    repoKey: repoKey,
     interval,
     is_deep_scan: isDeepScan,
     extensions: Array.from(extensions),
@@ -36,7 +37,7 @@ export async function createRecursiveScanAction(url: string, interval: ScanInter
   await fetch("http://scraper:5001/recursive-scan", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url, interval, isDeepScan, extensions}),
+    body: JSON.stringify({ url, repoKey, interval, isDeepScan, extensions}),
   });
 
   await createRecursiveScan(input);
