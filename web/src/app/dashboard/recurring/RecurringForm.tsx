@@ -63,10 +63,10 @@ export function RecurringForm({
       
       const result = await createRecursiveScanAction(
         url, 
-        finalRepoKey,
         interval, 
         isDeepScan, 
         extensionsState,
+        finalRepoKey,
       );
       
       if (!result.success) {

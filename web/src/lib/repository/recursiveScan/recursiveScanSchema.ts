@@ -8,6 +8,7 @@ export const recursiveScanSchema = z.object({
   id: z.uuidv4(),
   repo_url: z.url(),
   owner_id: z.uuidv4().nullable(),
+  repoKey: z.string().nullable().optional(),
   interval: z.enum(SCAN_INTERVALS),
   is_deep_scan: z.boolean(),
   extensions: z.array(z.string()).default([

@@ -168,11 +168,11 @@ def getAllRecursiveScans():
         conn = get_connection()
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, repo_url, interval, is_deep_scan, extensions, is_active, last_run_at, next_run_at, created_at "
+                "SELECT id, repo_url, interval, repoKey, is_deep_scan, extensions, is_active, last_run_at, next_run_at, created_at "
                 "FROM recursive_scans ORDER BY created_at DESC"
             )
             rows = cur.fetchall()
-            keys = ["id", "repo_url", "interval", "is_deep_scan", "extensions", "is_active", "last_run_at", "next_run_at", "created_at"]
+            keys = ["id", "repo_url", "interval", "repoKey", "is_deep_scan", "extensions", "is_active", "last_run_at", "next_run_at", "created_at"]
             return [dict(zip(keys, r)) for r in rows]
     finally:
         if conn:
@@ -186,11 +186,11 @@ def getDueRecursiveScans():
         conn = get_connection()
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, repo_url, interval, is_deep_scan, extensions "
+                "SELECT id, repo_url, repoKey, interval, is_deep_scan, extensions "
                 "FROM recursive_scans WHERE is_active = true AND next_run_at <= NOW()"
             )
             rows = cur.fetchall()
-            keys = ["id", "repo_url", "interval", "is_deep_scan", "extensions"]
+            keys = ["id", "repo_url", "repoKey", "interval", "is_deep_scan", "extensions"]
             return [dict(zip(keys, r)) for r in rows]
     finally:
         if conn:

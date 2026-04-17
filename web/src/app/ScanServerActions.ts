@@ -7,40 +7,16 @@ import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { clearScanJobToken, createScanJob, getScanJobById } from "@/lib/repository/scanJob/scanJobRepository";
 import { CreateScanJobDTO, createScanJobDTOSchema, ScanJob } from "@/lib/repository/scanJob/scanJobSchemas";
 
-/**
- * Create scan job server action.
- * @param input see {@link CreateScanJobDTO}.
- */
 export async function createScanJobServerAction(input: CreateScanJobDTO) {
-  const scanjob = await createScanJob(
-    createScanJobDTOSchema.parse({
-      repo_url: input.repo_url,
-      owner_id: input.owner_id,
-      repoKey: input.repoKey,
-      priority: input.priority,
-    }),
-  );
-  return scanjob
+  return await createScanJob(createScanJobDTOSchema.parse(input));
 }
 
-/**
- * Get scan findings for a given job.
- * @param id if of the job for which to get findings.
- * @returns a promise of an array of findings.
- */
 export async function getFindingsByJobIdServerAction(jobId: string): Promise<ScanFinding[]> {
-  const scanFindings: ScanFinding[] = await getFindingsByJobId(jobId);
-  return scanFindings
+  return await getFindingsByJobId(jobId);
 }
 
-/**
- * Gets the scan job from the database by the given id
- * @param id the id of the scan job to fetch
- * @returns returns the scan job of the given id
- */
 export async function getScanJobByIdServerAction(id: string): Promise<ScanJob> {
-  const scanJob: ScanJob = await getScanJobById(id);
-  return scanJob
+  return await getScanJobById(id);
 }
 
 export type ScanResult = {
@@ -54,6 +30,8 @@ export type ScanResult = {
 
 export async function scan(input: CreateScanJobDTO & { url: string; repoKey: string | null; isDeepScan: boolean; extensions: Set<string> }): Promise<ScanResult> {
   try {
+    const user = await getUser();
+    
     // 1. Validate URL with Python service
     const validateResponse = await fetch("http://scraper:5001/validate", {
       method: "POST",
@@ -64,65 +42,63 @@ export async function scan(input: CreateScanJobDTO & { url: string; repoKey: str
       }),
     });
 
-    const validateText = await validateResponse.text();
-    let validateData;
-
-    try {
-      validateData = JSON.parse(validateText);
-    } catch {
-      console.error("Non-JSON response from /validate:", validateText);
-      return { success: false, error: "Validation service returned an invalid response." };
-    }
-
+    const validateData = await validateResponse.json();
     if (!validateResponse.ok || !validateData.valid) {
-      console.log("Validation failed:", validateData);
-      return { success: false, error: validateData.message ?? "Invalid GitHub/GitLab URL. Please check and try again." };
+      return { success: false, error: validateData.message ?? "Invalid GitHub URL." };
     }
 
-    
-
+    // 2. Encrypt Token & Create Job in DB (Next.js is the Boss)
     const repokeyEncrypted = input.repoKey != null ? encryptToken(input.repoKey) : null;
+    
     const job = await createScanJobServerAction({
       repo_url: input.url,
-      owner_id: (await getUser())?.id ?? null,
+      owner_id: user?.id ?? null,
       repoKey: repokeyEncrypted,
       priority: 1,
     });
 
+    // 3. Command the Scraper to start, giving it the exact ID and raw data
     const scanResponse = await fetch("http://scraper:5001/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
+        id: job.id, // TELL python the ID
+        url: input.url, // TELL python the URL
+        repoKey: input.repoKey, // Unencrypted key
         isDeepScan: input.isDeepScan, 
         extensions: Array.from(input.extensions),
-        repoKey: input.repoKey, 
+        userId: user?.id ?? null
       }),
     });
 
-    const scanData = await scanResponse.json();
-    const scanId = scanData.scan_id;
+    if (!scanResponse.ok) {
+      return { success: false, error: "Failed to queue scan in the worker." };
+    }
 
-
-    // 4. Poll until the Celery worker finishes (status transitions PENDING → PARSING → PARSED)
+    // 4. Poll using the ID Next.js generated
     const POLL_INTERVAL_MS = 2000;
     const TIMEOUT_MS = 5 * 60 * 1000;
     const deadline = Date.now() + TIMEOUT_MS;
-    let fetchedJob = await getScanJobByIdServerAction(scanId);
+    
+    let fetchedJob = await getScanJobByIdServerAction(job.id);
+    
     while (fetchedJob.status !== "PARSED" && fetchedJob.status !== "FAILED") {
       if (Date.now() >= deadline) {
         return { success: false, error: "Scan timed out. Please try again." };
       }
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-      fetchedJob = await getScanJobByIdServerAction(scanId);
+      fetchedJob = await getScanJobByIdServerAction(job.id);
     }
 
     if (fetchedJob.status === "FAILED") {
       return { success: false, error: "Scan failed. Please try again." };
     }
 
-    // 5. Fetch results now that the scan is complete
-    const findings = await getFindingsByJobIdServerAction(scanId);
-    await clearScanJobToken(scanId);
+    // 5. Fetch results & cleanup
+    const findings = await getFindingsByJobIdServerAction(job.id);
+    
+    // Deleting the token after a one-off scan is a fantastic security practice!
+    await clearScanJobToken(job.id);
 
     return {
       success: true,

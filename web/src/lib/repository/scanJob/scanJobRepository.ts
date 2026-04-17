@@ -14,6 +14,7 @@ import {
  */
 export async function createScanJob(input: CreateScanJobDTO): Promise<ScanJob> {
   const data = createScanJobDTOSchema.parse(input);
+  
   // The status will default to "PENDING", so omitting it from the insertion.
   const row = await queryOne<ScanJob>(
     `
@@ -65,13 +66,14 @@ export async function getScanJobsByRecursiveScanId(
   const rows = await query<any>(
     `
     SELECT
-      sj.*,
+      sj.id, sj.repo_url, sj.status, sj.owner_id, sj.priority,
+      sj.created_at, sj.duration, sj.recursive_scan_id,
+      NULL as repoKey, -- Security: Prevent sending the ciphertext to the frontend
       COALESCE(COUNT(f.id), 0)::INTEGER as findings_count
     FROM scan_jobs sj
     LEFT JOIN scan_findings f ON f.job_id = sj.id
     WHERE sj.recursive_scan_id = $1
-    GROUP BY sj.id, sj.repo_url, sj.status, sj.owner_id, sj.priority,
-             sj.created_at, sj.duration, sj.repoKey  -- ADD repoKey
+    GROUP BY sj.id
     ORDER BY sj.created_at DESC
     `,
     [recursiveScanId],
@@ -86,13 +88,14 @@ export async function getUserScanJobs(
   const rows = await query<any>(
     `
     SELECT 
-      sj.*, 
+      sj.id, sj.repo_url, sj.status, sj.owner_id, sj.priority,
+      sj.created_at, sj.duration, sj.recursive_scan_id,
+      NULL as repoKey, -- Security: Prevent sending the ciphertext to the frontend
       COALESCE(COUNT(f.id), 0)::INTEGER as findings_count
     FROM scan_jobs sj
     LEFT JOIN scan_findings f ON f.job_id = sj.id
     WHERE sj.owner_id = $1
-    GROUP BY sj.id, sj.repo_url, sj.status, sj.owner_id, sj.priority, 
-             sj.created_at, sj.duration, sj.repoKey  -- ADD repoKey
+    GROUP BY sj.id
     ORDER BY sj.created_at DESC
     LIMIT $2
     `,
@@ -103,5 +106,5 @@ export async function getUserScanJobs(
 }
 
 export async function clearScanJobToken(id: string): Promise<void> {
-  await query(`UPDATE scan_jobs SET "repoKey" = NULL WHERE id = $1`, [id]);
+  await query(`UPDATE scan_jobs SET repoKey = NULL WHERE id = $1`, [id]);
 }

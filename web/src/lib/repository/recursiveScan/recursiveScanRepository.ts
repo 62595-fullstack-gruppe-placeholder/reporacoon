@@ -28,6 +28,16 @@ export async function createRecursiveScan(input: CreateRecursiveScanDTO): Promis
   return recursiveScanSchema.parse(row);
 }
 
+export async function getRecursiveScanById(id: string): Promise<RecursiveScan | null> {
+  const row = await queryOne<RecursiveScan>(
+    `SELECT * FROM recursive_scans WHERE id = $1`,
+    [id]
+  );
+  
+  if (!row) return null;
+  return recursiveScanSchema.parse(row);
+}
+
 export async function getRecursiveScansByOwner(ownerId: string): Promise<RecursiveScan[]> {
   const rows = await query<RecursiveScan>(
     `SELECT * FROM recursive_scans WHERE owner_id = $1 ORDER BY created_at DESC`,

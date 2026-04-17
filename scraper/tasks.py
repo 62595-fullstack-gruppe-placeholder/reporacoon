@@ -20,6 +20,10 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,  # each worker picks up one job at a time from the queue
 )
 
+# -------------------------------------------------------------------------
+# STANDARD SCANS
+# Expected delay call: task.delay(job_id, repo_url, is_deep_scan, extensions, repoKey)
+# -------------------------------------------------------------------------
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=30, queue='fast')
 def run_scan_job_pro(self, job_id, repo_url, is_deep_scan, extensions, repoKey):
@@ -37,7 +41,7 @@ def run_scan_job_pro(self, job_id, repo_url, is_deep_scan, extensions, repoKey):
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=30, queue='slow')
-def run_scan_job_free(self, job_id, repo_url, repoKey, is_deep_scan, extensions):
+def run_scan_job_free(self, job_id, repo_url, is_deep_scan, extensions, repoKey):
     """Free tier: runs on slow queue (concurrency=1)."""
     try:
         scanner = GitHubSecretScanner(repo_url, job_id, is_deep_scan, extensions, repoKey)
@@ -51,8 +55,13 @@ def run_scan_job_free(self, job_id, repo_url, repoKey, is_deep_scan, extensions)
         raise self.retry(exc=exc)
 
 
+# -------------------------------------------------------------------------
+# RECURSIVE SCANS
+# Expected delay call: task.delay(recursive_id, repo_url, repoKey, is_deep_scan, extensions)
+# -------------------------------------------------------------------------
+
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=30, queue='fast')
-def run_recursive_scan_job_pro(self, recursive_id, repoKey, repo_url, is_deep_scan, extensions):
+def run_recursive_scan_job_pro(self, recursive_id, repo_url, repoKey, is_deep_scan, extensions):
     """Pro tier recurring scan: runs on fast queue."""
     try:
         job_id = insertScanJob(repo_url, recursive_scan_id=recursive_id)
