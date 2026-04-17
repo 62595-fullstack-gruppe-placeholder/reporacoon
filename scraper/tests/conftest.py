@@ -8,6 +8,7 @@ import psycopg2.extras
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from api import app
+import repository
 
 @pytest.fixture
 def client():
@@ -15,26 +16,12 @@ def client():
     with app.test_client() as c:
         yield c
 
-import repository
-
-
 # Register UUID adapter globally
 psycopg2.extras.register_uuid()
 
 class NonClosingConnection:
-    """Wrapper that prevents real close() calls and ignores commits.
-
-    All test code runs inside a top‑level transaction returned by the
-    :pyfunc:`db_transaction` fixture.  The wrapped connection is eventually
-    rolled back, so we don't want intermediate commits to permanently
-    persist data.  ``commit()`` therefore becomes a no‑op.  The real
-    cursor is still returned so queries work normally.
-    """
     def __init__(self, real_conn):
         self.real_conn = real_conn
-        # some test setups wrap the connection in a transaction already, which
-        # makes setting autocommit illegal.  ignore that case so fixtures can
-        # still apply.
         try:
             self.real_conn.autocommit = False
         except psycopg2.ProgrammingError:
@@ -44,20 +31,13 @@ class NonClosingConnection:
         return self.real_conn.cursor()
     
     def commit(self):
-        # intentionally ignore to keep everything in the outer transaction
         pass
     
     def close(self):
-        pass  # Don't actually close!
+        pass
 
 @contextmanager
 def get_test_connection():
-    """Yields non-closing connection for tests.
-
-    The connection returned by :pyfunc:`repository.get_connection` is placed
-    inside a transaction.  That transaction is rolled back in the context
-    manager's ``finally`` block, ensuring no changes escape the fixture.
-    """
     conn = repository.get_connection()
     try:
         yield NonClosingConnection(conn)
@@ -65,19 +45,9 @@ def get_test_connection():
         conn.rollback()
         conn.close()
 
-
 @pytest.fixture(scope="function")
 def db_transaction():
-    """Provide a connection inside a disposable transaction.
-
-    Schema creation is idempotent so it's safe to run on every test run.  The
-    fixture yields the raw :class:`psycopg2` connection object; the tests
-    themselves normally access it indirectly through ``mock_get_connection``.
-    After the test finishes the transaction is rolled back, reclaiming any
-    modifications.
-    """
     with get_test_connection() as test_conn:
-        # ensure schema exists (mirrors migrations)
         with test_conn.cursor() as cur:
             cur.execute("""
                 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -112,7 +82,7 @@ def db_transaction():
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                     repo_url TEXT NOT NULL,
                     owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
-                    repoKey TEXT,  -- ADDED THIS LINE
+                    repoKey TEXT,
                     interval scan_interval NOT NULL DEFAULT 'WEEKLY',
                     is_deep_scan BOOLEAN NOT NULL DEFAULT false,
                     extensions TEXT[] NOT NULL DEFAULT '{}',
@@ -121,19 +91,23 @@ def db_transaction():
                     next_run_at TIMESTAMPTZ NOT NULL,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
+                
+                ALTER TABLE recursive_scans ADD COLUMN IF NOT EXISTS repoKey TEXT;
 
                 CREATE TABLE IF NOT EXISTS scan_jobs (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                     repo_url TEXT NOT NULL, 
                     status Status NOT NULL DEFAULT 'PENDING',
                     owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
-                    repoKey TEXT,  -- ADDED THIS LINE
+                    repoKey TEXT,
                     priority INTEGER NOT NULL DEFAULT 1 CHECK (priority BETWEEN 1 AND 5),
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), 
                     duration INTEGER,
                     recursive_scan_id UUID REFERENCES recursive_scans(id) ON DELETE SET NULL
                 );
                 
+                ALTER TABLE scan_jobs ADD COLUMN IF NOT EXISTS repoKey TEXT;
+
                 CREATE TABLE IF NOT EXISTS scan_findings (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                     job_id UUID NOT NULL REFERENCES scan_jobs(id) ON DELETE CASCADE,
@@ -145,24 +119,14 @@ def db_transaction():
         yield test_conn.real_conn
         test_conn.real_conn.rollback()
 
-
 @pytest.fixture
 def mock_get_connection(db_transaction):
-    """Ask :mod:`repository` to use the transactional connection instead.
-
-    When tests call any of the helper functions in ``repository`` that open a
-    new connection, they will receive a lightweight wrapper around the
-    ``db_transaction`` connection.  Because ``commit()`` is a no‑op, no
-    changes leak outside the fixture’s rollback.
-    """
     with patch.object(repository, 'get_connection') as mock:
         mock.return_value = NonClosingConnection(db_transaction)
         yield mock
 
-
 @pytest.fixture
 def insert_helpers(db_transaction):
-    """Utility closures for creating rows directly inside the transaction."""
     def _insert_user(email):
         with db_transaction.cursor() as cur:
             new_uuid = str(uuid.uuid4())
