@@ -61,9 +61,11 @@ def test_run_scan_job_free_success():
 
         mock_scanner_cls.return_value.run = MagicMock()
 
-        run_scan_job_free.delay(FAKE_JOB_ID, REPO_URL, False, [])
+        # FIXED: Added `None` for the repoKey parameter
+        run_scan_job_free.delay(FAKE_JOB_ID, REPO_URL, False, [], None)
 
-        mock_scanner_cls.assert_called_once_with(REPO_URL, FAKE_JOB_ID, False, [])
+        # FIXED: Added `None` to the assert_called_once_with to match
+        mock_scanner_cls.assert_called_once_with(REPO_URL, FAKE_JOB_ID, False, [], None)
         mock_scanner_cls.return_value.run.assert_called_once()
         mock_duration.assert_called_once()
         mock_parsed.assert_called_once_with([str(FAKE_JOB_ID)])
@@ -92,7 +94,8 @@ def test_run_recursive_scan_job_pro_success():
 
         mock_scanner_cls.return_value.run = MagicMock()
 
-        run_recursive_scan_job_pro.delay(FAKE_RECURSIVE_ID, REPO_URL, False, [])
+        # FIXED: Inserted `None` as the 3rd parameter (repoKey)
+        run_recursive_scan_job_pro.delay(FAKE_RECURSIVE_ID, REPO_URL, None, False, [])
 
         mock_insert.assert_called_once_with(REPO_URL, recursive_scan_id=FAKE_RECURSIVE_ID)
         mock_scanner_cls.return_value.run.assert_called_once()
@@ -119,7 +122,8 @@ def test_run_recursive_scan_job_free_success():
 
         mock_scanner_cls.return_value.run = MagicMock()
 
-        run_recursive_scan_job_free.delay(FAKE_RECURSIVE_ID, REPO_URL, False, [])
+        # FIXED: Inserted `None` as the 3rd parameter (repoKey)
+        run_recursive_scan_job_free.delay(FAKE_RECURSIVE_ID, REPO_URL, None, False, [])
 
         mock_insert.assert_called_once_with(REPO_URL, recursive_scan_id=FAKE_RECURSIVE_ID)
         mock_scanner_cls.return_value.run.assert_called_once()
@@ -152,4 +156,5 @@ def test_run_scan_job_free_retries_on_exception():
     with patch('tasks.GitHubSecretScanner') as mock_scanner_cls:
         mock_scanner_cls.return_value.run.side_effect = Exception("clone failed")
         with pytest.raises(Exception, match="clone failed"):
-            run_scan_job_free.delay(FAKE_JOB_ID, REPO_URL, False, [])
+            # FIXED: Added `None` for the repoKey parameter
+            run_scan_job_free.delay(FAKE_JOB_ID, REPO_URL, False, [], None)

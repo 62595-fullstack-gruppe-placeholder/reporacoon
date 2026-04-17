@@ -44,20 +44,22 @@ from repository import (
 @pytest.fixture
 def insert_recursive_scan(db_transaction):
     """Insert a recursive_scans row directly and return its id."""
-    def _insert(repo_url="https://github.com/owner/repo", interval="WEEKLY",
+    # FIXED: Added repoKey to the fixture parameters
+    def _insert(repo_url="https://github.com/owner/repo", repoKey=None, interval="WEEKLY",
                 is_deep_scan=False, is_active=True, next_run_at=None):
         rid = str(uuid.uuid4())
         if next_run_at is None:
             next_run_at = datetime.now(timezone.utc) + timedelta(days=7)
         with db_transaction.cursor() as cur:
+            # FIXED: Added repoKey to the raw SQL INSERT
             cur.execute(
                 """
                 INSERT INTO recursive_scans
-                  (id, repo_url, interval, is_deep_scan, is_active, next_run_at)
-                VALUES (%s, %s, %s::scan_interval, %s, %s, %s)
+                  (id, repo_url, "repoKey", interval, is_deep_scan, is_active, next_run_at)
+                VALUES (%s, %s, %s, %s::scan_interval, %s, %s, %s)
                 RETURNING id
                 """,
-                (rid, repo_url, interval, is_deep_scan, is_active, next_run_at),
+                (rid, repo_url, repoKey, interval, is_deep_scan, is_active, next_run_at),
             )
         return rid
     return _insert
@@ -69,8 +71,9 @@ def insert_recursive_scan(db_transaction):
 
 # 1. insertRecursiveScan, row created, next_run_at in the future
 def test_insert_recursive_scan_creates_row(mock_get_connection):
+    # FIXED: Added `None` as the second parameter for repoKey
     scan_id, next_run_at = insertRecursiveScan(
-        "https://github.com/owner/repo", "WEEKLY"
+        "https://github.com/owner/repo", None, "WEEKLY"
     )
     assert scan_id is not None
     now = datetime.now(timezone.utc)
@@ -80,8 +83,9 @@ def test_insert_recursive_scan_creates_row(mock_get_connection):
 # 2. insertRecursiveScan, all valid intervals are accepted
 @pytest.mark.parametrize("interval", ["EVERY_MINUTE", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"])
 def test_insert_recursive_scan_all_intervals(mock_get_connection, interval):
+    # FIXED: Added `None` as the second parameter for repoKey
     scan_id, next_run_at = insertRecursiveScan(
-        "https://github.com/owner/repo", interval
+        "https://github.com/owner/repo", None, interval
     )
     assert scan_id is not None
     assert next_run_at > datetime.now(timezone.utc)
@@ -204,4 +208,3 @@ def test_delete_recursive_scan_nullifies_job_fk(mock_get_connection, insert_recu
         row = cur.fetchone()
     assert row is not None
     assert row[0] is None
-
