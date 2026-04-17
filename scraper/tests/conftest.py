@@ -112,6 +112,7 @@ def db_transaction():
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                     repo_url TEXT NOT NULL,
                     owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                    repoKey TEXT,  -- ADDED THIS LINE
                     interval scan_interval NOT NULL DEFAULT 'WEEKLY',
                     is_deep_scan BOOLEAN NOT NULL DEFAULT false,
                     extensions TEXT[] NOT NULL DEFAULT '{}',
@@ -123,12 +124,16 @@ def db_transaction():
 
                 CREATE TABLE IF NOT EXISTS scan_jobs (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    repo_url TEXT NOT NULL, status Status NOT NULL DEFAULT 'PENDING',
+                    repo_url TEXT NOT NULL, 
+                    status Status NOT NULL DEFAULT 'PENDING',
                     owner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                    repoKey TEXT,  -- ADDED THIS LINE
                     priority INTEGER NOT NULL DEFAULT 1 CHECK (priority BETWEEN 1 AND 5),
-                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), duration INTEGER,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), 
+                    duration INTEGER,
                     recursive_scan_id UUID REFERENCES recursive_scans(id) ON DELETE SET NULL
                 );
+                
                 CREATE TABLE IF NOT EXISTS scan_findings (
                     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                     job_id UUID NOT NULL REFERENCES scan_jobs(id) ON DELETE CASCADE,
