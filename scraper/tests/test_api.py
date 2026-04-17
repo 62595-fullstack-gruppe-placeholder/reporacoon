@@ -10,13 +10,11 @@ from unittest.mock import patch, MagicMock
 #             Endpoint tests
 # =========================================
 
-# Test that flask is set up correctly
 def test_health_check(client):
     response = client.get('/health')
     assert response.status_code == 200
     assert response.json['status'] == 'ok'
 
-# Test the validate endpoint works correctly
 def test_validate_endpoint(client):
     response = client.post('/validate', json={
         "url": "https://github.com/62595-fullstack-gruppe-placeholder/testrepo"
@@ -34,7 +32,6 @@ def test_validate_endpoint(client):
     assert response.status_code == 400
     assert response.json['valid'] == False
     
-    # Make it throw an exception by sending data instead of json which the validate function can't parse
     response = client.post('/validate', data={
         "url": "notAValidUrl.com"
     })
@@ -49,7 +46,6 @@ def test_validate_endpoint(client):
 FAKE_JOB_ID = "job-0000-0000-0000-000000000001"
 REPO_URL = "https://github.com/someuser/somerepo"
 
-# Test the scan endpoint works correctly with status 202
 def test_scan_endpoint(client):
     with patch('api.getUserTier', return_value='free'), \
          patch('api.run_scan_job_free') as mock_free:
@@ -64,15 +60,11 @@ def test_scan_endpoint(client):
         })
         assert response.status_code == 202
         assert response.json['success'] is True
-        # Verify Celery task was called with correct args (including None for repoKey)
         mock_free.delay.assert_called_once_with(FAKE_JOB_ID, REPO_URL, False, [], None)
 
-    # Test Missing Fields (Should return 400 if ID or URL is missing)
     response = client.post('/scan', json={"url": REPO_URL})
     assert response.status_code == 400
 
-
-# Verifies that a free-tier user's scan job is routed to the slow (free) queue
 def test_scan_routes_free_user_to_slow_queue(client):
     with patch('api.getUserTier', return_value='free'), \
          patch('api.run_scan_job_free') as mock_free, \
@@ -86,8 +78,6 @@ def test_scan_routes_free_user_to_slow_queue(client):
         mock_free.delay.assert_called_once()
         mock_pro.delay.assert_not_called()
 
-
-# Verifies that a pro-tier user's scan job is routed to the fast (pro) queue
 def test_scan_routes_pro_user_to_fast_queue(client):
     with patch('api.getUserTier', return_value='pro'), \
          patch('api.run_scan_job_free') as mock_free, \
@@ -101,8 +91,6 @@ def test_scan_routes_pro_user_to_fast_queue(client):
         mock_pro.delay.assert_called_once()
         mock_free.delay.assert_not_called()
 
-
-# Verifies that a scan without userId defaults to free queue
 def test_scan_defaults_to_free_queue_when_no_user(client):
     with patch('api.run_scan_job_free') as mock_free, \
          patch('api.run_scan_job_pro') as mock_pro:
@@ -159,7 +147,6 @@ def test_downgrade_user_not_found(client):
 
 FAKE_SCAN_ID = "11111111-1111-1111-1111-111111111111"
 
-# Verifies that POST /recursive-scan with valid url and ID enqueues the task
 def test_create_recursive_scan_success(client):
     with patch('api.validate_github_url', return_value=(True, 'OK', None)), \
          patch('api.run_recursive_scan_job_free') as mock_free:
@@ -174,22 +161,15 @@ def test_create_recursive_scan_success(client):
         
     assert response.status_code == 202
     assert response.json['success'] is True
-    # Verify Celery task was called with correct args (including None for repoKey)
     mock_free.delay.assert_called_once_with(FAKE_SCAN_ID, REPO_URL, None, False, [])
 
-
-# Verifies that POST /recursive-scan returns 400 when required fields are missing
 def test_create_recursive_scan_missing_fields(client):
-    # Missing ID
     response = client.post('/recursive-scan', json={"url": REPO_URL})
     assert response.status_code == 400
 
-    # Missing URL
     response = client.post('/recursive-scan', json={"id": FAKE_SCAN_ID})
     assert response.status_code == 400
 
-
-# Verifies that POST /recursive-scan returns 400 when the provided URL is invalid
 def test_create_recursive_scan_invalid_url(client):
     response = client.post('/recursive-scan', json={
         "id": FAKE_SCAN_ID,
