@@ -129,7 +129,7 @@ def insertScanJob(repo_url, owner_id=None, priority=1, recursive_scan_id=None):
 
 # ---- Recursive scan repository functions ----
 
-def insertRecursiveScan(repo_url, interval, is_deep_scan=False, extensions=[], owner_id=None):
+def insertRecursiveScan(repo_url, repoKey, interval, is_deep_scan=False, extensions=[], owner_id=None):
     # next_run_at is calculated in SQL so it stays consistent with the DB clock.
     # The interval is passed twice because CASE requires the expression to be
     # evaluated independently from the column value being inserted.
@@ -139,8 +139,8 @@ def insertRecursiveScan(repo_url, interval, is_deep_scan=False, extensions=[], o
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO recursive_scans (repo_url, owner_id, interval, is_deep_scan, extensions, next_run_at)
-                VALUES (%s, %s, %s::scan_interval, %s, %s,
+                INSERT INTO recursive_scans (repo_url, owner_id, repoKey, interval, is_deep_scan, extensions, next_run_at)
+                VALUES (%s, %s, %s, %s::scan_interval, %s, %s,
                     CASE %s::scan_interval
                         WHEN 'EVERY_MINUTE' THEN NOW() + INTERVAL '1 minute'
                         WHEN 'HOURLY'  THEN NOW() + INTERVAL '1 hour'
@@ -151,7 +151,7 @@ def insertRecursiveScan(repo_url, interval, is_deep_scan=False, extensions=[], o
                     END)
                 RETURNING id, next_run_at
                 """,
-                (repo_url, owner_id, interval, is_deep_scan, extensions, interval),
+                (repo_url, owner_id, repoKey, interval, is_deep_scan, extensions, interval),
             )
             row = cur.fetchone()
             conn.commit()

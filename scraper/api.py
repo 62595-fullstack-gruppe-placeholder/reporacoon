@@ -32,6 +32,7 @@ def run_recursive_scan(scan):
     task.delay(
         scan["id"],
         scan["repo_url"],
+        scan["repoKey"],
         scan["is_deep_scan"],
         scan.get("extensions", []),
     )
@@ -129,7 +130,7 @@ def validate():
             return jsonify({'valid': False, 'message': 'No URL provided'}), 400
 
         url = data['url']
-        repoKey = data.get('repoKey')  # optional
+        repoKey = data.get('repoKey')
 
         is_valid_format, format_message, repo_info = validate_github_url(url)
         if not is_valid_format:
@@ -167,8 +168,8 @@ def validate():
 def start_scan():
     """Start a new scan"""
     try:
-        repoKey = request.json.get("repoKey") 
         data = getAllPendingScanJobs()
+        repoKey = request.json.get("repoKey") 
         isDeepScan = request.json.get("isDeepScan", False)
         extensions = request.json.get("extensions", [])
         if not data:
@@ -222,6 +223,7 @@ def create_recursive_scan():
             return jsonify({'error': 'url and interval are required'}), 400
 
         url = data['url']
+        repoKey = data['repoKey']
         interval = data['interval'].upper()
         is_deep_scan = data.get('isDeepScan', False)
         extensions = data.get('extensions', [])
@@ -233,11 +235,11 @@ def create_recursive_scan():
         if not is_valid:
             return jsonify({'error': message}), 400
 
-        scan_id, next_run_at = insertRecursiveScan(url, interval, is_deep_scan, extensions)
+        scan_id, next_run_at = insertRecursiveScan(url, repoKey, interval, is_deep_scan, extensions)
 
         # Run the first scan immediately in the background so the user sees results
         # right away without waiting for the scheduler
-        first_scan = {"id": scan_id, "repo_url": url, "is_deep_scan": is_deep_scan}
+        first_scan = {"id": scan_id, "repo_url": url, "repoKey": repoKey, "is_deep_scan": is_deep_scan}
         threading.Thread(target=run_recursive_scan, args=(first_scan,), daemon=True).start()
 
         return jsonify({

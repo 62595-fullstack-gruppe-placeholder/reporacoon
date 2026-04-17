@@ -10,25 +10,17 @@ import { createRecursiveScanDTOSchema, ScanInterval } from "@/lib/repository/rec
 import { getScanJobsByRecursiveScanId } from "@/lib/repository/scanJob/scanJobRepository";
 import { getFindingsByJobId } from "@/lib/repository/scanFinding/scanFindingRepository";
 import { revalidatePath } from "next/cache";
+import { encryptToken } from "@/lib/crypto";
 
-export async function createRecursiveScanAction(url: string, repoKey: String | null, interval: ScanInterval, isDeepScan: boolean, extensions: Set<string>) {
+export async function createRecursiveScanAction(url: string, repoKey: string | null, interval: ScanInterval, isDeepScan: boolean, extensions: Set<string>) {
   const user = await getUser();
   if (!user) return { success: false, error: "Not authenticated" };
-
-  const input = createRecursiveScanDTOSchema.parse({
-    repo_url: url,
-    owner_id: user.id,
-    repoKey: repoKey,
-    interval,
-    is_deep_scan: isDeepScan,
-    extensions: Array.from(extensions),
-  });
 
   // Validate with scraper before saving
   const validateRes = await fetch("http://scraper:5001/validate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, repoKey }),
   });
   const validateData = await validateRes.json();
   if (!validateData.valid) return { success: false, error: "Invalid GitHub URL" };
@@ -40,6 +32,15 @@ export async function createRecursiveScanAction(url: string, repoKey: String | n
     body: JSON.stringify({ url, repoKey, interval, isDeepScan, extensions}),
   });
 
+  const repokeyEncrypted = repoKey != null ? encryptToken(repoKey) : null;
+  const input = createRecursiveScanDTOSchema.parse({
+    repo_url: url,
+    owner_id: user.id,
+    repoKey: repokeyEncrypted,
+    interval,
+    is_deep_scan: isDeepScan,
+    extensions: Array.from(extensions),
+  });
   await createRecursiveScan(input);
 
   revalidatePath("/dashboard/recurring");
