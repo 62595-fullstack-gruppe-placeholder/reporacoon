@@ -5,12 +5,12 @@ import "server-only";
 const ACCESS_TOKEN_NAME = "access-token";
 const REFRESH_TOKEN_NAME = "refresh-token";
 
-const COOKIE_OPTIONS = {
+const getCookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
-};
+});
 
 // Helper to determine if we use the passed response or the global cookies()
 async function getCookieStore(res?: NextResponse) {
@@ -27,7 +27,7 @@ export async function getAccessTokenCookie(req?: NextRequest) {
 export async function setAccessTokenCookie(token: string, res?: NextResponse) {
   const store = await getCookieStore(res);
   store.set(ACCESS_TOKEN_NAME, token, {
-    ...COOKIE_OPTIONS,
+    ...getCookieOptions(),
     maxAge: 15 * 60,
   });
 }
@@ -35,7 +35,7 @@ export async function setAccessTokenCookie(token: string, res?: NextResponse) {
 export async function setRefreshTokenCookie(token: string, res?: NextResponse) {
   const store = await getCookieStore(res);
   store.set(REFRESH_TOKEN_NAME, token, {
-    ...COOKIE_OPTIONS,
+    ...getCookieOptions(),
     maxAge: 60 * 60 * 24 * 30,
   });
 }
