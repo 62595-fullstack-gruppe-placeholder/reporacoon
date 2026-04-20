@@ -2,13 +2,15 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GitPullRequest } from "lucide-react";
+import { CircleHelp, GitPullRequest } from "lucide-react";
 import { toast } from "sonner";
 import { SubmitButton } from "@/app/_components/SubmitButton";
 import { newListeningRepo } from "./newListeningRepo";
 import { createListeningRepositoryFormSchema } from "@/lib/repository/listeningRepository/listeningRepositorySchema";
 import { RepoSignupData, ManagedListeningRepository } from "./repoTypes";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function CreateRepoForm({
   onRepoCreated,
@@ -125,9 +127,28 @@ export function CreateRepoForm({
             Scan all branches
           </button>
         </div>
-        <p className="uppercase text-[10px] font-mono text-secondary tracking-widest block">
-          Choose whether to scan the default branch all branches
-        </p>
+        <div className="space-y-2">
+          <p className="uppercase text-[10px] font-mono text-secondary tracking-widest block">
+            Choose whether to scan the default branch or all branches
+          </p>
+
+          <Button
+            asChild
+            type="button"
+            variant="outline"
+            className="w-full justify-center border-secondary/20 bg-transparent font-mono text-[10px] uppercase tracking-widest text-secondary hover:bg-text-main/5 hover:text-text-main"
+          >
+            <Link
+              href={
+                process.env.NEXT_PUBLIC_APP_URL + "/dashboard/automatic/howto"
+              }
+              target="_blank "
+            >
+              <CircleHelp size={14} />
+              Webhook setup guide
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-2">
