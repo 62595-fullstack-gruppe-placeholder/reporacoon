@@ -136,18 +136,6 @@ function shouldRunScan(
     return branch === payload.repository.default_branch;
   }
 
-  if (listening_repo.branch_config === "CUSTOM") {
-    const skip = !listening_repo.branches.includes(branch);
-    if (skip) {
-      log(
-        `Skipping scan, branch ${branch} not in ${listening_repo.branches}`,
-        LogLevel.debug,
-      );
-      return false;
-    }
-    return true;
-  }
-
   return false;
 }
 
