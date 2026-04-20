@@ -16,8 +16,8 @@ export async function createListeningRepository(
   const data = createListeningRepositorySchema.parse(input);
   const row = await queryOne<ListeningRepository>(
     `
-        INSERT INTO listening_repositories (owner_id, repo_url, encrypted_secret, branches, branch_config)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO listening_repositories (owner_id, repo_url, encrypted_secret, branch_config)
+        VALUES ($1, $2, $3, $4)
         RETURNING
             owner_id,
             repo_url,
@@ -25,14 +25,12 @@ export async function createListeningRepository(
             is_active,
             created_at,
             id,
-            branches,
             branch_config
         `,
     [
       data.owner_id,
       data.repo_url,
       data.encrypted_secret,
-      data.branches ?? [],
       data.branch_config ?? "DEFAULT",
     ],
   );
@@ -47,7 +45,7 @@ export async function createListeningRepository(
 export async function getUserListeningRepositories(userId: string) {
   const rows = await query<ListeningRepository>(
     `
-        SELECT owner_id, repo_url, encrypted_secret, is_active, created_at, id, branches, branch_config
+        SELECT owner_id, repo_url, encrypted_secret, is_active, created_at, id, branch_config
         FROM listening_repositories
         WHERE owner_id = $1
         `,
@@ -66,7 +64,6 @@ export async function getListeningRepositoryByUrl(repoUrl: string) {
             is_active,
             created_at,
             id,
-            branches,
             branch_config
         FROM listening_repositories
         WHERE repo_url = $1
@@ -83,10 +80,10 @@ export async function updateBranchConfig(dto: UpdateBranchConfigDTO) {
   await queryOne<UpdateBranchConfigDTO>(
     `
       UPDATE listening_repositories SET
-        branches = $1, branch_config = $2
-      WHERE id = $3
+        branch_config = $1
+      WHERE id = $2 and is_active = true
     `,
-    [dto.branches, dto.branch_config, dto.id],
+    [dto.branch_config, dto.id],
   );
 }
 

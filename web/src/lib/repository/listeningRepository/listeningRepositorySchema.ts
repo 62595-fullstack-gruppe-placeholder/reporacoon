@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const branchConfigSchema = z.enum(["DEFAULT", "CUSTOM", "ALL"]);
+export const branchConfigSchema = z.enum(["DEFAULT", "ALL"]);
 
 export type ListeningRepositoryBranchConfig = z.infer<
   typeof branchConfigSchema
@@ -13,7 +13,6 @@ export const listeningRepositorySchema = z.object({
   is_active: z.boolean(),
   repo_url: z.url(),
   encrypted_secret: z.string().nullable().optional(),
-  branches: z.array(z.string()),
   branch_config: branchConfigSchema,
 });
 
@@ -23,7 +22,6 @@ export const createListeningRepositorySchema = z.object({
   owner_id: z.uuidv4(),
   repo_url: z.url(),
   encrypted_secret: z.string().nullable().optional(),
-  branches: z.array(z.string()).optional(),
   branch_config: branchConfigSchema.nullable().optional(),
 });
 
@@ -37,7 +35,6 @@ export const createListeningRepositoryFormSchema = z.object({
     .min(1, "Repository URL is required"),
   webhookSecret: z.string().nullable().optional(),
   branch_config: branchConfigSchema.nullable().optional(),
-  branches: z.array(z.string()).optional(),
 });
 
 export type CreateListeningRepositoryForm = z.infer<
@@ -47,7 +44,6 @@ export type CreateListeningRepositoryForm = z.infer<
 export const updateBranchConfigDTOSchema = z.object({
   id: z.string(),
   branch_config: branchConfigSchema,
-  branches: z.array(z.string()).nullable(),
 });
 
 export type UpdateBranchConfigDTO = z.infer<typeof updateBranchConfigDTOSchema>;

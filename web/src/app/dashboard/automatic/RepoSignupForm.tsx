@@ -13,7 +13,6 @@ function normalizeRepo(repo: ListeningRepository): ManagedListeningRepository {
     is_active:
       typeof typedRepo.is_active === "boolean" ? typedRepo.is_active : true,
     branch_config: typedRepo.branch_config ?? "DEFAULT",
-    branches: typedRepo.branches ?? [],
     webhook_secret: typedRepo.webhook_secret ?? null,
   };
 }

@@ -2,7 +2,7 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'branchconfig') THEN
-    CREATE TYPE BranchConfig AS ENUM ('DEFAULT', 'CUSTOM', 'ALL');
+    CREATE TYPE BranchConfig AS ENUM ('DEFAULT', 'ALL');
   END IF;
 END$$;
 
@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS listening_repositories (
     is_active BOOLEAN NOT NULL DEFAULT true,
     repo_url TEXT UNIQUE NOT NULL,
     encrypted_secret TEXT,
-    branches TEXT[] DEFAULT '{}' NOT NULL,
     branch_config BranchConfig NOT NULL DEFAULT 'DEFAULT'
 );
 

@@ -7,7 +7,6 @@ import {
   CreateListeningRepositoryForm,
   createListeningRepositoryFormSchema,
 } from "@/lib/repository/listeningRepository/listeningRepositorySchema";
-import { createHash } from "crypto";
 
 export async function newListeningRepo(form: CreateListeningRepositoryForm) {
   const formData = createListeningRepositoryFormSchema.parse(form);
@@ -22,7 +21,6 @@ export async function newListeningRepo(form: CreateListeningRepositoryForm) {
       repo_url: formData.repoUrl,
       encrypted_secret: formData.webhookSecret ? encrypt(formData.webhookSecret) : null,
       branch_config: formData.branch_config,
-      branches: formData.branches,
     });
     return {
       id: created.id,

@@ -26,8 +26,7 @@ import {
 import { BranchListInput } from "./BranchListInput";
 
 const existingRepoEditorSchema = z.object({
-  branch_config: z.enum(["DEFAULT", "ALL", "CUSTOM"]),
-  branches: z.array(z.string()),
+  branch_config: z.enum(["DEFAULT", "ALL"]),
 });
 
 export function ExistingRepoCard({
@@ -50,46 +49,33 @@ export function ExistingRepoCard({
     resolver: zodResolver(existingRepoEditorSchema),
     defaultValues: {
       branch_config: repo.branch_config ?? "DEFAULT",
-      branches: repo.branches,
     },
   });
 
   const branchConfig = form.watch("branch_config");
-  const selectedBranches = form.watch("branches") ?? [];
   const isActive = repo.is_active ?? true;
   const isBusy = isSaving || isTogglingActive || isDeleting;
 
   useEffect(() => {
     form.reset({
       branch_config: repo.branch_config ?? "DEFAULT",
-      branches: repo.branches ?? [],
     });
-  }, [repo.branch_config, repo.branches, form]);
+  }, [repo.branch_config, form]);
 
   const handleSave = form.handleSubmit(async (data) => {
-    if (data.branch_config === "CUSTOM" && data.branches.length === 0) {
-      form.setError("branches", {
-        type: "manual",
-        message: "Add at least one branch to scan.",
-      });
-      return;
-    }
-
     setIsSaving(true);
 
     try {
       const payload = {
         id: String(repo.id),
         branch_config: data.branch_config,
-        branches: data.branch_config === "CUSTOM" ? data.branches : [],
       };
 
       const result = await updateListeningRepo(payload);
 
       if (result.success) {
-        onRepoUpdated(String(repo.id), {
+        onRepoUpdated(repo.id, {
           branch_config: payload.branch_config,
-          branches: payload.branches,
         });
         toast.success(result.message);
       } else {
@@ -175,14 +161,6 @@ export function ExistingRepoCard({
             <span className="rounded px-2 py-1 border border-secondary/20 text-secondary">
               {repo.branch_config ?? "DEFAULT"}
             </span>
-
-            {repo.branch_config === "CUSTOM" &&
-              (repo.branches?.length ?? 0) > 0 && (
-                <span className="rounded px-2 py-1 border border-secondary/20 text-secondary">
-                  {repo.branches?.length} selected branch
-                  {repo.branches?.length === 1 ? "" : "es"}
-                </span>
-              )}
           </div>
         </div>
 
@@ -225,7 +203,7 @@ export function ExistingRepoCard({
             Branch scan mode
           </label>
 
-          <div className="grid grid-cols-3 gap-2 rounded-md border border-secondary/20 p-1 bg-background/30">
+          <div className="flex gap-2 rounded-md border border-secondary/20 p-1 bg-background/30">
             <button
               type="button"
               onClick={() => {
@@ -233,14 +211,9 @@ export function ExistingRepoCard({
                   shouldValidate: true,
                   shouldDirty: true,
                 });
-                form.setValue("branches", [], {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                });
-                form.clearErrors("branches");
               }}
               disabled={isBusy || !isActive}
-              className={`rounded-md px-3 py-2 text-xs font-mono uppercase tracking-widest transition-all ${
+              className={`flex-1 whitespace-nowrap text-center rounded-md px-3 py-2 text-xs font-mono uppercase tracking-widest transition-all ${
                 branchConfig === "DEFAULT"
                   ? "bg-button-main/15 text-text-main border border-button-main/30"
                   : "text-secondary"
@@ -256,38 +229,15 @@ export function ExistingRepoCard({
                   shouldValidate: true,
                   shouldDirty: true,
                 });
-                form.setValue("branches", [], {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                });
-                form.clearErrors("branches");
               }}
               disabled={isBusy || !isActive}
-              className={`rounded-md px-3 py-2 text-xs font-mono uppercase tracking-widest transition-all ${
+              className={`flex-1 whitespace-nowrap text-center rounded-md px-3 py-2 text-xs font-mono uppercase tracking-widest transition-all ${
                 branchConfig === "ALL"
                   ? "bg-button-main/15 text-text-main border border-button-main/30"
                   : "text-secondary"
               }`}
             >
               All
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                form.setValue("branch_config", "CUSTOM", {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                })
-              }
-              disabled={isBusy || !isActive}
-              className={`rounded-md px-3 py-2 text-xs font-mono uppercase tracking-widest transition-all ${
-                branchConfig === "CUSTOM"
-                  ? "bg-button-main/15 text-text-main border border-button-main/30"
-                  : "text-secondary"
-              }`}
-            >
-              Custom
             </button>
           </div>
 
@@ -298,24 +248,6 @@ export function ExistingRepoCard({
             </p>
           )}
         </div>
-
-        {branchConfig === "CUSTOM" && (
-          <BranchListInput
-            value={selectedBranches}
-            onChange={(next) => {
-              form.setValue("branches", next, {
-                shouldValidate: true,
-                shouldDirty: true,
-              });
-
-              if (next.length > 0) {
-                form.clearErrors("branches");
-              }
-            }}
-            disabled={isBusy || !isActive}
-            error={form.formState.errors.branches?.message}
-          />
-        )}
 
         <div className="flex justify-end">
           <button

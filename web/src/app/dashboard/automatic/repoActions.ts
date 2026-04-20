@@ -25,7 +25,6 @@ export async function updateListeningRepo(dto: UpdateBranchConfigDTO) {
     repo: {
       id: validatedDTO.id,
       branch_config: validatedDTO.branch_config,
-      branches: validatedDTO.branches,
     },
   };
 }
