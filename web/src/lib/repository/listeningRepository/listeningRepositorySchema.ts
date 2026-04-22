@@ -14,6 +14,7 @@ export const listeningRepositorySchema = z.object({
   repo_url: z.url(),
   encrypted_secret: z.string().nullable().optional(),
   branch_config: branchConfigSchema,
+  repoKey: z.string().nullable().optional(),
 });
 
 export type ListeningRepository = z.infer<typeof listeningRepositorySchema>;
@@ -23,6 +24,7 @@ export const createListeningRepositorySchema = z.object({
   repo_url: z.url(),
   encrypted_secret: z.string().nullable().optional(),
   branch_config: branchConfigSchema.nullable().optional(),
+  repoKey: z.string().nullable().optional(),
 });
 
 export type CreateListeningRepository = z.infer<
@@ -35,6 +37,8 @@ export const createListeningRepositoryFormSchema = z.object({
     .min(1, "Repository URL is required"),
   webhookSecret: z.string().nullable().optional(),
   branch_config: branchConfigSchema.nullable().optional(),
+  repoType: z.string().nullable().optional(),
+  repoKey: z.string().nullable().optional(),
 });
 
 export type CreateListeningRepositoryForm = z.infer<

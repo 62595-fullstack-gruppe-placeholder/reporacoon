@@ -11,7 +11,7 @@ import { createRecursiveScanDTOSchema, ScanInterval } from "@/lib/repository/rec
 import { getScanJobsByRecursiveScanId } from "@/lib/repository/scanJob/scanJobRepository";
 import { getFindingsByJobId } from "@/lib/repository/scanFinding/scanFindingRepository";
 import { revalidatePath } from "next/cache";
-import { encryptToken, decryptToken } from "@/lib/crypto"; 
+import { encrypt, decrypt } from "@/lib/encryption"; 
 
 export async function createRecursiveScanAction(
   url: string, 
@@ -34,7 +34,7 @@ export async function createRecursiveScanAction(
   const validateData = await validateRes.json();
   if (!validateData.valid) return { success: false, error: "Invalid GitHub URL or access token" };
 
-  const repokeyEncrypted = repoKey != null ? encryptToken(repoKey) : null;  
+  const repokeyEncrypted = repoKey != null ? encrypt(repoKey) : null;  
   const input = createRecursiveScanDTOSchema.parse({
     repo_url: url,
     owner_id: user.id,
@@ -102,7 +102,7 @@ export async function runRecursiveScanNowAction(scanId: string) {
     return { success: false, error: "Scan not found or unauthorized" };
   }
 
-  const decryptedKey = scan.repoKey ? decryptToken(scan.repoKey) : null;
+  const decryptedKey = scan.repoKey ? decrypt(scan.repoKey) : null;
   const res = await fetch("http://scraper:5001/recursive-scan", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

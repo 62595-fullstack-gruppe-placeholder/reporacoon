@@ -1,6 +1,6 @@
 "use server";
 
-import { encrypt } from "@/lib/auth/encryption";
+import { encrypt } from "@/lib/encryption";
 import { getUser } from "@/lib/auth/userFromToken";
 import { createListeningRepository } from "@/lib/repository/listeningRepository/listeningRepositoryRepository";
 import {
@@ -21,6 +21,7 @@ export async function newListeningRepo(form: CreateListeningRepositoryForm) {
       repo_url: formData.repoUrl,
       encrypted_secret: formData.webhookSecret ? encrypt(formData.webhookSecret) : null,
       branch_config: formData.branch_config,
+      repoKey: formData.repoKey,
     });
     return {
       id: created.id,

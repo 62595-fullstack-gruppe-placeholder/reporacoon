@@ -14,6 +14,7 @@ export type ManagedListeningRepository = ListeningRepository & {
   is_active?: boolean;
   branch_config?: BranchConfig;
   webhook_secret?: string | null;
+  repoKey?: string | null;
 };
 
 export type ExistingRepoEditorData = {

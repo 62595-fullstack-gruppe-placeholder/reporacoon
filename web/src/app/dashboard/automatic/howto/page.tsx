@@ -27,25 +27,10 @@ export default function GithubWebhookSetupPage() {
                 Set up automatic scans from GitHub push events
               </h1>
               <p className="max-w-3xl text-sm font-mono text-secondary">
-                Connect a public GitHub repository to automatic scanning by
+                Connect a GitHub repository to automatic scanning by
                 adding a webhook in GitHub, then registering the repository in
                 our system.
               </p>
-            </div>
-
-            <div className="rounded-md border border-yellow-700/20 bg-yellow-700/10 p-4">
-              <div className="flex items-start gap-3">
-                <GitBranch className="mt-0.5 text-yellow-700" size={16} />
-                <div className="space-y-1">
-                  <p className="text-xs font-mono uppercase tracking-widest text-yellow-700">
-                    Public repositories only for now
-                  </p>
-                  <p className="text-sm font-mono text-text-main">
-                    Automatic scanning currently works for public repositories
-                    only. Private repository support is coming soon.
-                  </p>
-                </div>
-              </div>
             </div>
           </header>
 

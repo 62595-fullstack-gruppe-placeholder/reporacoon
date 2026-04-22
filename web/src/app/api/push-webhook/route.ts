@@ -1,4 +1,4 @@
-import { decrypt } from "@/lib/auth/encryption";
+import { decrypt } from "@/lib/encryption";
 import { getListeningRepositoryByUrl } from "@/lib/repository/listeningRepository/listeningRepositoryRepository";
 import { ListeningRepository } from "@/lib/repository/listeningRepository/listeningRepositorySchema";
 import { createScanJob } from "@/lib/repository/scanJob/scanJobRepository";
@@ -65,6 +65,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         isDeepScan: false,
         extensions: userSettings ? userSettings.extensions : [],
+        repoKey: listeningRepository.repoKey
+          ? decrypt(listeningRepository.repoKey)
+          : null,
       }),
     });
     return NextResponse.json("OK", { status: 200 });

@@ -1,7 +1,7 @@
 "use server";
 
 import { getUser } from "@/lib/auth/userFromToken";
-import { encryptToken } from "@/lib/crypto";
+import { encrypt } from "@/lib/encryption";
 import { getFindingsByJobId } from "@/lib/repository/scanFinding/scanFindingRepository";
 import { ScanFinding } from "@/lib/repository/scanFinding/scanFindingSchema";
 import { clearScanJobToken, createScanJob, getScanJobById } from "@/lib/repository/scanJob/scanJobRepository";
@@ -48,7 +48,7 @@ export async function scan(input: CreateScanJobDTO & { url: string; repoKey: str
     }
 
     // 2. Encrypt Token & Create Job in DB (Next.js is the Boss)
-    const repokeyEncrypted = input.repoKey != null ? encryptToken(input.repoKey) : null;
+    const repokeyEncrypted = input.repoKey != null ? encrypt(input.repoKey) : null;
     
     const job = await createScanJobServerAction({
       repo_url: input.url,

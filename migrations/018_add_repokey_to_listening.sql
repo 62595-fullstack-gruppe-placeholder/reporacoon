@@ -1,0 +1,2 @@
+ALTER TABLE listening_repositories
+ADD COLUMN IF NOT EXISTS repoKey TEXT DEFAULT NULL;
