@@ -277,7 +277,7 @@ class GitHubSecretScanner:
 
         
         # second pass: entropy scan on lines regex did not already flag
-        self.scan_entropy_on_unmatched_lines(
+        self._scan_entropy(
             lines,
             regex_matched_lines,
             file_path,
