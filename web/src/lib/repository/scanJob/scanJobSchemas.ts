@@ -12,6 +12,7 @@ export const scanJobSchema = z.object({
   priority: z.number().int().min(1).max(5), /* MIGHT BRICK?*/
   created_at: z.coerce.date(),
   duration: z.number().int().nullable(), // nullable if some jobs have no duration yet
+  listening_repository_id: z.string().nullable().optional(),
 });
 
 /**
@@ -39,6 +40,7 @@ export const createScanJobDTOSchema = z.object({
   owner_id: z.uuidv4().nullable(),
   repoKey: z.string().nullable().optional(),
   priority: z.number().int().min(1).max(5),
+  listening_repository_id: z.string().nullable().optional(),
 });
 
 /**

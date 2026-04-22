@@ -30,14 +30,14 @@ export async function getUserById(id: string): Promise<User | null> {
 }
 
 /**
- * Get user settings by id, returns validated {@link Settings} or null. Since we are using JSONB in the database, its a little funky 
+ * Get user settings by user id, returns validated {@link Settings} or null. Since we are using JSONB in the database, its a little funky 
  */
-export async function getUserSettingsById(id: string): Promise<Settings | null> {
+export async function getUserSettingsById(userId: string): Promise<Settings | null> {
   const row = await queryOne<{
     user_settings: unknown; // Raw DB column
   }>(
     `SELECT user_settings FROM users WHERE id = $1`,
-    [id],
+    [userId],
   );
 
   if (!row || row.user_settings == null) return null;
