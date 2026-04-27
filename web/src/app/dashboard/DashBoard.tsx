@@ -1,8 +1,5 @@
 "use client";
 
-import { getUser } from "@/lib/auth/userFromToken";
-import Image from 'next/image';
-
 import URLForm from "../_components/URLForm";
 import { ScanOptions } from "../_components/ScanOptions";
 import { useState } from "react";
@@ -28,12 +25,11 @@ export default function Dashboard({ user, settings }: { user: any, settings: Set
     };
     return (
         <div className="flex flex-col justify-center items-center gap-8">
-            <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
+            <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-130">
                 <p>Scan repositories, manage recurring jobs and view old jobs</p>
-                <div className="field flex items-center gap-2 w-full">
-                    <URLForm onScanStarted={handleScanSuccess} isDeepScan={isDeepScan} extensions={selected} />
-                </div>
-                <ScanOptions isDisabled={false} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
+
+                <URLForm onScanStarted={handleScanSuccess} hasUser={user} isDeepScan={isDeepScan} extensions={selected} />
+                <ScanOptions isDisabled={!user} isDeep={settings.isDeep} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
                 <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={selected}/>
                     
 

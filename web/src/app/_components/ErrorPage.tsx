@@ -24,9 +24,8 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button
             onClick={reset}
-            className="box flex items-center gap-3 px-8 py-4 font-mono font-bold text-sm uppercase tracking-wider 
-                     bg-button-main/20 hover:bg-button-main/30 border-2 border-button-main/30 
-                     hover:border-button-main text-button-main hover:shadow-lg transition-all h-12"
+            className="box flex items-center gap-3 px-8 py-4 font-mono font-bold text-sm uppercase tracking-wider bg-button-main/20 hover:bg-button-main/30 border-2 border-button-main/30 hover:border-button-main text-button-main hover:shadow-lg transition-all h-12"
+
           >
             <Zap size={16} />
             Try again
@@ -34,9 +33,8 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
 
           <a
             href="/dashboard"
-            className="box flex items-center gap-3 px-8 py-4 font-mono font-bold text-sm uppercase tracking-wider 
-                     bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 
-                     text-secondary hover:text-text-main hover:shadow-lg transition-all h-12"
+            className="box flex items-center gap-3 px-8 py-4 font-mono font-bold text-sm uppercase tracking-wider bg-button-main/20 hover:bg-button-main/30 border-2 border-button-main/30 hover:border-button-main text-button-main hover:shadow-lg transition-all h-12"
+
           >
             <ShieldCheck size={16} />
             Go to Dashboard

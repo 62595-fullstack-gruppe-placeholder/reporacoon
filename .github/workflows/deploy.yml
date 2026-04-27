@@ -28,6 +28,8 @@ jobs:
         tags: ghcr.io/${{ github.repository }}/web:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          TOKEN_ENCRYPTION_KEY=${{ secrets.TOKEN_ENCRYPTION_KEY }}
         
     - name: Build and push scraper
       uses: docker/build-push-action@v6
@@ -50,6 +52,7 @@ jobs:
         key: ${{ secrets.VM_SSH_KEY }}
         script: |
           cd /home/${{ secrets.VM_USERNAME }}/reporacoon
+          echo "TOKEN_ENCRYPTION_KEY=${{ secrets.TOKEN_ENCRYPTION_KEY }}" > .env
           git pull origin main
           chmod +x cron/*
           docker compose pull

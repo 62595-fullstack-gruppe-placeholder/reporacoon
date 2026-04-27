@@ -51,15 +51,17 @@ except Exception as e:
 
 
 class GitHubSecretScanner:
-    def __init__(self, repo_url, job_id, isDeepScan=False, extensions=defaultExtensions):
+    def __init__(self, repo_url, job_id, isDeepScan=False, extensions=defaultExtensions, repoKey=None):
         self.repo_url = repo_url
         self.job_id = job_id
         self.scanned_files = 0
         self.findings = defaultdict(list)
         self.isDeepScan = isDeepScan
         self.extensions = extensions
+        self.repoKey = repoKey
         self.entropy_candidate_pattern = re.compile(
             r'(?<![A-Za-z0-9])([A-Za-z0-9+/=_-]{20,}|[A-Fa-f0-9]{32,})(?![A-Za-z0-9])')
+
         
         # Create a requests session for HTTP requests
         self.session = requests.Session()
@@ -119,11 +121,17 @@ class GitHubSecretScanner:
     def clone_repo(self):
         self.write_log("Cloning repository...")
         temp_dir = tempfile.mkdtemp()
+
+        clone_url = self.repo_url
+        if self.repoKey:
+            # https://github.com/owner/repo → https://<token>@github.com/owner/repo
+            clone_url = self.repo_url.replace("https://", f"https://{self.repoKey}@")
+
         try:
             if self.isDeepScan == True:
                 # full clone with all branches and history
                 subprocess.run(
-                    ["git", "clone", self.repo_url, temp_dir],
+                    ["git", "clone", clone_url, temp_dir],
                     check=True,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
@@ -131,7 +139,7 @@ class GitHubSecretScanner:
             else:
                 # shallow clone - only default branch
                 subprocess.run(
-                    ["git", "clone", "--depth", "1", self.repo_url, temp_dir],
+                    ["git", "clone", "--depth", "1", clone_url, temp_dir],
                     check=True,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
@@ -269,7 +277,7 @@ class GitHubSecretScanner:
 
         
         # second pass: entropy scan on lines regex did not already flag
-        self.scan_entropy_on_unmatched_lines(
+        self._scan_entropy(
             lines,
             regex_matched_lines,
             file_path,
