@@ -9,13 +9,20 @@ import { ScanJob } from '@/lib/repository/scanJob/scanJobSchemas';
 import { ScanOptions } from './_components/ScanOptions';
 import { IgnoreSettingsButtons } from './_components/IgnoreSettings';
 import { extensionsUtil } from '@/lib/utils';
+import { Settings } from '@/lib/repository/user/userSchemas';
+import { getScanSettings } from './ScanSettingsServerActions';
+
+
+
+
 
 
 export default function Home() {
   const [scanFindings, setScanFindings] = useState<ScanFinding[] | null>(null);
   const [scanJobs, setScanJob] = useState<ScanJob[] | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-
+  const [isDeepScan, setIsDeepScan] = useState(false);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const extensions = extensionsUtil;
   const [selected, setSelected] = useState(extensions);
 
@@ -29,6 +36,17 @@ export default function Home() {
         if (res.ok) setIsAuthenticated(true);
       })
       .catch(() => setIsAuthenticated(false));
+
+    async function loadSettings() {
+      try {
+        const data = await getScanSettings();
+        setSettings(data);
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+      }
+    }
+    loadSettings();
+    setIsDeepScan(settings?.isDeep ?? false)
 
     const savedResults = localStorage.getItem('raccoon_scanjob_history');
     if (savedResults) {
@@ -93,7 +111,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col justify-center items-center gap-8">
-      <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-125">
+      <div className="px-4 py-10 flex flex-col justify-center items-center gap-8 min-w-96 max-w-130">
         <h1 className="h1">Sniff out vulnerabilities in seconds</h1>
 
         <p className="p">
@@ -102,11 +120,9 @@ export default function Home() {
           weaknesses.
         </p>
 
-        <div className="field flex items-center gap-2 w-full">
-          <URLForm onScanStarted={handleScanSuccess} isDeepScan={false} extensions={selected}/>
-        </div>
-        <ScanOptions isDisabled={true} isDeep={false} />
-        <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={extensions}/>
+        <URLForm onScanStarted={handleScanSuccess} hasUser={isAuthenticated} isDeepScan={false} extensions={selected}/>
+        <ScanOptions isDisabled={!isAuthenticated} isDeep={settings?.isDeep ?? false} onDeepChange={(isDeep) => setIsDeepScan(isDeep)} />
+        <IgnoreSettingsButtons onSelectedChange={(selected) => setSelected(selected)} extensions={selected}/>
       </div>
 
       {/* Dashboard appears with fade and slide down animation */}

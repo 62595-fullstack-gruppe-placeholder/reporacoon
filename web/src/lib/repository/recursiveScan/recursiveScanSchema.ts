@@ -8,6 +8,7 @@ export const recursiveScanSchema = z.object({
   id: z.uuidv4(),
   repo_url: z.url(),
   owner_id: z.uuidv4().nullable(),
+  repoKey: z.string().nullable().optional(),
   interval: z.enum(SCAN_INTERVALS),
   is_deep_scan: z.boolean(),
   extensions: z.array(z.string()).default([
@@ -25,6 +26,7 @@ export type RecursiveScan = z.infer<typeof recursiveScanSchema>;
 export const createRecursiveScanDTOSchema = z.object({
   repo_url: z.url({ error: "Not a valid URL" }),
   owner_id: z.uuidv4().nullable(),
+  repoKey: z.string().nullable().optional(),
   interval: z.enum(SCAN_INTERVALS),
   is_deep_scan: z.boolean().default(false),
   extensions: z.array(z.string()).default([

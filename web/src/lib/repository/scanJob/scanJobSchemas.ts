@@ -8,9 +8,11 @@ export const scanJobSchema = z.object({
   repo_url: z.url(),
   status: z.enum(["PENDING", "PARSING", "PARSED", "FAILED"]).default("PENDING"),
   owner_id: z.uuidv4().nullable(),
+  repoKey: z.string().nullable().optional(),
   priority: z.number().int().min(1).max(5), /* MIGHT BRICK?*/
   created_at: z.coerce.date(),
   duration: z.number().int().nullable(), // nullable if some jobs have no duration yet
+  listening_repository_id: z.string().nullable().optional(),
 });
 
 /**
@@ -37,6 +39,8 @@ export const createScanJobDTOSchema = z.object({
   repo_url: z.url({error: "Not a valid URL"}),
   owner_id: z.uuidv4().nullable(),
   priority: z.number().int().min(1).max(5),
+  listening_repository_id: z.string().nullable().optional(),
+  repoKey: z.string().nullable().optional(),
 });
 
 /**

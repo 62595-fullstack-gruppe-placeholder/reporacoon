@@ -2,17 +2,17 @@
  * RecurringForm tests
  *
  * Test flow:
- * 1. Empty state  — form renders correctly with no existing scans
- * 2. Form inputs  — interval dropdown has all options, defaults to WEEKLY
- * 3. Submit       — calls server action with correct URL, interval, and deep-scan flag
- * 4. Submit OK    — clears the URL input after a successful submission
- * 5. Submit error — shows an error message when the server action fails
- * 6. Deep scan    — passes isDeepScan=true when the checkbox is ticked
- * 7. Scan list    — renders a row per scan, shows Active/Paused badge
- * 8. Delete       — calls deleteRecursiveScanAction with the scan id
- * 9. Pause/resume — calls toggleRecursiveScanAction with the scan id
- * 10. Run now     — calls runRecursiveScanNowAction with the scan id
- * 11. Expand OK   — fetches results and renders ScanResults on row expand
+ * 1. Empty state   — form renders correctly with no existing scans
+ * 2. Form inputs   — interval dropdown has all options, defaults to WEEKLY
+ * 3. Submit        — calls server action with correct URL, interval, deep-scan flag, and null token
+ * 4. Submit Private— calls server action with encrypted token when private repo is selected
+ * 5. Submit OK     — clears the URL input after a successful submission
+ * 6. Submit error  — shows an error message when the server action fails
+ * 7. Scan list     — renders a row per scan, shows Active/Paused badge
+ * 8. Delete        — calls deleteRecursiveScanAction with the scan id
+ * 9. Pause/resume  — calls toggleRecursiveScanAction with the scan id
+ * 10. Run now      — calls runRecursiveScanNowAction with the scan id
+ * 11. Expand OK    — fetches results and renders ScanResults on row expand
  * 12. Expand empty — shows "No scans have run yet" when jobs list is empty
  */
 
@@ -67,19 +67,19 @@ describe("RecurringForm", () => {
   // 1. Empty state
 
   it("shows empty state message when there are no scans", () => {
-    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>()}/>);
     expect(screen.getByText("No recurring scans yet.")).toBeInTheDocument();
   });
 
   it("renders the schedule form heading", () => {
-    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>()}/>);
     expect(screen.getByText("Schedule a recurring scan")).toBeInTheDocument();
   });
 
   // 2. Form inputs
 
   it("renders all interval options in the dropdown", () => {
-    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>()}/>);
     const select = screen.getByRole("combobox");
     const options = Array.from(select.querySelectorAll("option")).map((o) => o.value);
     expect(options).toContain("WEEKLY");
@@ -90,19 +90,19 @@ describe("RecurringForm", () => {
   });
 
   it("defaults interval to WEEKLY", () => {
-    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>()}/>);
     const select = screen.getByRole("combobox") as HTMLSelectElement;
     expect(select.value).toBe("WEEKLY");
   });
 
-  // 3. Submit, correct args
+  // 3. Submit, correct args (Public Repo)
 
-  it("calls createRecursiveScanAction with the entered URL and selected interval", async () => {
+  it("calls createRecursiveScanAction with the entered URL, interval, and null repoKey for public repos", async () => {
     (actions.createRecursiveScanAction as Mock).mockResolvedValue({ success: true });
 
-    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>()}/>);
 
-    fireEvent.change(screen.getByPlaceholderText("Paste a public GitHub repository URL"), {
+    fireEvent.change(screen.getByPlaceholderText("Paste a Git repository URL"), {
       target: { value: "https://github.com/owner/repo" },
     });
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "DAILY" } });
@@ -113,26 +113,60 @@ describe("RecurringForm", () => {
         "https://github.com/owner/repo",
         "DAILY",
         false,
-        new Set<string>,
+        new Set<string>(),
+        null // <--- Added the new 5th parameter for public repos
       );
     });
   });
 
-  // 4. Submit OK, clears input
+  // 4. Submit, correct args (Private Repo)
+
+  it("calls createRecursiveScanAction with the repoKey when private repo is selected", async () => {
+    (actions.createRecursiveScanAction as Mock).mockResolvedValue({ success: true });
+
+    // hasUser must be true to allow private repo selection
+    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>()} hasUser={true} />);
+
+    // Toggle to private
+    fireEvent.click(screen.getByRole("button", { name: /private/i }));
+
+    fireEvent.change(screen.getByPlaceholderText("Paste a Git repository URL"), {
+      target: { value: "https://github.com/owner/private-repo" },
+    });
+    
+    // Fill in the newly revealed token input
+    fireEvent.change(screen.getByPlaceholderText("Enter your personal access token"), {
+      target: { value: "ghp_super_secret_token" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /schedule scan/i }));
+
+    await waitFor(() => {
+      expect(actions.createRecursiveScanAction).toHaveBeenCalledWith(
+        "https://github.com/owner/private-repo",
+        "WEEKLY", // default
+        false,
+        new Set<string>(),
+        "ghp_super_secret_token" // <--- Ensures the token gets passed to the server action
+      );
+    });
+  });
+
+  // 5. Submit OK, clears input
 
   it("clears the URL input after a successful submission", async () => {
     (actions.createRecursiveScanAction as Mock).mockResolvedValue({ success: true });
 
-    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>()}/>);
 
-    const input = screen.getByPlaceholderText("Paste a public GitHub repository URL") as HTMLInputElement;
+    const input = screen.getByPlaceholderText("Paste a Git repository URL") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "https://github.com/owner/repo" } });
     fireEvent.click(screen.getByRole("button", { name: /schedule scan/i }));
 
     await waitFor(() => expect(input.value).toBe(""));
   });
 
-  // 5. Submit error
+  // 6. Submit error
 
   it("shows an error message when createRecursiveScanAction fails", async () => {
     (actions.createRecursiveScanAction as Mock).mockResolvedValue({
@@ -140,9 +174,10 @@ describe("RecurringForm", () => {
       error: "Invalid GitHub URL",
     });
 
-    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>}/>);
+    // Removed the invalid `repoKey={null}` prop that was here previously
+    render(<RecurringForm initialScans={[]} isDeep={false} extensions={new Set<string>()} />);
 
-    fireEvent.change(screen.getByPlaceholderText("Paste a public GitHub repository URL"), {
+    fireEvent.change(screen.getByPlaceholderText("Paste a Git repository URL"), {
       target: { value: "not-a-url" },
     });
     fireEvent.click(screen.getByRole("button", { name: /schedule scan/i }));
@@ -152,35 +187,34 @@ describe("RecurringForm", () => {
     });
   });
 
-
-  // 6. Scan list
+  // 7. Scan list
 
   it("renders a row for each scan in initialScans", () => {
     const scans = [
       makeScan({ id: "00000000-0000-0000-0000-000000000001", repo_url: "https://github.com/a/b" }),
       makeScan({ id: "00000000-0000-0000-0000-000000000002", repo_url: "https://github.com/c/d" }),
     ];
-    render(<RecurringForm initialScans={scans} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={scans} isDeep={false} extensions={new Set<string>()}/>);
     expect(screen.getByText("https://github.com/a/b")).toBeInTheDocument();
     expect(screen.getByText("https://github.com/c/d")).toBeInTheDocument();
   });
 
   it("shows Active badge for active scans", () => {
-    render(<RecurringForm initialScans={[makeScan({ is_active: true })]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[makeScan({ is_active: true })]} isDeep={false} extensions={new Set<string>()}/>);
     expect(screen.getByText("Active")).toBeInTheDocument();
   });
 
   it("shows Paused badge for inactive scans", () => {
-    render(<RecurringForm initialScans={[makeScan({ is_active: false })]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[makeScan({ is_active: false })]} isDeep={false} extensions={new Set<string>()}/>);
     expect(screen.getByText("Paused")).toBeInTheDocument();
   });
 
-  // 7. Delete
+  // 8. Delete
 
   it("calls deleteRecursiveScanAction when delete is clicked", async () => {
     (actions.deleteRecursiveScanAction as Mock).mockResolvedValue({ success: true });
 
-    render(<RecurringForm initialScans={[makeScan()]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[makeScan()]} isDeep={false} extensions={new Set<string>()}/>);
     fireEvent.click(screen.getByTitle("Delete"));
 
     await waitFor(() => {
@@ -190,12 +224,12 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 8. Pause / resume
+  // 9. Pause / resume
 
   it("calls toggleRecursiveScanAction when pause is clicked", async () => {
     (actions.toggleRecursiveScanAction as Mock).mockResolvedValue({ success: true });
 
-    render(<RecurringForm initialScans={[makeScan({ is_active: true })]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[makeScan({ is_active: true })]} isDeep={false} extensions={new Set<string>()}/>);
     fireEvent.click(screen.getByTitle("Pause"));
 
     await waitFor(() => {
@@ -205,12 +239,12 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 9. Run now
+  // 10. Run now
 
   it("calls runRecursiveScanNowAction when run now is clicked", async () => {
     (actions.runRecursiveScanNowAction as Mock).mockResolvedValue({ success: true });
 
-    render(<RecurringForm initialScans={[makeScan()]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[makeScan()]} isDeep={false} extensions={new Set<string>()}/>);
     fireEvent.click(screen.getByTitle("Run now"));
 
     await waitFor(() => {
@@ -220,7 +254,7 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 10. Expand, shows results
+  // 11. Expand, shows results
 
   it("fetches and shows results when a row is expanded", async () => {
     (actions.getRecurringScanResultsAction as Mock).mockResolvedValue({
@@ -229,7 +263,7 @@ describe("RecurringForm", () => {
       findings: [],
     });
 
-    render(<RecurringForm initialScans={[makeScan()]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[makeScan()]} isDeep={false} extensions={new Set<string>()}/>);
     fireEvent.click(screen.getByText("https://github.com/owner/repo"));
 
     await waitFor(() => {
@@ -240,7 +274,7 @@ describe("RecurringForm", () => {
     });
   });
 
-  // 11. Expand, empty jobs
+  // 12. Expand, empty jobs
 
   it("shows 'No scans have run yet' when expanded with empty jobs", async () => {
     (actions.getRecurringScanResultsAction as Mock).mockResolvedValue({
@@ -249,7 +283,7 @@ describe("RecurringForm", () => {
       findings: [],
     });
 
-    render(<RecurringForm initialScans={[makeScan()]} isDeep={false} extensions={new Set<string>}/>);
+    render(<RecurringForm initialScans={[makeScan()]} isDeep={false} extensions={new Set<string>()}/>);
     fireEvent.click(screen.getByText("https://github.com/owner/repo"));
 
     await waitFor(() => {

@@ -43,7 +43,7 @@ export function TryItYourself({
               setFindings(findings);
               postScanCallback();
             }}
-            // Just uses all extensions
+            hasUser={false}
             extensions={extensionsUtil}
             isDeepScan={false}
           />
